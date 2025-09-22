@@ -1194,95 +1194,97 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Empty inventory icon in a circle
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceVariant,
-              shape: BoxShape.circle,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Empty inventory icon in a circle
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceVariant,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.inventory_2_outlined,
+                size: 40,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
-            child: Icon(
-              Icons.inventory_2_outlined,
-              size: 40,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // "No Inventory Available" text
-          Text(
-            'No Inventory Available',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-
-          // Descriptive text
-          Text(
-            'There are no inventory items to display.\nAdd some items to get started.',
-            style: TextStyle(
-              fontSize: 14,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              height: 1.4,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-
-          // Add Inventory button
-          ElevatedButton.icon(
-            onPressed: () async {
-              // Navigate to add inventory screen
-              final result = await PersistentNavBarNavigator.pushNewScreen(
-                context,
-                screen: const InventoryFormPage(),
-                withNavBar: false,
-                pageTransitionAnimation: PageTransitionAnimation.cupertino,
-              );
-
-              // Handle the result from form submission and refresh data
-              if (result != null && result is Map && result['success'] == true) {
-                // Refresh inventory data to show the new item
-                try {
-                  await ref.read(inventoryProvider.notifier).refreshInventoryData();
-                  print('✅ Inventory data refreshed after adding new item');
-                } catch (e) {
-                  print('⚠️ Warning: Could not refresh inventory data: $e');
-                }
-              }
-            },
-            icon: Icon(
-              Icons.add,
-              color: Theme.of(context).colorScheme.onPrimary,
-              size: 20,
-            ),
-            label: Text(
-              'Add Inventory',
+            const SizedBox(height: 24),
+        
+            // "No Inventory Available" text
+            Text(
+              'No Inventory Available',
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onPrimary,
-                fontSize: 16,
+                fontSize: 20,
                 fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+        
+            // Descriptive text
+            Text(
+              'There are no inventory items to display.\nAdd some items to get started.',
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+        
+            // Add Inventory button
+            ElevatedButton.icon(
+              onPressed: () async {
+                // Navigate to add inventory screen
+                final result = await PersistentNavBarNavigator.pushNewScreen(
+                  context,
+                  screen: const InventoryFormPage(),
+                  withNavBar: false,
+                  pageTransitionAnimation: PageTransitionAnimation.cupertino,
+                );
+        
+                // Handle the result from form submission and refresh data
+                if (result != null && result is Map && result['success'] == true) {
+                  // Refresh inventory data to show the new item
+                  try {
+                    await ref.read(inventoryProvider.notifier).refreshInventoryData();
+                    print('✅ Inventory data refreshed after adding new item');
+                  } catch (e) {
+                    print('⚠️ Warning: Could not refresh inventory data: $e');
+                  }
+                }
+              },
+              icon: Icon(
+                Icons.add,
+                color: Theme.of(context).colorScheme.onPrimary,
+                size: 20,
+              ),
+              label: Text(
+                'Add Inventory',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
               ),
             ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Theme.of(context).colorScheme.onPrimary,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              elevation: 0,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

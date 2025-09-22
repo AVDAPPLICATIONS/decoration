@@ -4021,11 +4021,14 @@ class _FinalDecorationImageUploadDialogState
                         Icon(Icons.info_outline,
                             color: Colors.grey[500], size: 16),
                         const SizedBox(width: 4),
-                        Text(
-                          'Supported: Images (JPG, PNG) and PDFs',
-                          style: TextStyle(
-                            color: Colors.grey[500],
-                            fontSize: 12,
+                        Expanded(
+                          child: Text(
+                            'Supported: Images (JPG, PNG) and PDFs',
+                            softWrap: true,
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                       ],
