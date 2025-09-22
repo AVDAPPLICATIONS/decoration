@@ -5,6 +5,7 @@ import 'add_inventory_screen.dart';
 import '../../providers/category_provider.dart';
 import '../../models/category_model.dart';
 import '../../providers/inventory_provider.dart';
+import '../../utils/snackbar_manager.dart';
 import 'package:file_picker/file_picker.dart';
 
 class InventoryFormPage extends ConsumerStatefulWidget {
@@ -17,6 +18,19 @@ class InventoryFormPage extends ConsumerStatefulWidget {
 class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  DateTime? _lastSubmissionTime;
+  bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Clear any existing SnackBars when the form page loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        SnackBarManager.clearAll(context);
+      }
+    });
+  }
 
   // Helper method for safe navigation
   void _safePop([dynamic result]) {
@@ -366,7 +380,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                 width: double.infinity,
                 height: 60,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : () => _submitForm(),
+                  onPressed: (_isLoading || _isSubmitting) ? null : () => _submitForm(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     foregroundColor: Theme.of(context).colorScheme.onPrimary,
@@ -376,7 +390,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                     elevation: 0,
                     shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                   ),
-                  child: _isLoading
+                  child: (_isLoading || _isSubmitting)
                       ? Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -1193,225 +1207,283 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
 
   void _submitForm() async {
     print('Form submission started');
-    if (_formKey.currentState!.validate()) {
-      print('Form validation passed');
-      final notifier = ref.read(inventoryFormNotifierProvider.notifier);
-
-      if (notifier.validateForm()) {
-        print('Business validation passed');
-        
-        // Set loading state
-        setState(() {
-          _isLoading = true;
-        });
-        
-        // Prepare data for API
-        final formData = _prepareFormData();
-        print('Form data prepared: $formData');
-        print('🔍 Debug: Image path in form data: ${formData['imagePath']}');
-
-        try {
-          // Test API connection first
-          print('🔍 Testing API connection before creating item...');
-          final isConnected = await ref.read(inventoryProvider.notifier).testApiConnection();
-          if (!isConnected) {
-            throw Exception('Cannot connect to server. Please check your internet connection and try again.');
-          }
-          print('✅ API connection test passed');
-
-          // Show loading dialog with progress indicator
-          showDialog(
+    
+    // Prevent multiple simultaneous submissions
+    if (_isSubmitting || _isLoading) {
+      print('Submission blocked: already submitting');
+      return;
+    }
+    
+    // Prevent rapid successive submissions (increased to 3 seconds for better UX)
+    final now = DateTime.now();
+    if (_lastSubmissionTime != null && 
+        now.difference(_lastSubmissionTime!).inSeconds < 3) {
+      print('Submission blocked: too soon after last submission');
+      // Show a brief message to user
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          SnackBarManager.showWarning(
             context: context,
-            barrierDismissible: false,
-            builder: (context) => _buildLoadingDialog(context),
+            message: 'Please wait before submitting again',
+            duration: const Duration(seconds: 2),
           );
+        }
+      });
+      return;
+    }
+    
+    _isSubmitting = true;
+    _lastSubmissionTime = now;
+    
+    try {
+      if (_formKey.currentState!.validate()) {
+        print('Form validation passed');
+        final notifier = ref.read(inventoryFormNotifierProvider.notifier);
 
-          // Check if this is a furniture, fabric, carpet, or frame structures category and use appropriate API
-          final category =
-              ref.read(inventoryFormNotifierProvider).selectedCategory;
-          if (category?.name.toLowerCase() == 'furniture') {
-            // Use furniture-specific API
-            await ref.read(inventoryProvider.notifier).createFurnitureItem(
-                  name: formData['name'],
-                  material: formData['material'],
-                  dimensions: formData['dimensions'],
-                  unit: formData['unit'],
-                  notes: formData['notes'],
-                  storageLocation: formData['storage_location'],
-                  quantityAvailable: formData['quantity_available'],
-                  itemImagePath: formData['imagePath'],
-                  itemImageBytes: formData['imageBytes'],
-                  itemImageName: formData['imageName'],
-                );
-          } else if (category?.name.toLowerCase() == 'fabric' ||
-              category?.name.toLowerCase() == 'fabrics') {
-            // Use fabric-specific API
-            await ref.read(inventoryProvider.notifier).createFabricItem(
-                  name: formData['name'],
-                  fabricType: formData['fabric_type'],
-                  pattern: formData['pattern'],
-                  width: formData['width'],
-                  length: formData['length'],
-                  color: formData['color'],
-                  unit: formData['unit'],
-                  storageLocation: formData['storage_location'],
-                  notes: formData['notes'],
-                  quantityAvailable: formData['quantity_available'],
-                  itemImagePath: formData['imagePath'],
-                  itemImageBytes: formData['imageBytes'],
-                  itemImageName: formData['imageName'],
-                );
-          } else if (category?.name.toLowerCase() == 'carpet' ||
-              category?.name.toLowerCase() == 'carpets') {
-            // Use carpet-specific API
-            await ref.read(inventoryProvider.notifier).createCarpetItem(
-                  name: formData['name'],
-                  unit: formData['unit'],
-                  storageLocation: formData['storage_location'],
-                  notes: formData['notes'],
-                  quantityAvailable: formData['quantity_available'],
-                  carpetType: formData['carpet_type'],
-                  material: formData['material'],
-                  size: formData['size'],
-                  itemImagePath: formData['imagePath'],
-                  itemImageBytes: formData['imageBytes'],
-                  itemImageName: formData['imageName'],
-                );
-          } else if (category?.name.toLowerCase() == 'frame structure' ||
-              category?.name.toLowerCase() == 'frame structures') {
-            // Use frame structures-specific API
-            await ref.read(inventoryProvider.notifier).createFrameStructureItem(
-                  name: formData['name'],
-                  unit: formData['unit'],
-                  storageLocation: formData['storage_location'],
-                  notes: formData['notes'],
-                  quantityAvailable: formData['quantity_available'],
-                  frameType: formData['frame_type'],
-                  material: formData['material'],
-                  dimensions: formData['dimensions'],
-                  itemImagePath: formData['imagePath'],
-                  itemImageBytes: formData['imageBytes'],
-                  itemImageName: formData['imageName'],
-                );
-          } else if (category?.name.toLowerCase() == 'murti set' ||
-              category?.name.toLowerCase() == 'murti sets') {
-            // Use murti sets-specific API
-            await ref.read(inventoryProvider.notifier).createMurtiSetsItem(
-                  name: formData['name'],
-                  unit: formData['unit'],
-                  storageLocation: formData['storage_location'],
-                  notes: formData['notes'],
-                  quantityAvailable: formData['quantity_available'],
-                  setNumber: formData['set_number'],
-                  material: formData['material'],
-                  dimensions: formData['dimensions'],
-                  itemImagePath: formData['imagePath'],
-                  itemImageBytes: formData['imageBytes'],
-                  itemImageName: formData['imageName'],
-                );
-          } else if (category?.name.toLowerCase() == 'thermocol' ||
-              category?.name.toLowerCase() == 'thermocol material' ||
-              category?.name.toLowerCase() == 'thermocol materials') {
-            // Use thermocol materials-specific API
-            await ref
-                .read(inventoryProvider.notifier)
-                .createThermocolMaterialsItem(
-                  name: formData['name'],
-                  unit: formData['unit'],
-                  storageLocation: formData['storage_location'],
-                  notes: formData['notes'],
-                  quantityAvailable: formData['quantity_available'],
-                  thermocolType: formData['thermocol_type'],
-                  dimensions: formData['dimensions'],
-                  density: formData['density'],
-                  itemImagePath: formData['imagePath'],
-                  itemImageBytes: formData['imageBytes'],
-                  itemImageName: formData['imageName'],
-                );
-          } else if (category?.name.toLowerCase() == 'stationery') {
-            // Use stationery-specific API
-            await ref.read(inventoryProvider.notifier).createStationeryItem(
-                  name: formData['name'],
-                  unit: formData['unit'],
-                  storageLocation: formData['storage_location'],
-                  notes: formData['notes'],
-                  quantityAvailable: formData['quantity_available'],
-                  specifications: formData['specifications'],
-                  itemImagePath: formData['imagePath'],
-                  itemImageBytes: formData['imageBytes'],
-                  itemImageName: formData['imageName'],
-                );
-          } else {
-            // Use general inventory API for other categories
-            await ref.read(inventoryProvider.notifier).createItem(
-                  name: formData['name'],
-                  categoryId: category?.id ?? 1,
-                  unit: formData['unit'],
-                  storageLocation: formData['storage_location'],
-                  notes: formData['notes'],
-                  quantityAvailable: formData['quantity_available'],
-                  itemImagePath: formData['imagePath'],
-                  itemImageBytes: formData['imageBytes'],
-                  itemImageName: formData['imageName'],
-                  categoryDetails: formData['category_details'],
-                );
-          }
-
-          // Close loading dialog
-          _safePop();
-
-          // Reset loading state
-          setState(() {
-            _isLoading = false;
-          });
-
-          // Show success message
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Inventory item created successfully!'),
-              backgroundColor: Theme.of(context).colorScheme.primary,
-            ),
-          );
-
-          // Reset form
-          ref.read(inventoryFormNotifierProvider.notifier).resetForm();
-
-          // Navigate back with result data using safe navigation
-          _safePop(formData);
-        } catch (e) {
-          // Close loading dialog
-          _safePop();
-
-          // Reset loading state
-          setState(() {
-            _isLoading = false;
-          });
-
-          // Show error message
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error creating item: ${e.toString()}'),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
+        if (notifier.validateForm()) {
+          print('Business validation passed');
           
-          // Don't navigate back on error, let user fix the form
+          // Set loading state
+          setState(() {
+            _isLoading = true;
+          });
+          
+          // Prepare data for API
+          final formData = _prepareFormData();
+          print('Form data prepared: $formData');
+          print('🔍 Debug: Image path in form data: ${formData['imagePath']}');
+
+          try {
+            // Test API connection first
+            print('🔍 Testing API connection before creating item...');
+            final isConnected = await ref.read(inventoryProvider.notifier).testApiConnection();
+            if (!isConnected) {
+              throw Exception('Cannot connect to server. Please check your internet connection and try again.');
+            }
+            print('✅ API connection test passed');
+
+            // Show loading dialog with progress indicator
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) => _buildLoadingDialog(context),
+            );
+
+            // Check if this is a furniture, fabric, carpet, or frame structures category and use appropriate API
+            final category =
+                ref.read(inventoryFormNotifierProvider).selectedCategory;
+            if (category?.name.toLowerCase() == 'furniture') {
+              // Use furniture-specific API
+              await ref.read(inventoryProvider.notifier).createFurnitureItem(
+                    name: formData['name'],
+                    material: formData['material'],
+                    dimensions: formData['dimensions'],
+                    unit: formData['unit'],
+                    notes: formData['notes'],
+                    storageLocation: formData['storage_location'],
+                    quantityAvailable: formData['quantity_available'],
+                    itemImagePath: formData['imagePath'],
+                    itemImageBytes: formData['imageBytes'],
+                    itemImageName: formData['imageName'],
+                  );
+            } else if (category?.name.toLowerCase() == 'fabric' ||
+                category?.name.toLowerCase() == 'fabrics') {
+              // Use fabric-specific API
+              await ref.read(inventoryProvider.notifier).createFabricItem(
+                    name: formData['name'],
+                    fabricType: formData['fabric_type'],
+                    pattern: formData['pattern'],
+                    width: formData['width'],
+                    length: formData['length'],
+                    color: formData['color'],
+                    unit: formData['unit'],
+                    storageLocation: formData['storage_location'],
+                    notes: formData['notes'],
+                    quantityAvailable: formData['quantity_available'],
+                    itemImagePath: formData['imagePath'],
+                    itemImageBytes: formData['imageBytes'],
+                    itemImageName: formData['imageName'],
+                  );
+            } else if (category?.name.toLowerCase() == 'carpet' ||
+                category?.name.toLowerCase() == 'carpets') {
+              // Use carpet-specific API
+              await ref.read(inventoryProvider.notifier).createCarpetItem(
+                    name: formData['name'],
+                    unit: formData['unit'],
+                    storageLocation: formData['storage_location'],
+                    notes: formData['notes'],
+                    quantityAvailable: formData['quantity_available'],
+                    carpetType: formData['carpet_type'],
+                    material: formData['material'],
+                    size: formData['size'],
+                    itemImagePath: formData['imagePath'],
+                    itemImageBytes: formData['imageBytes'],
+                    itemImageName: formData['imageName'],
+                  );
+            } else if (category?.name.toLowerCase() == 'frame structure' ||
+                category?.name.toLowerCase() == 'frame structures') {
+              // Use frame structures-specific API
+              await ref.read(inventoryProvider.notifier).createFrameStructureItem(
+                    name: formData['name'],
+                    unit: formData['unit'],
+                    storageLocation: formData['storage_location'],
+                    notes: formData['notes'],
+                    quantityAvailable: formData['quantity_available'],
+                    frameType: formData['frame_type'],
+                    material: formData['material'],
+                    dimensions: formData['dimensions'],
+                    itemImagePath: formData['imagePath'],
+                    itemImageBytes: formData['imageBytes'],
+                    itemImageName: formData['imageName'],
+                  );
+            } else if (category?.name.toLowerCase() == 'murti set' ||
+                category?.name.toLowerCase() == 'murti sets') {
+              // Use murti sets-specific API
+              await ref.read(inventoryProvider.notifier).createMurtiSetsItem(
+                    name: formData['name'],
+                    unit: formData['unit'],
+                    storageLocation: formData['storage_location'],
+                    notes: formData['notes'],
+                    quantityAvailable: formData['quantity_available'],
+                    setNumber: formData['set_number'],
+                    material: formData['material'],
+                    dimensions: formData['dimensions'],
+                    itemImagePath: formData['imagePath'],
+                    itemImageBytes: formData['imageBytes'],
+                    itemImageName: formData['imageName'],
+                  );
+            } else if (category?.name.toLowerCase() == 'thermocol' ||
+                category?.name.toLowerCase() == 'thermocol material' ||
+                category?.name.toLowerCase() == 'thermocol materials') {
+              // Use thermocol materials-specific API
+              await ref
+                  .read(inventoryProvider.notifier)
+                  .createThermocolMaterialsItem(
+                    name: formData['name'],
+                    unit: formData['unit'],
+                    storageLocation: formData['storage_location'],
+                    notes: formData['notes'],
+                    quantityAvailable: formData['quantity_available'],
+                    thermocolType: formData['thermocol_type'],
+                    dimensions: formData['dimensions'],
+                    density: formData['density'],
+                    itemImagePath: formData['imagePath'],
+                    itemImageBytes: formData['imageBytes'],
+                    itemImageName: formData['imageName'],
+                  );
+            } else if (category?.name.toLowerCase() == 'stationery') {
+              // Use stationery-specific API
+              await ref.read(inventoryProvider.notifier).createStationeryItem(
+                    name: formData['name'],
+                    unit: formData['unit'],
+                    storageLocation: formData['storage_location'],
+                    notes: formData['notes'],
+                    quantityAvailable: formData['quantity_available'],
+                    specifications: formData['specifications'],
+                    itemImagePath: formData['imagePath'],
+                    itemImageBytes: formData['imageBytes'],
+                    itemImageName: formData['imageName'],
+                  );
+            } else {
+              // Use general inventory API for other categories
+              await ref.read(inventoryProvider.notifier).createItem(
+                    name: formData['name'],
+                    categoryId: category?.id ?? 1,
+                    unit: formData['unit'],
+                    storageLocation: formData['storage_location'],
+                    notes: formData['notes'],
+                    quantityAvailable: formData['quantity_available'],
+                    itemImagePath: formData['imagePath'],
+                    itemImageBytes: formData['imageBytes'],
+                    itemImageName: formData['imageName'],
+                    categoryDetails: formData['category_details'],
+                  );
+            }
+
+            // Close loading dialog
+            _safePop();
+
+            // Reset loading state
+            setState(() {
+              _isLoading = false;
+              _isSubmitting = false;
+            });
+
+            // Show success message with a small delay to ensure UI is stable
+            Future.delayed(const Duration(milliseconds: 100), () {
+              if (mounted) {
+                SnackBarManager.showSuccess(
+                  context: context,
+                  message: 'Inventory item created successfully!',
+                );
+              }
+            });
+
+            // Reset form
+            ref.read(inventoryFormNotifierProvider.notifier).resetForm();
+
+            // Refresh inventory data to clear any errors and update the list
+            try {
+              await ref.read(inventoryProvider.notifier).refreshInventoryData();
+              print('✅ Inventory data refreshed successfully');
+            } catch (e) {
+              print('⚠️ Warning: Could not refresh inventory data: $e');
+            }
+
+            // Navigate back with result data using safe navigation
+            print('🔍 Debug: Navigating back with form data: $formData');
+            _safePop({'success': true, 'data': formData});
+          } catch (e) {
+            // Close loading dialog
+            _safePop();
+
+            // Reset loading state
+            setState(() {
+              _isLoading = false;
+              _isSubmitting = false;
+            });
+
+            // Show error message with a small delay to ensure UI is stable
+            Future.delayed(const Duration(milliseconds: 100), () {
+              if (mounted) {
+                SnackBarManager.showError(
+                  context: context,
+                  message: 'Error creating item: ${e.toString()}',
+                );
+              }
+            });
+            
+            // Don't navigate back on error, let user fix the form
+          }
+        } else {
+          print('Business validation failed');
+          // Show error message with a small delay to ensure UI is stable
+          Future.delayed(const Duration(milliseconds: 100), () {
+            if (mounted) {
+              SnackBarManager.showError(
+                context: context,
+                message: 'Please select a category and fill in at least one field',
+              );
+            }
+          });
         }
       } else {
-        print('Business validation failed');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Please select a category and fill in at least one field'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
+        print('Form validation failed');
       }
-    } else {
-      print('Form validation failed');
+    } catch (e) {
+      print('Unexpected error during form submission: $e');
+      // Show error message with a small delay to ensure UI is stable
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          SnackBarManager.showError(
+            context: context,
+            message: 'An unexpected error occurred. Please try again.',
+          );
+        }
+      });
+    } finally {
+      // Always reset submitting state
+      _isSubmitting = false;
     }
   }
 

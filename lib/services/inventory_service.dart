@@ -44,9 +44,10 @@ class InventoryService {
   // Test API connection
   Future<bool> testConnection() async {
     try {
-      final response = await http.get(
+      final response = await http.post(
         Uri.parse('$baseUrl/api/inventory/categories/getAll'),
         headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({}),
       ).timeout(const Duration(seconds: 10));
       
       print('🔍 API Connection Test: Status ${response.statusCode}');
@@ -2377,16 +2378,36 @@ class InventoryService {
       print('🔍 Debug Carpet API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final responseData = jsonDecode(response.body);
-        if (responseData['success'] == true) {
-          return responseData;
-        } else {
-          throw Exception(
-              responseData['message'] ?? 'Failed to create carpet item');
+        try {
+          final responseData = jsonDecode(response.body);
+          if (responseData['success'] == true) {
+            return responseData;
+          } else {
+            throw Exception(
+                responseData['message'] ?? 'Failed to create carpet item');
+          }
+        } catch (e) {
+          // If JSON parsing fails, it's likely HTML (server error page)
+          throw Exception('Server returned invalid response. Please check server configuration.');
         }
       } else {
-        final errorData = jsonDecode(response.body);
-        throw Exception(errorData['message'] ?? 'Failed to create carpet item');
+        try {
+          final errorData = jsonDecode(response.body);
+          throw Exception(errorData['message'] ?? 'Failed to create carpet item');
+        } catch (e) {
+          // If JSON parsing fails, it's likely HTML (404, 500 error page)
+          String errorMessage = 'Server error (${response.statusCode})';
+          if (response.statusCode == 404) {
+            errorMessage = 'API endpoint not found. Please check server configuration.';
+          } else if (response.statusCode == 500) {
+            errorMessage = 'Internal server error. Please try again later.';
+          } else if (response.statusCode == 401) {
+            errorMessage = 'Authentication required. Please login again.';
+          } else if (response.statusCode == 403) {
+            errorMessage = 'Access denied. You do not have permission to perform this action.';
+          }
+          throw Exception(errorMessage);
+        }
       }
     } catch (e) {
       print('❌ Carpet API Error: $e');
@@ -2521,15 +2542,35 @@ class InventoryService {
       print('🔍 Debug: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final responseData = jsonDecode(response.body);
-        if (responseData['success'] == true) {
-          return responseData;
-        } else {
-          throw Exception(responseData['message'] ?? 'Failed to create item');
+        try {
+          final responseData = jsonDecode(response.body);
+          if (responseData['success'] == true) {
+            return responseData;
+          } else {
+            throw Exception(responseData['message'] ?? 'Failed to create item');
+          }
+        } catch (e) {
+          // If JSON parsing fails, it's likely HTML (server error page)
+          throw Exception('Server returned invalid response. Please check server configuration.');
         }
       } else {
-        final errorData = jsonDecode(response.body);
-        throw Exception(errorData['message'] ?? 'Failed to create item');
+        try {
+          final errorData = jsonDecode(response.body);
+          throw Exception(errorData['message'] ?? 'Failed to create item');
+        } catch (e) {
+          // If JSON parsing fails, it's likely HTML (404, 500 error page)
+          String errorMessage = 'Server error (${response.statusCode})';
+          if (response.statusCode == 404) {
+            errorMessage = 'API endpoint not found. Please check server configuration.';
+          } else if (response.statusCode == 500) {
+            errorMessage = 'Internal server error. Please try again later.';
+          } else if (response.statusCode == 401) {
+            errorMessage = 'Authentication required. Please login again.';
+          } else if (response.statusCode == 403) {
+            errorMessage = 'Access denied. You do not have permission to perform this action.';
+          }
+          throw Exception(errorMessage);
+        }
       }
     } catch (e) {
       print('❌ Error creating inventory item: $e');

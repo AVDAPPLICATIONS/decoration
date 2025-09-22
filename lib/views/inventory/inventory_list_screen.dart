@@ -7,6 +7,7 @@ import 'inventory_screen.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/inventory_provider.dart';
 import '../../providers/event_provider.dart';
+import '../../utils/snackbar_manager.dart';
 import 'issue_inventory_screen.dart';
 import 'item_issue_history_screen.dart';
 import 'edit_inventory_screen.dart';
@@ -286,7 +287,16 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                     pageTransitionAnimation: PageTransitionAnimation.cupertino,
                   );
 
-                  // Handle the result from form submission
+                  // Handle the result from form submission and refresh data
+                  if (result != null && result is Map && result['success'] == true) {
+                    // Refresh inventory data to show the new item
+                    try {
+                      await ref.read(inventoryProvider.notifier).refreshInventoryData();
+                      print('✅ Inventory data refreshed after adding new item');
+                    } catch (e) {
+                      print('⚠️ Warning: Could not refresh inventory data: $e');
+                    }
+                  }
                   print('Form result received: $result');
                   if (result != null && result is Map<String, dynamic>) {
                     print('Result is valid map, adding to inventory');
@@ -320,16 +330,9 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                         .addItem(newItem.toMap());
                     print('Inventory items count: ${inventoryItems.length}');
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                            '${result['name']} added to inventory successfully!'),
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
+                    SnackBarManager.showSuccess(
+                      context: context,
+                      message: '${result['name']} added to inventory successfully!',
                     );
                   } else {
                     print('Result is null or not a map: $result');
@@ -1113,31 +1116,18 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                 Navigator.pop(context);
 
                 // Show success message
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('${item['name']} deleted successfully!'),
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
+                SnackBarManager.showSuccess(
+                  context: context,
+                  message: '${item['name']} deleted successfully!',
                 );
               } catch (e) {
                 // Close loading dialog
                 Navigator.pop(context);
 
                 // Show error message
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                        'Failed to delete ${item['name']}: ${e.toString()}'),
-                    backgroundColor: Theme.of(context).colorScheme.error,
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
+                SnackBarManager.showError(
+                  context: context,
+                  message: 'Failed to delete ${item['name']}: ${e.toString()}',
                 );
               }
             },
@@ -1255,14 +1245,25 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
 
           // Add Inventory button
           ElevatedButton.icon(
-            onPressed: () {
+            onPressed: () async {
               // Navigate to add inventory screen
-              PersistentNavBarNavigator.pushNewScreen(
+              final result = await PersistentNavBarNavigator.pushNewScreen(
                 context,
                 screen: const InventoryFormPage(),
                 withNavBar: false,
                 pageTransitionAnimation: PageTransitionAnimation.cupertino,
               );
+
+              // Handle the result from form submission and refresh data
+              if (result != null && result is Map && result['success'] == true) {
+                // Refresh inventory data to show the new item
+                try {
+                  await ref.read(inventoryProvider.notifier).refreshInventoryData();
+                  print('✅ Inventory data refreshed after adding new item');
+                } catch (e) {
+                  print('⚠️ Warning: Could not refresh inventory data: $e');
+                }
+              }
             },
             icon: Icon(
               Icons.add,
