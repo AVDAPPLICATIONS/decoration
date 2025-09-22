@@ -7,7 +7,7 @@ class AppColors {
   static const Color background = Color(0xFFFBF9D1); // Pale cream
   static const Color accentIcon = Color(0xFFE6CFA9); // Light beige for icons
   static const Color chartDivider =
-      Color(0xFFC1856D); // Warm brown for chart dividers
+  Color(0xFFC1856D); // Warm brown for chart dividers
 }
 
 class AppTheme {
@@ -21,7 +21,22 @@ class AppTheme {
       backgroundColor: ColorSchemes.lightColorScheme.primary,
       foregroundColor: ColorSchemes.lightColorScheme.onPrimary,
     ),
-    // Add more theming as needed
+
+    // 🔥 Global ElevatedButton style
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: ColorSchemes.lightColorScheme.primary,
+        foregroundColor: ColorSchemes.lightColorScheme.onPrimary,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        textStyle: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
   );
 
   static final ThemeData darkTheme = ThemeData(
@@ -34,6 +49,21 @@ class AppTheme {
       backgroundColor: ColorSchemes.darkColorScheme.primary,
       foregroundColor: ColorSchemes.darkColorScheme.onPrimary,
     ),
-    // Add more theming as needed
+
+    // 🔥 Global ElevatedButton style
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: ColorSchemes.darkColorScheme.primary,
+        foregroundColor: ColorSchemes.darkColorScheme.onPrimary,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        textStyle: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
   );
 }

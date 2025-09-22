@@ -1,3 +1,4 @@
+import 'package:avd_decoration_application/themes/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'event_details_screen.dart';
 import 'years_screen.dart';
@@ -885,51 +886,53 @@ class _EventScreenState extends ConsumerState<EventScreen> {
 
   void _showAddTemplateDialog(BuildContext context) {
     final TextEditingController nameController = TextEditingController();
+    String? errorText; // holds the error message
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Event Template'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'Template Name',
-                hintText: 'Enter template name',
-                border: OutlineInputBorder(),
-              ),
-              autofocus: true,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final name = nameController.text.trim();
-              if (name.isNotEmpty) {
-                Navigator.pop(context);
-                await _createTemplate(name);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please enter a template name'),
-                    backgroundColor: Colors.red,
-                    behavior: SnackBarBehavior.floating,
-                    margin: EdgeInsets.only(bottom: 100, left: 16, right: 16),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            title: const Text('Add Event Template'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    labelText: 'Template Name',
+                    hintText: 'Enter template name',
+                    border: const OutlineInputBorder(),
+                    errorText: errorText, // display error here
                   ),
-                );
-              }
-            },
-            child: const Text('Add'),
+                  autofocus: true,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final name = nameController.text.trim();
+                  if (name.isNotEmpty) {
+                    Navigator.pop(context);
+                    await _createTemplate(name);
+                  } else {
+                    // update the error message inside the dialog
+                    setState(() {
+                      errorText = 'Please enter a template name';
+                    });
+                  }
+                },
+                child: const Text('Add'),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -940,7 +943,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Creating template...'),
-            backgroundColor: Colors.blue,
+            backgroundColor: AppColors.primary,
             duration: const Duration(seconds: 1),
             behavior: SnackBarBehavior.floating,
             margin: const EdgeInsets.only(bottom: 100, left: 16, right: 16),
