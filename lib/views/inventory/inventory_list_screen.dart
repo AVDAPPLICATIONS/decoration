@@ -37,6 +37,10 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
   List<String> _getCategories(List<InventoryItem> items) {
     final categories = items.map((item) => item.categoryName).toSet().toList();
     categories.sort();
+    print('🔍 Debug: Available categories for filtering: $categories');
+    for (var item in items) {
+      print('🔍 Debug: Item "${item.name}" has categoryName: "${item.categoryName}"');
+    }
     return ['All', ...categories];
   }
 
@@ -46,9 +50,15 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
     
     // Filter by category
     if (_selectedCategory != 'All') {
+      print('🔍 Debug: Filtering by category: "$_selectedCategory"');
       filteredItems = filteredItems
-          .where((item) => item.categoryName == _selectedCategory)
+          .where((item) {
+            final matches = item.categoryName == _selectedCategory;
+            print('🔍 Debug: Item "${item.name}" categoryName: "${item.categoryName}" matches "$_selectedCategory": $matches');
+            return matches;
+          })
           .toList();
+      print('🔍 Debug: After category filtering: ${filteredItems.length} items');
     }
     
     // Filter by search query
@@ -64,7 +74,6 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
               (item.size?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
               (item.fabricType?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
               (item.pattern?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
-              (item.carpetType?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
               (item.frameType?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
               (item.setNumber?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
               (item.thermocolType?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false))
@@ -277,7 +286,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
           ? Container(
               margin: const EdgeInsets.only(
                   bottom: 100), // Space above bottom nav bar
-              child: FloatingActionButton.extended(
+              child: FloatingActionButton(
                 heroTag: "inventory_add_button",
                 onPressed: () async {
                   final result = await PersistentNavBarNavigator.pushNewScreen(
@@ -311,6 +320,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                       storageLocation: result['location'] ?? 'Unknown',
                       notes: result['notes'] ?? '',
                       availableQuantity: (result['quantity'] ?? 1).toDouble(),
+                      totalStock: (result['quantity'] ?? 1).toDouble(),
                       material: result['material'] ?? 'Unknown',
                       createdAt: DateTime.now().toIso8601String(),
                       status: (result['quantity'] ?? 0) > 5
@@ -340,12 +350,9 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                 },
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Theme.of(context).colorScheme.surface,
-                icon: const Icon(Icons.add),
-                label: const Text('Add'),
+                child: const Icon(Icons.add),
                 elevation: 12,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+                tooltip: 'Add new inventory item',
               ),
             )
           : null,
@@ -500,13 +507,13 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                 children: [
                   Expanded(
                     child: _buildStatCard(
-                      title: 'Total Items',
+                      title: 'Items',
                       value: inventoryNotifier.totalItemsCount.toString(),
                       icon: Icons.inventory,
                       color: colorScheme.primary,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: _buildStatCard(
                       title: 'Categories',
@@ -515,7 +522,16 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                       color: colorScheme.primary,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildStatCard(
+                      title: 'Total Stock',
+                      value: inventoryNotifier.totalStockCount.toStringAsFixed(0),
+                      icon: Icons.storage,
+                      color: colorScheme.secondary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: _buildStatCard(
                       title: 'Low Stock',
@@ -608,15 +624,15 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
             color: Theme.of(context).colorScheme.shadow.withOpacity(0.04),
             spreadRadius: 0,
-            blurRadius: 8,
+            blurRadius: 6,
             offset: const Offset(0, 2),
           ),
         ],
@@ -628,22 +644,22 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(4),
             ),
             child: Icon(
               icon,
               color: color,
-              size: 16,
+              size: 14,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             value,
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
               color: color,
             ),
@@ -652,7 +668,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
           Text(
             title,
             style: TextStyle(
-              fontSize: 10,
+              fontSize: 9,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w500,
             ),
@@ -702,9 +718,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
         }
         break;
       case 'Carpet':
-        if (item.carpetType != null && item.carpetType!.isNotEmpty) {
-          dimensionParts.add('Type: ${item.carpetType}');
-        }
+        // Carpet type field removed - no longer displayed
         break;
       case 'Frame Structure':
         if (item.frameType != null && item.frameType!.isNotEmpty) {
@@ -846,14 +860,15 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
             ],
           ),
           trailing: Column(
+            mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: _getStatusColor(_getItemStatus(item)).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(6),
                   border: Border.all(
                     color: _getStatusColor(_getItemStatus(item)),
                     width: 1,
@@ -862,20 +877,29 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                 child: Text(
                   _getItemStatus(item),
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 9,
                     fontWeight: FontWeight.w600,
                     color: _getStatusColor(_getItemStatus(item)),
                   ),
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 3),
 
               Text(
-                'Qty: ${item.availableQuantity.toStringAsFixed(0)}',
+                'Available: ${item.availableQuantity.toStringAsFixed(0)}',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                'Total: ${item.totalStock.toStringAsFixed(0)}',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -1098,9 +1122,12 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
             onPressed: () async {
               Navigator.pop(context); // Close dialog first
 
+              // Get the navigator context before showing loading dialog
+              final navigatorContext = Navigator.of(context, rootNavigator: true).context;
+
               // Show loading indicator
               showDialog(
-                context: context,
+                context: navigatorContext,
                 barrierDismissible: false,
                 builder: (context) => const Center(
                   child: CircularProgressIndicator(),
@@ -1112,23 +1139,31 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                       id: int.parse(item['id'].toString()),
                     );
 
-                // Close loading dialog
-                Navigator.pop(context);
+                // Close loading dialog safely
+                if (mounted && Navigator.of(navigatorContext).canPop()) {
+                  Navigator.pop(navigatorContext);
+                }
 
                 // Show success message
-                SnackBarManager.showSuccess(
-                  context: context,
-                  message: '${item['name']} deleted successfully!',
-                );
+                if (mounted) {
+                  SnackBarManager.showSuccess(
+                    context: context,
+                    message: '${item['name']} deleted successfully!',
+                  );
+                }
               } catch (e) {
-                // Close loading dialog
-                Navigator.pop(context);
+                // Close loading dialog safely
+                if (mounted && Navigator.of(navigatorContext).canPop()) {
+                  Navigator.pop(navigatorContext);
+                }
 
                 // Show error message
-                SnackBarManager.showError(
-                  context: context,
-                  message: 'Failed to delete ${item['name']}: ${e.toString()}',
-                );
+                if (mounted) {
+                  SnackBarManager.showError(
+                    context: context,
+                    message: 'Failed to delete ${item['name']}: ${e.toString()}',
+                  );
+                }
               }
             },
             style: TextButton.styleFrom(
@@ -2124,14 +2159,14 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Available: ${ref.watch(inventoryProvider).firstWhere((item) => item.id == widget.inventoryItem['id'], orElse: () => InventoryItem(id: '', name: '', category: '', categoryName: '', unit: '', storageLocation: '', notes: '', availableQuantity: 0.0)).availableQuantity}',
+                        'Available: ${ref.watch(inventoryProvider).firstWhere((item) => item.id == widget.inventoryItem['id'], orElse: () => InventoryItem(id: '', name: '', category: '', categoryName: '', unit: '', storageLocation: '', notes: '', availableQuantity: 0.0, totalStock: 0.0)).availableQuantity}',
                         style: TextStyle(
                           fontSize: 14,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                       Text(
-                        'Remaining: ${(ref.watch(inventoryProvider).firstWhere((item) => item.id == widget.inventoryItem['id'], orElse: () => InventoryItem(id: '', name: '', category: '', categoryName: '', unit: '', storageLocation: '', notes: '', availableQuantity: 0.0)).availableQuantity) - issueQuantity}',
+                        'Remaining: ${(ref.watch(inventoryProvider).firstWhere((item) => item.id == widget.inventoryItem['id'], orElse: () => InventoryItem(id: '', name: '', category: '', categoryName: '', unit: '', storageLocation: '', notes: '', availableQuantity: 0.0, totalStock: 0.0)).availableQuantity) - issueQuantity}',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -2149,7 +2184,8 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
                                                   unit: '',
                                                   storageLocation: '',
                                                   notes: '',
-                                                  availableQuantity: 0.0))
+                                                  availableQuantity: 0.0,
+                                                  totalStock: 0.0))
                                           .availableQuantity) -
                                       issueQuantity) <
                                   5

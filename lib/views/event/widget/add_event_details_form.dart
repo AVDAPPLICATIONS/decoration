@@ -8,12 +8,14 @@ import '../../../utils/constants.dart';
 class AddEventDetailsForm extends StatefulWidget {
   final int templateId;
   final int yearId;
+  final String yearName; // Add year name to restrict date picker
   final Function(Map<String, dynamic>) onEventCreated;
 
   const AddEventDetailsForm({
     super.key,
     required this.templateId,
     required this.yearId,
+    required this.yearName,
     required this.onEventCreated,
   });
 
@@ -40,28 +42,37 @@ class _AddEventDetailsFormState extends State<AddEventDetailsForm> {
   }
 
   Future<void> _selectDate() async {
-  final DateTime now = DateTime.now();
-  final DateTime lastDate = DateTime(now.year + 1, 12, 31);
+    // Parse the year from yearName (e.g., "2024" -> 2024)
+    final int selectedYear = int.tryParse(widget.yearName) ?? DateTime.now().year;
+    
+    // Restrict date picker to only show months from the selected year
+    final DateTime firstDate = DateTime(selectedYear, 1, 1);
+    final DateTime lastDate = DateTime(selectedYear, 12, 31);
+    
+    // Set initial date to the first day of the selected year if no date is selected
+    final DateTime initialDate = _selectedDate != null && 
+        _selectedDate!.year == selectedYear 
+        ? _selectedDate! 
+        : firstDate;
 
-  final DateTime? picked = await showDatePicker(
-    context: context,
-    initialDate: _selectedDate != null
-        ? _selectedDate!.isAfter(lastDate)
-            ? lastDate
-            : _selectedDate!
-        : now, // Start from today
-    firstDate: DateTime(2012, 1, 1),
-    lastDate: lastDate,
-  );
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
+      helpText: 'Select date for ${widget.yearName}',
+      cancelText: 'Cancel',
+      confirmText: 'OK',
+    );
 
-  if (picked != null) {
-    setState(() {
-      _selectedDate = picked;
-      _dateController.text =
-          "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
-    });
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+        _dateController.text =
+            "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+      });
+    }
   }
-}
 
 
   Future<void> _pickImage() async {
@@ -234,9 +245,40 @@ class _AddEventDetailsFormState extends State<AddEventDetailsForm> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Year Information
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: colorScheme.primary.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_month,
+                            color: colorScheme.primary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Adding event for year: ${widget.yearName}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    
                     // Date Field
                     Text(
-                      'Event Date',
+                      'Event Date (${widget.yearName})',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -248,7 +290,7 @@ class _AddEventDetailsFormState extends State<AddEventDetailsForm> {
                       controller: _dateController,
                       readOnly: true,
                       decoration: InputDecoration(
-                        hintText: 'Select event date',
+                        hintText: 'Select date from ${widget.yearName}',
                         suffixIcon: IconButton(
                           onPressed: _selectDate,
                           icon: const Icon(Icons.calendar_today),

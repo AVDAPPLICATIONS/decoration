@@ -736,7 +736,7 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
 
       // Open Add Event Details Form for the newly created year
       if (createdYear != null) {
-        _showAddEventDetailsForm(yearId: createdYear.id);
+        _showAddEventDetailsForm(yearId: createdYear.id, yearName: createdYear.yearName);
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -801,7 +801,7 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
           _navigateToEventDetails(eventDetails, yearId: year.id);
         } else {
           // Event not found, show Add Event Details form
-          _showAddEventDetailsForm(yearId: year.id);
+          _showAddEventDetailsForm(yearId: year.id, yearName: year.yearName);
         }
       }
     } catch (e) {
@@ -861,7 +861,19 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
     );
   }
 
-  void _showAddEventDetailsForm({required int yearId}) {
+  void _showAddEventDetailsForm({required int yearId, String? yearName}) {
+    // Get year name from the year provider if not provided
+    final years = ref.read(yearProvider);
+    final year = years.firstWhere(
+      (y) => y.id == yearId,
+      orElse: () => YearModel(
+        id: yearId,
+        yearName: yearName ?? 'Unknown',
+        templateId: widget.templateId ?? 0,
+        createdAt: DateTime.now(),
+      ),
+    );
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -874,6 +886,7 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
         child: AddEventDetailsForm(
           templateId: widget.templateId!,
           yearId: yearId,
+          yearName: year.yearName,
           onEventCreated: (eventData) {
             print(
                 'Event created successfully, navigating to details: $eventData');

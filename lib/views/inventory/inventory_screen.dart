@@ -461,7 +461,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
       keyboardType: keyboardType,
       maxLines: maxLines ?? 1,
       decoration: InputDecoration(
-        labelText: isOptional ? '$label (optional)' : label,
+        labelText: isOptional ? '$label' : label,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),
@@ -497,6 +497,14 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               }),
           const SizedBox(height: 16),
           _buildTextField(
+              label: "Dimensions (e.g.,45cm x 45cm x 90cm)",
+              onChanged: (value) {
+                ref
+                    .read(inventoryFormNotifierProvider.notifier)
+                    .updateFurnitureData(dimensions: value);
+              }),
+          const SizedBox(height: 16),
+          _buildTextField(
               label: "Material",
               onChanged: (value) {
                 ref
@@ -505,28 +513,12 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               }),
           const SizedBox(height: 16),
           _buildTextField(
-              label: "Dimensions (e.g., 45cm x 45cm x 90cm)",
+              label: "Total Quantity",
+              keyboardType: TextInputType.number,
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
-                    .updateFurnitureData(dimensions: value);
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Unit (e.g., piece, set)",
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateFurnitureData(unit: value);
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Notes",
-              maxLines: 3,
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateFurnitureData(notes: value);
+                    .updateFurnitureData(quantity: int.tryParse(value));
               }),
           const SizedBox(height: 16),
           _buildTextField(
@@ -538,15 +530,14 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               }),
           const SizedBox(height: 16),
           _buildTextField(
-              label: "Quantity Available",
-              keyboardType: TextInputType.number,
+              label: "Notes",
+              maxLines: 3,
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
-                    .updateFurnitureData(quantity: int.tryParse(value));
+                    .updateFurnitureData(notes: value);
               }),
         ];
-
       case 'fabric':
       case 'fabrics':
         return [
@@ -717,11 +708,20 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               }),
           const SizedBox(height: 16),
           _buildTextField(
-              label: "Unit (e.g., piece, meter)",
+              label: "Size (e.g., 4m x 3m)",
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
-                    .updateCarpetData(unit: value);
+                    .updateCarpetData(size: value);
+              }),
+          const SizedBox(height: 16),
+          _buildTextField(
+              label: "Quantity Available",
+              keyboardType: TextInputType.number,
+              onChanged: (value) {
+                ref
+                    .read(inventoryFormNotifierProvider.notifier)
+                    .updateCarpetData(stock: int.tryParse(value));
               }),
           const SizedBox(height: 16),
           _buildTextField(
@@ -739,39 +739,6 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
                     .updateCarpetData(notes: value);
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Carpet Type",
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateCarpetData(type: value);
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Material",
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateCarpetData(material: value);
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Size (e.g., 4m x 3m)",
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateCarpetData(size: value);
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Quantity Available",
-              keyboardType: TextInputType.number,
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateCarpetData(stock: int.tryParse(value));
               }),
         ];
 
@@ -1272,7 +1239,21 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
             // Check if this is a furniture, fabric, carpet, or frame structures category and use appropriate API
             final category =
                 ref.read(inventoryFormNotifierProvider).selectedCategory;
-            if (category?.name.toLowerCase() == 'furniture') {
+            print('🔍 Debug: Selected category: ${category?.name} (ID: ${category?.id})');
+            print('🔍 Debug: Category name lowercase: ${category?.name.toLowerCase()}');
+            // More robust category matching
+            final categoryName = category?.name.toLowerCase().trim() ?? '';
+            print('🔍 Debug: Final category name for matching: "$categoryName"');
+            print('🔍 Debug: Category matching logic:');
+            print('  - furniture: ${categoryName == 'furniture'}');
+            print('  - fabric: ${categoryName == 'fabric' || categoryName == 'fabrics'}');
+            print('  - carpet: ${categoryName == 'carpet' || categoryName == 'carpets' || categoryName.contains('carpet')}');
+            print('  - frame structure: ${categoryName == 'frame structure' || categoryName == 'frame structures'}');
+            print('  - murti set: ${categoryName == 'murti set' || categoryName == 'murti sets'}');
+            print('  - thermocol: ${categoryName == 'thermocol' || categoryName == 'thermocol material' || categoryName == 'thermocol materials'}');
+            print('  - stationery: ${categoryName == 'stationery'}');
+            
+            if (categoryName == 'furniture') {
               // Use furniture-specific API
               await ref.read(inventoryProvider.notifier).createFurnitureItem(
                     name: formData['name'],
@@ -1286,8 +1267,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                     itemImageBytes: formData['imageBytes'],
                     itemImageName: formData['imageName'],
                   );
-            } else if (category?.name.toLowerCase() == 'fabric' ||
-                category?.name.toLowerCase() == 'fabrics') {
+            } else if (categoryName == 'fabric' || categoryName == 'fabrics') {
               // Use fabric-specific API
               await ref.read(inventoryProvider.notifier).createFabricItem(
                     name: formData['name'],
@@ -1304,24 +1284,23 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                     itemImageBytes: formData['imageBytes'],
                     itemImageName: formData['imageName'],
                   );
-            } else if (category?.name.toLowerCase() == 'carpet' ||
-                category?.name.toLowerCase() == 'carpets') {
+            } else if (categoryName == 'carpet' || categoryName == 'carpets' || categoryName.contains('carpet')) {
               // Use carpet-specific API
+              print('🔍 Debug: Using carpet API for category: ${category?.name}');
+              print('🔍 Debug: Carpet category ID being passed: ${category?.id ?? 6}');
               await ref.read(inventoryProvider.notifier).createCarpetItem(
                     name: formData['name'],
                     unit: formData['unit'],
                     storageLocation: formData['storage_location'],
                     notes: formData['notes'],
                     quantityAvailable: formData['quantity_available'],
-                    carpetType: formData['carpet_type'],
-                    material: formData['material'],
                     size: formData['size'],
+                    categoryId: category?.id ?? 6, // Use selected category ID or default to 6
                     itemImagePath: formData['imagePath'],
                     itemImageBytes: formData['imageBytes'],
                     itemImageName: formData['imageName'],
                   );
-            } else if (category?.name.toLowerCase() == 'frame structure' ||
-                category?.name.toLowerCase() == 'frame structures') {
+            } else if (categoryName == 'frame structure' || categoryName == 'frame structures') {
               // Use frame structures-specific API
               await ref.read(inventoryProvider.notifier).createFrameStructureItem(
                     name: formData['name'],
@@ -1336,9 +1315,9 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                     itemImageBytes: formData['imageBytes'],
                     itemImageName: formData['imageName'],
                   );
-            } else if (category?.name.toLowerCase() == 'murti set' ||
-                category?.name.toLowerCase() == 'murti sets') {
+            } else if (categoryName == 'murti set' || categoryName == 'murti sets') {
               // Use murti sets-specific API
+              print('🔍 Debug: Using murti sets API for category: ${category?.name}');
               await ref.read(inventoryProvider.notifier).createMurtiSetsItem(
                     name: formData['name'],
                     unit: formData['unit'],
@@ -1352,9 +1331,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                     itemImageBytes: formData['imageBytes'],
                     itemImageName: formData['imageName'],
                   );
-            } else if (category?.name.toLowerCase() == 'thermocol' ||
-                category?.name.toLowerCase() == 'thermocol material' ||
-                category?.name.toLowerCase() == 'thermocol materials') {
+            } else if (categoryName == 'thermocol' || categoryName == 'thermocol material' || categoryName == 'thermocol materials') {
               // Use thermocol materials-specific API
               await ref
                   .read(inventoryProvider.notifier)
@@ -1371,7 +1348,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                     itemImageBytes: formData['imageBytes'],
                     itemImageName: formData['imageName'],
                   );
-            } else if (category?.name.toLowerCase() == 'stationery') {
+            } else if (categoryName == 'stationery') {
               // Use stationery-specific API
               await ref.read(inventoryProvider.notifier).createStationeryItem(
                     name: formData['name'],
@@ -1386,6 +1363,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                   );
             } else {
               // Use general inventory API for other categories
+              print('🔍 Debug: Using general API for category: ${category?.name}');
               await ref.read(inventoryProvider.notifier).createItem(
                     name: formData['name'],
                     categoryId: category?.id ?? 1,
@@ -1419,9 +1397,6 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               }
             });
 
-            // Reset form
-            ref.read(inventoryFormNotifierProvider.notifier).resetForm();
-
             // Refresh inventory data to clear any errors and update the list
             try {
               await ref.read(inventoryProvider.notifier).refreshInventoryData();
@@ -1429,6 +1404,18 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
             } catch (e) {
               print('⚠️ Warning: Could not refresh inventory data: $e');
             }
+
+            // Reset form BEFORE navigation to ensure clean state for next use
+            print('🔍 Debug: About to reset form after successful item creation');
+            ref.read(inventoryFormNotifierProvider.notifier).resetForm();
+            print('🔍 Debug: Form reset completed');
+
+            // Reset loading states
+            setState(() {
+              _isLoading = false;
+              _isSubmitting = false;
+            });
+            print('🔍 Debug: Loading states reset');
 
             // Navigate back with result data using safe navigation
             print('🔍 Debug: Navigating back with form data: $formData');
@@ -1564,19 +1551,15 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
       case 'carpet':
       case 'carpets':
         data['name'] = formState.carpet.name ?? 'Unknown';
-        data['unit'] = formState.carpet.unit ?? 'piece';
+        data['unit'] = 'piece'; // Default unit for carpet items
         data['storage_location'] =
             formState.carpet.storageLocation ?? 'Unknown';
         data['notes'] = formState.carpet.notes ?? 'Carpet item';
         data['quantity_available'] = (formState.carpet.stock ?? 1).toDouble();
         // For carpet API, we need these fields directly in the main data
-        data['carpet_type'] = formState.carpet.type ?? 'Unknown';
-        data['material'] = formState.carpet.material ?? 'Unknown';
         data['size'] = formState.carpet.size ?? 'Unknown';
         // Also keep category_details for general API compatibility
         data['category_details'] = {
-          'carpet_type': formState.carpet.type ?? 'Unknown',
-          'material': formState.carpet.material ?? 'Unknown',
           'size': formState.carpet.size ?? 'Unknown',
         };
         break;

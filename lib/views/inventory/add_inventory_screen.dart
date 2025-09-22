@@ -219,7 +219,9 @@ class InventoryFormNotifier extends StateNotifier<InventoryFormState> {
   }
 
   void resetForm() {
+    print('🔍 Debug: Resetting form state');
     state = const InventoryFormState();
+    print('🔍 Debug: Form state reset completed - selectedCategory: ${state.selectedCategory?.name}');
   }
 
   void setImage(

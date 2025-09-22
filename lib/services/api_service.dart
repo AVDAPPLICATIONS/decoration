@@ -9,31 +9,72 @@ class ApiService {
   ApiService(this.baseUrl);
 
   Future<dynamic> get(String endpoint) async {
-    final url = Uri.parse('$baseUrl$endpoint');
-    print('Making GET request to: $url');
-    final response = await http.get(url, headers: _headers());
-    print('Response status: ${response.statusCode}');
-    print('Response headers: ${response.headers}');
-    print(
-        'Response body (first 200 chars): ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}');
-    return _processResponse(response);
+    try {
+      final url = Uri.parse('$baseUrl$endpoint');
+      print('Making GET request to: $url');
+      final response = await http.get(url, headers: _headers()).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw Exception('Request timeout. Please check your network connection.');
+        },
+      );
+      print('Response status: ${response.statusCode}');
+      print('Response headers: ${response.headers}');
+      print(
+          'Response body (first 200 chars): ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}');
+      return _processResponse(response);
+    } on SocketException {
+      throw Exception('No internet connection. Please check your network and try again.');
+    } on HttpException {
+      throw Exception('Could not reach the server. Please check if the server is running.');
+    } on FormatException {
+      throw Exception('Invalid response from server. Please try again.');
+    } catch (e) {
+      if (e.toString().contains('HandshakeException') || e.toString().contains('WRONG_VERSION_NUMBER')) {
+        throw Exception('SSL/TLS connection error. Please check if the server is running on the correct protocol (HTTP/HTTPS).');
+      }
+      if (e.toString().contains('Connection timed out')) {
+        throw Exception('Connection timed out. Please check your network connection and try again.');
+      }
+      rethrow;
+    }
   }
 
   Future<dynamic> post(String endpoint,
       {required Map<String, dynamic> body}) async {
-    final url = Uri.parse('$baseUrl$endpoint');
-    print('Making POST request to: $url');
-    print('Request body: ${jsonEncode(body)}');
-    print('Request headers: ${_headers()}');
+    try {
+      final url = Uri.parse('$baseUrl$endpoint');
+      print('Making POST request to: $url');
+      print('Request body: ${jsonEncode(body)}');
+      print('Request headers: ${_headers()}');
 
-    final response =
-        await http.post(url, headers: _headers(), body: jsonEncode(body));
+      final response = await http.post(url, headers: _headers(), body: jsonEncode(body)).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw Exception('Request timeout. Please check your network connection.');
+        },
+      );
 
-    print('Response status: ${response.statusCode}');
-    print('Response headers: ${response.headers}');
-    print('Response body: ${response.body}');
+      print('Response status: ${response.statusCode}');
+      print('Response headers: ${response.headers}');
+      print('Response body: ${response.body}');
 
-    return _processResponse(response);
+      return _processResponse(response);
+    } on SocketException {
+      throw Exception('No internet connection. Please check your network and try again.');
+    } on HttpException {
+      throw Exception('Could not reach the server. Please check if the server is running.');
+    } on FormatException {
+      throw Exception('Invalid response from server. Please try again.');
+    } catch (e) {
+      if (e.toString().contains('HandshakeException') || e.toString().contains('WRONG_VERSION_NUMBER')) {
+        throw Exception('SSL/TLS connection error. Please check if the server is running on the correct protocol (HTTP/HTTPS).');
+      }
+      if (e.toString().contains('Connection timed out')) {
+        throw Exception('Connection timed out. Please check your network connection and try again.');
+      }
+      rethrow;
+    }
   }
 
   Future<dynamic> put(String endpoint,

@@ -33,7 +33,6 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
   final widthCtrl = TextEditingController();
   final lengthCtrl = TextEditingController();
   final colorCtrl = TextEditingController();
-  final carpetTypeCtrl = TextEditingController();
   final sizeCtrl = TextEditingController();
   final frameTypeCtrl = TextEditingController();
   final setNumberCtrl = TextEditingController();
@@ -99,8 +98,6 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
         break;
       case 'carpet':
       case 'carpets':
-        carpetTypeCtrl.text = item.carpetType ?? '';
-        materialCtrl.text = item.material ?? '';
         sizeCtrl.text = item.size ?? '';
         break;
       case 'frame structure':
@@ -252,15 +249,12 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
       case 'carpets':
         return [
           _buildTextField('Carpet Name', nameCtrl, required: true),
-          _buildTextField('Unit (e.g., piece, set)', unitCtrl, required: true),
-          _buildTextField('Storage Location', storageLocationCtrl,
-              required: true),
-          _buildTextField('Notes', notesCtrl, maxLines: 3),
-          _buildTextField('Carpet Type', carpetTypeCtrl, required: true),
-          _buildTextField('Material', materialCtrl, required: true),
           _buildTextField('Size', sizeCtrl, required: true),
           _buildTextField('Quantity Available', quantityCtrl,
               keyboardType: TextInputType.number, required: true),
+          _buildTextField('Storage Location', storageLocationCtrl,
+              required: true),
+          _buildTextField('Notes', notesCtrl, maxLines: 3),
         ];
       case 'frame structure':
       case 'frame structures':
@@ -532,9 +526,8 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
                 storageLocation: formData['storage_location'],
                 notes: formData['notes'],
                 quantityAvailable: formData['quantity_available'],
-                carpetType: formData['carpet_type'],
-                material: formData['material'],
                 size: formData['size'],
+                categoryId: int.parse(item.category), // Use the item's category ID
                 itemImagePath: imagePath,
                 itemImageBytes: imageBytes,
                 itemImageName: imageName,
@@ -709,8 +702,7 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
         break;
       case 'carpet':
       case 'carpets':
-        data['carpet_type'] = carpetTypeCtrl.text.trim();
-        data['material'] = materialCtrl.text.trim();
+        data['unit'] = 'piece'; // Default unit for carpet items
         data['size'] = sizeCtrl.text.trim();
         break;
       case 'frame structure':
@@ -754,7 +746,6 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
     widthCtrl.dispose();
     lengthCtrl.dispose();
     colorCtrl.dispose();
-    carpetTypeCtrl.dispose();
     sizeCtrl.dispose();
     frameTypeCtrl.dispose();
     setNumberCtrl.dispose();

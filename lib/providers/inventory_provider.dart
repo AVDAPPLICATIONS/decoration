@@ -13,6 +13,7 @@ class InventoryItem {
   final String storageLocation;
   final String notes;
   final double availableQuantity;
+  final double totalStock;
   final String? material;
   final String? createdAt;
   final String? itemImage;
@@ -27,7 +28,6 @@ class InventoryItem {
   final double? width;
   final double? length;
   final String? color;
-  final String? carpetType;
   final String? size;
   final String? frameType;
   final String? setNumber;
@@ -44,6 +44,7 @@ class InventoryItem {
     required this.storageLocation,
     required this.notes,
     required this.availableQuantity,
+    required this.totalStock,
     this.material,
     this.createdAt,
     this.itemImage,
@@ -56,7 +57,6 @@ class InventoryItem {
     this.width,
     this.length,
     this.color,
-    this.carpetType,
     this.size,
     this.frameType,
     this.setNumber,
@@ -75,6 +75,7 @@ class InventoryItem {
       'storageLocation': storageLocation,
       'notes': notes,
       'availableQuantity': availableQuantity,
+      'totalStock': totalStock,
       'material': material,
       'createdAt': createdAt,
       'itemImage': itemImage,
@@ -87,7 +88,6 @@ class InventoryItem {
       'width': width,
       'length': length,
       'color': color,
-      'carpetType': carpetType,
       'size': size,
       'frameType': frameType,
       'setNumber': setNumber,
@@ -103,6 +103,7 @@ class InventoryItem {
     Map<String, dynamic>? categoryDetails;
 
     print('🔍 Parsing item: ${map['name']} (Category: $categoryName)');
+    print('🔍 Raw category data: category_id=${map['category_id']}, category_name=${map['category_name']}');
 
     // Get the appropriate details object based on category
     switch (categoryName) {
@@ -154,6 +155,8 @@ class InventoryItem {
       notes: map['notes'] ?? '',
       availableQuantity:
           double.tryParse(map['available_quantity']?.toString() ?? '0') ?? 0.0,
+      totalStock:
+          double.tryParse(map['total_stock']?.toString() ?? '0') ?? 0.0,
       material: categoryDetails?['material'] ?? map['material'],
       createdAt: map['created_at'],
       itemImage: map['item_image'],
@@ -173,7 +176,6 @@ class InventoryItem {
           ? double.tryParse(categoryDetails!['length'].toString())
           : null,
       color: categoryDetails?['color'],
-      carpetType: categoryDetails?['carpet_type'],
       size: categoryDetails?['size'],
       frameType: categoryDetails?['frame_type'],
       setNumber: categoryDetails?['set_number'],
@@ -194,6 +196,7 @@ class InventoryItem {
     String? storageLocation,
     String? notes,
     double? availableQuantity,
+    double? totalStock,
     String? material,
     String? createdAt,
     String? itemImage,
@@ -206,7 +209,6 @@ class InventoryItem {
     double? width,
     double? length,
     String? color,
-    String? carpetType,
     String? size,
     String? frameType,
     String? setNumber,
@@ -223,6 +225,7 @@ class InventoryItem {
       storageLocation: storageLocation ?? this.storageLocation,
       notes: notes ?? this.notes,
       availableQuantity: availableQuantity ?? this.availableQuantity,
+      totalStock: totalStock ?? this.totalStock,
       material: material ?? this.material,
       createdAt: createdAt ?? this.createdAt,
       itemImage: itemImage ?? this.itemImage,
@@ -235,7 +238,6 @@ class InventoryItem {
       width: width ?? this.width,
       length: length ?? this.length,
       color: color ?? this.color,
-      carpetType: carpetType ?? this.carpetType,
       size: size ?? this.size,
       frameType: frameType ?? this.frameType,
       setNumber: setNumber ?? this.setNumber,
@@ -274,14 +276,44 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
 
       if (itemsResponse['success'] == true) {
         final itemsData = itemsResponse['data'] as List;
-        final items =
-            itemsData.map((item) => InventoryItem.fromMap(item)).toList();
-        state = items;
+        print('🔍 Debug: Parsing ${itemsData.length} inventory items');
+        
+        try {
+          final items = itemsData.map((item) {
+            try {
+              return InventoryItem.fromMap(item);
+            } catch (e) {
+              print('❌ Error parsing item: $item');
+              print('❌ Parsing error: $e');
+              // Return a default item to prevent complete failure
+              return InventoryItem(
+                id: item['id']?.toString() ?? 'unknown',
+                name: item['name']?.toString() ?? 'Unknown Item',
+                category: item['category_id']?.toString() ?? '0',
+                categoryName: item['category_name']?.toString() ?? 'Unknown',
+                unit: item['unit']?.toString() ?? 'piece',
+                storageLocation: item['storage_location']?.toString() ?? 'Unknown',
+                notes: item['notes']?.toString() ?? '',
+                availableQuantity: double.tryParse(item['available_quantity']?.toString() ?? '0') ?? 0.0,
+                totalStock: double.tryParse(item['total_stock']?.toString() ?? '0') ?? 0.0,
+              );
+            }
+          }).toList();
+          state = items;
+          print('✅ Successfully parsed ${items.length} inventory items');
+        } catch (e) {
+          print('❌ Error parsing inventory items: $e');
+          throw Exception('Failed to parse inventory items: $e');
+        }
       }
 
       if (categoriesResponse['success'] == true) {
         _categories =
             List<Map<String, dynamic>>.from(categoriesResponse['data']);
+        print('🔍 Debug: Loaded ${_categories.length} categories:');
+        for (var cat in _categories) {
+          print('  - ID: ${cat['id']}, Name: "${cat['name']}"');
+        }
       }
 
       print('✅ Inventory data loaded successfully');
@@ -657,9 +689,8 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
-    required String carpetType,
-    required String material,
     required String size,
+    required int categoryId,
     File? itemImage,
     String? itemImagePath,
     Uint8List? itemImageBytes,
@@ -672,13 +703,12 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       final response = await _inventoryService.updateCarpetItem(
         id: id,
         name: name,
-        unit: unit,
+        unit: 'piece', // Default unit for carpet items
         storageLocation: storageLocation,
         notes: notes,
         quantityAvailable: quantityAvailable,
-        carpetType: carpetType,
-        material: material,
         size: size,
+        categoryId: categoryId,
         itemImage: itemImage,
         itemImagePath: itemImagePath,
         itemImageBytes: itemImageBytes,
@@ -1217,9 +1247,8 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
-    required String carpetType,
-    required String material,
     required String size,
+    required int categoryId,
     File? itemImage,
     String? itemImagePath,
     Uint8List? itemImageBytes,
@@ -1231,13 +1260,12 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
     try {
       final response = await _inventoryService.createCarpetItem(
         name: name,
-        unit: unit,
+        unit: 'piece', // Default unit for carpet items
         storageLocation: storageLocation,
         notes: notes,
         quantityAvailable: quantityAvailable,
-        carpetType: carpetType,
-        material: material,
         size: size,
+        categoryId: categoryId,
         itemImage: itemImage,
         itemImagePath: itemImagePath,
         itemImageBytes: itemImageBytes,
@@ -1323,6 +1351,7 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
               storageLocation: '',
               notes: '',
               availableQuantity: 0.0,
+              totalStock: 0.0,
             ));
     return item.availableQuantity;
   }
@@ -1339,6 +1368,9 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
 
   // Get total count of categories
   int get totalCategoriesCount => _categories.length;
+
+  // Get total stock across all items
+  double get totalStockCount => state.fold(0.0, (sum, item) => sum + item.totalStock);
 
   // Get low stock items count
   int get lowStockCount =>

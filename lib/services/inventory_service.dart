@@ -62,24 +62,54 @@ class InventoryService {
 
   // Get all inventory items
   Future<Map<String, dynamic>> getAllItems() async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/api/inventory/items/getAll'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({}),
-    );
+    try {
+      print('🔍 Debug: Fetching inventory items from: $baseUrl/api/inventory/items/getAll');
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/inventory/items/getAll'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({}),
+      ).timeout(const Duration(seconds: 30));
 
-    if (response.statusCode == 200) {
-      final responseData = jsonDecode(response.body);
-      if (responseData['success'] == true) {
-        return responseData;
+      print('🔍 Debug: Response status: ${response.statusCode}');
+      print('🔍 Debug: Response body length: ${response.body.length}');
+
+      if (response.statusCode == 200) {
+        try {
+          final responseData = jsonDecode(response.body);
+          if (responseData['success'] == true) {
+            print('✅ Successfully fetched inventory items');
+            print('🔍 Debug: API Response structure:');
+            print('  - success: ${responseData['success']}');
+            print('  - message: ${responseData['message']}');
+            print('  - data type: ${responseData['data'].runtimeType}');
+            print('  - data length: ${(responseData['data'] as List).length}');
+            if ((responseData['data'] as List).isNotEmpty) {
+              print('  - First item structure: ${(responseData['data'] as List).first}');
+            }
+            return responseData;
+          } else {
+            throw Exception(
+                responseData['message'] ?? 'Failed to fetch inventory items');
+          }
+        } catch (e) {
+          print('❌ Error parsing JSON response: $e');
+          print('❌ Response body: ${response.body}');
+          throw Exception('Invalid response format from server');
+        }
       } else {
-        throw Exception(
-            responseData['message'] ?? 'Failed to fetch inventory items');
+        try {
+          final errorData = jsonDecode(response.body);
+          throw Exception(
+              errorData['message'] ?? 'Failed to fetch inventory items');
+        } catch (e) {
+          print('❌ Error parsing error response: $e');
+          print('❌ Error response body: ${response.body}');
+          throw Exception('Server error (${response.statusCode})');
+        }
       }
-    } else {
-      final errorData = jsonDecode(response.body);
-      throw Exception(
-          errorData['message'] ?? 'Failed to fetch inventory items');
+    } catch (e) {
+      print('❌ Error in getAllItems: $e');
+      rethrow;
     }
   }
 
@@ -216,11 +246,11 @@ class InventoryService {
 
       // Add form fields
       request.fields['name'] = name;
-      request.fields['material'] = material;
       request.fields['dimensions'] = dimensions;
       request.fields['unit'] = unit;
       request.fields['notes'] = notes;
-      request.fields['storage_location'] = storageLocation;
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['storage_location'] = storageLocation == 'Unknown' ? '' : storageLocation;
       request.fields['quantity_available'] = quantityAvailable.toString();
 
       // Add image file if provided
@@ -350,13 +380,17 @@ class InventoryService {
 
       // Add form fields
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
-      request.fields['storage_location'] = storageLocation;
+      request.fields['unit'] = 'piece'; // Default unit for murti sets items
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['storage_location'] = storageLocation == 'Unknown' ? '' : storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
       request.fields['set_number'] = setNumber;
-      request.fields['material'] = material;
-      request.fields['dimensions'] = dimensions;
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['material'] = material == 'Unknown' ? '' : material;
+      request.fields['dimensions'] = dimensions == 'Unknown' ? '' : dimensions;
+      // Add category_id to ensure correct categorization
+      request.fields['category_id'] = '5'; // Murti Sets category ID
 
       // Add image file if provided
       print('🔍 Debug Murti Sets API: itemImage = $itemImage');
@@ -430,6 +464,7 @@ class InventoryService {
 
       // Debug: Print request details
       print('🔍 Debug Murti Sets API: Request fields: ${request.fields}');
+      print('🔍 Debug Murti Sets API: Category ID being sent: ${request.fields['category_id']}');
       print(
           '🔍 Debug Murti Sets API: Request files count: ${request.files.length}');
       for (var file in request.files) {
@@ -484,11 +519,15 @@ class InventoryService {
 
       // Add form fields
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
-      request.fields['storage_location'] = storageLocation;
+      request.fields['unit'] = 'piece'; // Default unit for stationery items
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['storage_location'] = storageLocation == 'Unknown' ? '' : storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
-      request.fields['specifications'] = specifications;
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['specifications'] = specifications == 'Unknown' ? '' : specifications;
+      // Add category_id to ensure correct categorization
+      request.fields['category_id'] = '7'; // Stationery category ID
 
       // Add image file if provided
       print('🔍 Debug Stationery API: itemImage = $itemImage');
@@ -562,6 +601,7 @@ class InventoryService {
 
       // Debug: Print request details
       print('🔍 Debug Stationery API: Request fields: ${request.fields}');
+      print('🔍 Debug Stationery API: Category ID being sent: ${request.fields['category_id']}');
       print(
           '🔍 Debug Stationery API: Request files count: ${request.files.length}');
       for (var file in request.files) {
@@ -618,13 +658,17 @@ class InventoryService {
 
       // Add form fields
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
-      request.fields['storage_location'] = storageLocation;
+      request.fields['unit'] = 'piece'; // Default unit for thermocol items
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['storage_location'] = storageLocation == 'Unknown' ? '' : storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
-      request.fields['thermocol_type'] = thermocolType;
-      request.fields['dimensions'] = dimensions;
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['thermocol_type'] = thermocolType == 'Unknown' ? '' : thermocolType;
+      request.fields['dimensions'] = dimensions == 'Unknown' ? '' : dimensions;
       request.fields['density'] = density.toString();
+      // Add category_id to ensure correct categorization
+      request.fields['category_id'] = '6'; // Thermocol Materials category ID
 
       // Add image file if provided
       print('🔍 Debug Thermocol Materials API: itemImage = $itemImage');
@@ -705,6 +749,7 @@ class InventoryService {
       // Debug: Print request details
       print(
           '🔍 Debug Thermocol Materials API: Request fields: ${request.fields}');
+      print('🔍 Debug Thermocol Materials API: Category ID being sent: ${request.fields['category_id']}');
       print(
           '🔍 Debug Thermocol Materials API: Request files count: ${request.files.length}');
       for (var file in request.files) {
@@ -764,11 +809,11 @@ class InventoryService {
       // Add form fields
       request.fields['id'] = id.toString();
       request.fields['name'] = name;
-      request.fields['material'] = material;
       request.fields['dimensions'] = dimensions;
       request.fields['unit'] = unit;
       request.fields['notes'] = notes;
-      request.fields['storage_location'] = storageLocation;
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['storage_location'] = storageLocation == 'Unknown' ? '' : storageLocation;
       request.fields['quantity_available'] = quantityAvailable.toString();
 
       // Add image file if provided
@@ -888,9 +933,8 @@ class InventoryService {
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
-    required String carpetType,
-    required String material,
     required String size,
+    required int categoryId,
     File? itemImage,
     String? itemImagePath,
     Uint8List? itemImageBytes,
@@ -905,13 +949,13 @@ class InventoryService {
       // Add form fields
       request.fields['id'] = id.toString();
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
-      request.fields['storage_location'] = storageLocation;
+      request.fields['unit'] = 'piece'; // Default unit for carpet items
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['storage_location'] = storageLocation == 'Unknown' ? '' : storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
-      request.fields['carpet_type'] = carpetType;
-      request.fields['material'] = material;
       request.fields['size'] = size;
+      request.fields['category_id'] = categoryId.toString();
 
       // Add image file if provided
       print('🔍 Debug Carpet Update API: itemImage = $itemImage');
@@ -1045,8 +1089,9 @@ class InventoryService {
       // Add form fields
       request.fields['id'] = id.toString();
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
-      request.fields['storage_location'] = storageLocation;
+      request.fields['unit'] = 'piece'; // Default unit for carpet items
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['storage_location'] = storageLocation == 'Unknown' ? '' : storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
       request.fields['fabric_type'] = fabricType;
@@ -1185,12 +1230,12 @@ class InventoryService {
       // Add form fields
       request.fields['id'] = id.toString();
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
-      request.fields['storage_location'] = storageLocation;
+      request.fields['unit'] = 'piece'; // Default unit for carpet items
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['storage_location'] = storageLocation == 'Unknown' ? '' : storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
       request.fields['frame_type'] = frameType;
-      request.fields['material'] = material;
       request.fields['dimensions'] = dimensions;
 
       // Add image file if provided
@@ -1335,8 +1380,9 @@ class InventoryService {
       // Add form fields
       request.fields['id'] = id.toString();
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
-      request.fields['storage_location'] = storageLocation;
+      request.fields['unit'] = 'piece'; // Default unit for carpet items
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['storage_location'] = storageLocation == 'Unknown' ? '' : storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
       request.fields['thermocol_type'] = thermocolType;
@@ -1485,13 +1531,15 @@ class InventoryService {
       // Add form fields
       request.fields['id'] = id.toString();
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
-      request.fields['storage_location'] = storageLocation;
+      request.fields['unit'] = 'piece'; // Default unit for carpet items
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['storage_location'] = storageLocation == 'Unknown' ? '' : storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
       request.fields['set_number'] = setNumber;
-      request.fields['material'] = material;
-      request.fields['dimensions'] = dimensions;
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['material'] = material == 'Unknown' ? '' : material;
+      request.fields['dimensions'] = dimensions == 'Unknown' ? '' : dimensions;
 
       // Add image file if provided
       print('🔍 Debug Murti Sets Update API: itemImage = $itemImage');
@@ -1627,11 +1675,13 @@ class InventoryService {
       // Add form fields
       request.fields['id'] = id.toString();
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
-      request.fields['storage_location'] = storageLocation;
+      request.fields['unit'] = 'piece'; // Default unit for carpet items
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['storage_location'] = storageLocation == 'Unknown' ? '' : storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
-      request.fields['specifications'] = specifications;
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['specifications'] = specifications == 'Unknown' ? '' : specifications;
 
       // Add image file if provided
       print('🔍 Debug Stationery Update API: itemImage = $itemImage');
@@ -2010,13 +2060,17 @@ class InventoryService {
 
       // Add form fields
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
-      request.fields['storage_location'] = storageLocation;
+      request.fields['unit'] = 'piece'; // Default unit for frame structure items
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['storage_location'] = storageLocation == 'Unknown' ? '' : storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
-      request.fields['frame_type'] = frameType;
-      request.fields['material'] = material;
-      request.fields['dimensions'] = dimensions;
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['frame_type'] = frameType == 'Unknown' ? '' : frameType;
+      request.fields['material'] = material == 'Unknown' ? '' : material;
+      request.fields['dimensions'] = dimensions == 'Unknown' ? '' : dimensions;
+      // Add category_id to ensure correct categorization
+      request.fields['category_id'] = '4'; // Frame Structure category ID
 
       // Add image file if provided
       print('🔍 Debug Frame Structure API: itemImage = $itemImage');
@@ -2093,6 +2147,7 @@ class InventoryService {
 
       // Debug: Print request details
       print('🔍 Debug Frame Structure API: Request fields: ${request.fields}');
+      print('🔍 Debug Frame Structure API: Category ID being sent: ${request.fields['category_id']}');
       print(
           '🔍 Debug Frame Structure API: Request files count: ${request.files.length}');
       for (var file in request.files) {
@@ -2152,15 +2207,21 @@ class InventoryService {
 
       // Add form fields
       request.fields['name'] = name;
-      request.fields['fabric_type'] = fabricType;
-      request.fields['pattern'] = pattern;
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['fabric_type'] = fabricType == 'Unknown' ? '' : fabricType;
+      request.fields['pattern'] = pattern == 'Unknown' ? '' : pattern;
       request.fields['width'] = width.toString();
       request.fields['length'] = length.toString();
-      request.fields['color'] = color;
+      // Add size field as required by API (combining width and length)
+      request.fields['size'] = '${width.toString()} x ${length.toString()}';
+      request.fields['color'] = color == 'Unknown' ? '' : color;
       request.fields['unit'] = unit;
-      request.fields['storage_location'] = storageLocation;
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['storage_location'] = storageLocation == 'Unknown' ? '' : storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
+      // Add category_id to ensure correct categorization
+      request.fields['category_id'] = '3'; // Fabric category ID
 
       // Add image file if provided
       print('🔍 Debug Fabric API: itemImage = $itemImage');
@@ -2231,6 +2292,7 @@ class InventoryService {
 
       // Debug: Print request details
       print('🔍 Debug Fabric API: Request fields: ${request.fields}');
+      print('🔍 Debug Fabric API: Category ID being sent: ${request.fields['category_id']}');
       print(
           '🔍 Debug Fabric API: Request files count: ${request.files.length}');
       for (var file in request.files) {
@@ -2270,9 +2332,8 @@ class InventoryService {
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
-    required String carpetType,
-    required String material,
     required String size,
+    required int categoryId,
     File? itemImage,
     String? itemImagePath,
     Uint8List? itemImageBytes,
@@ -2286,13 +2347,13 @@ class InventoryService {
 
       // Add form fields
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
-      request.fields['storage_location'] = storageLocation;
+      request.fields['unit'] = 'piece'; // Default unit for carpet items
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['storage_location'] = storageLocation == 'Unknown' ? '' : storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
-      request.fields['carpet_type'] = carpetType;
-      request.fields['material'] = material;
       request.fields['size'] = size;
+      request.fields['category_id'] = categoryId.toString();
 
       // Add image file if provided
       print('🔍 Debug Carpet API: itemImage = $itemImage');
@@ -2363,6 +2424,7 @@ class InventoryService {
 
       // Debug: Print request details
       print('🔍 Debug Carpet API: Request fields: ${request.fields}');
+      print('🔍 Debug Carpet API: Category ID being sent: ${request.fields['category_id']}');
       print(
           '🔍 Debug Carpet API: Request files count: ${request.files.length}');
       for (var file in request.files) {
@@ -2376,6 +2438,20 @@ class InventoryService {
 
       print('🔍 Debug Carpet API: Response status: ${response.statusCode}');
       print('🔍 Debug Carpet API: Response body: ${response.body}');
+      
+      // Log the response data to see what category was actually assigned
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        try {
+          final responseData = jsonDecode(response.body);
+          if (responseData['success'] == true && responseData['data'] != null) {
+            final itemData = responseData['data'];
+            print('🔍 Debug Carpet API: Created item category_id: ${itemData['category_id']}');
+            print('🔍 Debug Carpet API: Created item category_name: ${itemData['category_name']}');
+          }
+        } catch (e) {
+          print('🔍 Debug Carpet API: Could not parse response data: $e');
+        }
+      }
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         try {
@@ -2439,7 +2515,8 @@ class InventoryService {
       request.fields['name'] = name;
       request.fields['category_id'] = categoryId.toString();
       request.fields['unit'] = unit;
-      request.fields['storage_location'] = storageLocation;
+      // Handle "Unknown" values by converting them to empty strings
+      request.fields['storage_location'] = storageLocation == 'Unknown' ? '' : storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
 
