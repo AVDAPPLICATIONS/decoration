@@ -29,6 +29,10 @@ class _AddCostDialogState extends State<AddCostDialog> {
   bool _isSubmitting = false;
   File? _selectedReceiptFile;
   DateTime _selectedDate = DateTime.now();
+  
+  // Validation states
+  String? _descriptionError;
+  String? _amountError;
 
   @override
   void initState() {
@@ -55,14 +59,52 @@ class _AddCostDialogState extends State<AddCostDialog> {
       // Adding new cost
       _dateController.text = DateFormat('yyyy-MM-dd').format(_selectedDate);
     }
+
+    // Add listeners for real-time validation
+    _descriptionController.addListener(_validateDescription);
+    _amountController.addListener(_validateAmount);
   }
 
   @override
   void dispose() {
+    _descriptionController.removeListener(_validateDescription);
+    _amountController.removeListener(_validateAmount);
     _descriptionController.dispose();
     _amountController.dispose();
     _dateController.dispose();
     super.dispose();
+  }
+
+  void _validateDescription() {
+    final text = _descriptionController.text.trim();
+    setState(() {
+      if (text.isEmpty) {
+        _descriptionError = 'Please enter a description';
+      } else {
+        _descriptionError = null;
+      }
+    });
+  }
+
+  void _validateAmount() {
+    final text = _amountController.text.trim();
+    setState(() {
+      if (text.isEmpty) {
+        _amountError = 'Please enter an amount';
+      } else {
+        final amount = double.tryParse(text);
+        if (amount == null || amount <= 0) {
+          _amountError = 'Please enter a valid amount';
+        } else {
+          _amountError = null;
+        }
+      }
+    });
+  }
+
+  void _validateAllFields() {
+    _validateDescription();
+    _validateAmount();
   }
 
   Future<void> _selectDate() async {
@@ -133,20 +175,16 @@ class _AddCostDialogState extends State<AddCostDialog> {
   }
 
   Future<void> _submitCost() async {
-    if (_descriptionController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a description')),
-      );
-      return;
+    // Validate all fields
+    _validateAllFields();
+    
+    // Check if there are any validation errors
+    if (_descriptionError != null || _amountError != null) {
+      return; // Don't proceed if there are validation errors
     }
 
-    final amount = double.tryParse(_amountController.text);
-    if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid amount')),
-      );
-      return;
-    }
+    // Parse amount since validation passed
+    final amount = double.parse(_amountController.text.trim());
 
     setState(() {
       _isSubmitting = true;
@@ -280,6 +318,7 @@ class _AddCostDialogState extends State<AddCostDialog> {
                       label: 'Description *',
                       hintText: 'Enter cost description',
                       colorScheme: colorScheme,
+                      errorText: _descriptionError,
                     ),
 
                     const SizedBox(height: 20),
@@ -288,10 +327,11 @@ class _AddCostDialogState extends State<AddCostDialog> {
                     _buildInputField(
                       controller: _amountController,
                       icon: Icons.currency_rupee,
-                      label: 'Amount (₹) *',
+                      label: 'Amount (Rs) *',
                       hintText: 'Enter amount',
                       keyboardType: TextInputType.number,
                       colorScheme: colorScheme,
+                      errorText: _amountError,
                     ),
 
                     const SizedBox(height: 20),
@@ -382,6 +422,7 @@ class _AddCostDialogState extends State<AddCostDialog> {
     required String hintText,
     TextInputType? keyboardType,
     required ColorScheme colorScheme,
+    String? errorText,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -403,15 +444,29 @@ class _AddCostDialogState extends State<AddCostDialog> {
             prefixIcon: Icon(icon, color: Colors.grey[600]),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
+              borderSide: BorderSide(
+                color: errorText != null ? Colors.red : Colors.grey[300]!,
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey[300]!),
+              borderSide: BorderSide(
+                color: errorText != null ? Colors.red : Colors.grey[300]!,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: colorScheme.primary),
+              borderSide: BorderSide(
+                color: errorText != null ? Colors.red : colorScheme.primary,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Colors.red),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Colors.red),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -419,6 +474,16 @@ class _AddCostDialogState extends State<AddCostDialog> {
             ),
           ),
         ),
+        if (errorText != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            errorText,
+            style: const TextStyle(
+              color: Colors.red,
+              fontSize: 12,
+            ),
+          ),
+        ],
       ],
     );
   }

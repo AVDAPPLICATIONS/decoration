@@ -339,8 +339,8 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                 },
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Theme.of(context).colorScheme.surface,
-                icon: const Icon(Icons.add),
-                label: const Text('Add'),
+                // icon: const Icon(Icons.add),
+                label: const Icon(Icons.add),
                 elevation: 12,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),

@@ -156,7 +156,7 @@ class CostTab extends ConsumerWidget {
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
                   pw.Text(
-                    'Total Cost:',
+                    'Total Cost sz:',
                     style: pw.TextStyle(
                       fontSize: 18,
                       fontWeight: pw.FontWeight.bold,
@@ -237,29 +237,29 @@ class CostTab extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 20),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Event Costs',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.primary,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Manage and track all expenses',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  // Expanded(
+                  //   child: Column(
+                  //     crossAxisAlignment: CrossAxisAlignment.start,
+                  //     children: [
+                  //       Text(
+                  //         'Event Costs',
+                  //         style: TextStyle(
+                  //           fontSize: 24,
+                  //           fontWeight: FontWeight.bold,
+                  //           color: colorScheme.primary,
+                  //         ),
+                  //       ),
+                  //       const SizedBox(height: 4),
+                  //       Text(
+                  //         'Manage and track all expenses',
+                  //         style: TextStyle(
+                  //           fontSize: 16,
+                  //           color: colorScheme.onSurfaceVariant,
+                  //         ),
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
                 ],
               ),
             ),

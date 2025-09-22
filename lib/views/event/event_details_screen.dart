@@ -4,6 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'dart:convert';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:intl/intl.dart';
 import '../../utils/constants.dart';
 import '../../services/gallery_service.dart';
 import '../../services/event_service.dart';
@@ -79,6 +83,20 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
     _subTabController.dispose();
     _inventoryTabController.dispose();
     super.dispose();
+  }
+  void _handleFabAction() {
+    if (_subTabController.index == 0 && _mainTabController.index == 1) {
+      _addDesignImage(); // when first tab is active
+    } else if (_subTabController.index == 1 && _mainTabController.index == 1) {
+      _addFinalDecorationImage(); // when second tab is active
+    }
+    else if (_mainTabController.index == 2){
+      _showAddCostDialog();
+    }
+    else if (_mainTabController.index == 0){
+      // _IssueItemDialogState();
+      _showIssueItemDialog();
+    }
   }
 
   Future<void> _refreshEventData() async {
@@ -178,6 +196,15 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         return true;
       },
       child: Scaffold(
+        floatingActionButton: FloatingActionButton(
+          onPressed: _handleFabAction,
+          backgroundColor: colorScheme.primary,
+          child: Icon(
+            Icons.add,
+            color: colorScheme.onPrimary,
+          ),
+        ),
+
         backgroundColor: colorScheme.background,
         body: Column(
           children: [
@@ -640,81 +667,43 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
           color: Colors.white,
           child: Column(
             children: [
-              // Event Costs Card
-              Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceVariant,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[50],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.account_balance_wallet,
-                        color: Colors.grey[600],
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Event Costs',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey[800],
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Manage and track all expenses',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              const SizedBox(width: 26),
 
               // Total Cost Card
               Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: colorScheme.primary,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
+                    // Left Icon
                     Container(
-                      width: 48,
-                      height: 48,
+                      width: 52,
+                      height: 52,
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
                         Icons.calculate,
                         color: Colors.white,
-                        size: 24,
+                        size: 26,
                       ),
                     ),
+
                     const SizedBox(width: 16),
+
+                    // Texts
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -722,15 +711,16 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
                           Text(
                             'Total Cost',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
                               color: Colors.white.withOpacity(0.8),
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '₹${totalCost.toStringAsFixed(2)}',
+                            'Rs${totalCost.toStringAsFixed(2)}',
                             style: const TextStyle(
-                              fontSize: 24,
+                              fontSize: 22,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
@@ -738,93 +728,22 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
                         ],
                       ),
                     ),
-                    Icon(
-                      Icons.receipt_long,
-                      color: Colors.white.withOpacity(0.8),
-                      size: 24,
-                    ),
-                  ],
-                ),
-              ),
 
-              const SizedBox(height: 16),
-
-              // Action Buttons
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    // Add Cost Button
-                    Expanded(
+                    // Right Icon - PDF Export
+                    GestureDetector(
+                      onTap: () => _exportCostsToPDF(costs),
                       child: Container(
-                        height: 56,
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: colorScheme.primary,
-                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.white.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () => _showAddCostDialog(),
-                            borderRadius: BorderRadius.circular(12),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: 24,
-                                  height: 24,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.add,
-                                    color: colorScheme.primary,
-                                    size: 18,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                const Text(
-                                  'Add Cost',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Export PDF Button
-                    Container(
-                      height: 56,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[50],
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: costs.isNotEmpty
-                              ? () => _exportCostsToPDF(costs)
-                              : null,
-                          borderRadius: BorderRadius.circular(12),
-                          child: Center(
-                            child: Text(
-                              'Export PDF',
-                              style: TextStyle(
-                                color: costs.isNotEmpty
-                                    ? Colors.grey[700]
-                                    : Colors.grey[400],
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                        child: Tooltip(
+                          message: 'Export costs to PDF',
+                          child: Icon(
+                            Icons.receipt_long,
+                            color: Colors.white.withOpacity(0.9),
+                            size: 26,
                           ),
                         ),
                       ),
@@ -833,7 +752,8 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 8),
+
 
               // Content Area
               Expanded(
@@ -904,12 +824,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
           ),
 
           // Bottom add button
-          Positioned(
-            bottom: 16,
-            left: 16,
-            right: 16,
-            child: _buildAddDesignImageButton(),
-          ),
+
         ],
       ),
     );
@@ -960,14 +875,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
               ),
             ],
           ),
-        ),
-
-        // Bottom add button
-        Positioned(
-          bottom: 16,
-          left: 16,
-          right: 16,
-          child: _buildAddFinalDecorationButton(),
         ),
       ],
     );
@@ -1060,51 +967,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
     );
   }
 
-  Widget _buildAddDesignImageButton() {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      width: double.infinity,
-      height: 56,
-      decoration: BoxDecoration(
-        color: colorScheme.primary,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _addDesignImage(),
-          borderRadius: BorderRadius.circular(12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: colorScheme.onPrimary,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.add,
-                  color: colorScheme.primary,
-                  size: 18,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Add Design Image',
-                style: TextStyle(
-                  color: colorScheme.onPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   void _showDeleteConfirmation() {
     showDialog(
@@ -1235,51 +1097,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
     );
   }
 
-  Widget _buildAddFinalDecorationButton() {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      width: double.infinity,
-      height: 56,
-      decoration: BoxDecoration(
-        color: colorScheme.primary,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _addFinalDecorationImage(),
-          borderRadius: BorderRadius.circular(12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: colorScheme.onPrimary,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.add,
-                  color: colorScheme.primary,
-                  size: 18,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Add Final Decoration Image',
-                style: TextStyle(
-                  color: colorScheme.onPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   void _addFinalDecorationImage() {
     showDialog(
@@ -1489,20 +1306,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: colorScheme.primary,
-              ),
-            ),
-          ),
-          // Issue Item button
-          ElevatedButton.icon(
-            onPressed: () => _showIssueItemDialog(),
-            icon: const Icon(Icons.add, size: 18),
-            label: const Text('Issue Item'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: colorScheme.primary,
-              foregroundColor: colorScheme.onPrimary,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
               ),
             ),
           ),
@@ -2491,12 +2294,13 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
 
   Widget _buildCostCard(dynamic cost, int index) {
     final colorScheme = Theme.of(context).colorScheme;
-    // Ensure cost is a Map, otherwise create a default one
+
     Map<String, dynamic> costMap;
     if (cost is Map<String, dynamic>) {
       costMap = cost;
     } else {
       costMap = {
+        'id': index,
         'amount': 0.0,
         'description': 'Cost Item',
         'uploaded_at': DateTime.now().toIso8601String(),
@@ -2509,156 +2313,165 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
     final documentUrl = costMap['document_url'];
     final documentType = costMap['document_type'];
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+    return Dismissible(
+      key: Key('cost_${costMap['id'] ?? index}'),
+      direction: DismissDirection.horizontal,
+      background: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.green,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.edit,
+              color: colorScheme.onPrimary,
+              size: 28,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Edit',
+              style: TextStyle(
+                color: colorScheme.onPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+      secondaryBackground: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.red,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.delete,
+              color: colorScheme.onPrimary,
+              size: 28,
             ),
-            child: Icon(
-              Icons.attach_money,
-              color: colorScheme.primary,
-              size: 24,
+            const SizedBox(height: 4),
+            Text(
+              'Delete',
+              style: TextStyle(
+                color: colorScheme.onPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
             ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  description,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+          ],
+        ),
+      ),
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          // Swiped from left → right (Edit)
+          _editCost(costMap);
+          return false; // Don’t actually dismiss, just trigger edit
+        } else if (direction == DismissDirection.endToStart) {
+          // Swiped from right → left (Delete)
+          final confirm = await _showDeleteCostDialog(costMap['id']);
+          return confirm ?? false; // Dismiss only if confirmed
+        }
+        return false;
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              spreadRadius: 0,
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.attach_money,
+                color: colorScheme.primary,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    description,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _formatDate(date),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                if (documentUrl != null) ...[
                   const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(
-                        documentType == 'pdf'
-                            ? Icons.picture_as_pdf
-                            : Icons.image,
-                        size: 16,
-                        color: Colors.grey[600],
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          'Receipt attached',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
+                  Text(
+                    _formatDate(date),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  if (documentUrl != null) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          documentType == 'pdf'
+                              ? Icons.picture_as_pdf
+                              : Icons.image,
+                          size: 16,
+                          color: Colors.grey[600],
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            'Receipt attached',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '₹${amount.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
+            Text(
+              'Rs${amount.toStringAsFixed(2)}',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
               ),
-              const SizedBox(height: 8),
-              // Action buttons
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // View button
-                  if (documentUrl != null)
-                    GestureDetector(
-                      onTap: () => _viewCostDocument(documentUrl, documentType),
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Icon(
-                          Icons.visibility,
-                          color: Colors.blue,
-                          size: 16,
-                        ),
-                      ),
-                    ),
-                  if (documentUrl != null) const SizedBox(width: 8),
-                  // Edit button
-                  GestureDetector(
-                    onTap: () => _editCost(costMap),
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Icon(
-                        Icons.edit,
-                        color: Colors.orange,
-                        size: 16,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Delete button
-                  GestureDetector(
-                    onTap: () => _showDeleteCostDialog(costMap['id']),
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Icon(
-                        Icons.delete_outline,
-                        color: Colors.red,
-                        size: 16,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -2685,19 +2498,22 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
     );
   }
 
-  void _showDeleteCostDialog(int costId) {
-    showDialog(
+  Future<bool?> _showDeleteCostDialog(int costId) {
+    return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Cost'),
         content: const Text('Are you sure you want to delete this cost entry?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () => _deleteCost(costId),
+            onPressed: () async {
+              Navigator.pop(context, true);
+              await _deleteCost(costId);
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
@@ -2785,14 +2601,233 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
     }
   }
 
-  void _exportCostsToPDF(List<dynamic> costs) {
-    // TODO: Implement PDF export functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('PDF export functionality will be implemented'),
-        backgroundColor: Colors.blue,
-      ),
-    );
+  String _formatAmount(dynamic amount) {
+    if (amount == null) return '0.00';
+    if (amount is String) {
+      final parsed = double.tryParse(amount);
+      return parsed?.toStringAsFixed(2) ?? '0.00';
+    } else if (amount is num) {
+      return amount.toStringAsFixed(2);
+    }
+    return '0.00';
+  }
+
+  Future<void> _exportCostsToPDF(List<dynamic> costs) async {
+    try {
+      if (costs.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No costs to export'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Calculate total cost
+      double totalCost = 0;
+      for (var cost in costs) {
+        final amount = cost['amount'];
+        if (amount != null) {
+          if (amount is String) {
+            totalCost += double.tryParse(amount) ?? 0;
+          } else if (amount is num) {
+            totalCost += amount.toDouble();
+          }
+        }
+      }
+
+      // Create PDF document
+      final pdf = pw.Document();
+
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          build: (pw.Context context) {
+            return pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                // Header
+                pw.Container(
+                  width: double.infinity,
+                  padding: const pw.EdgeInsets.all(20),
+                  decoration: pw.BoxDecoration(
+                    color: PdfColors.blue800,
+                    borderRadius: pw.BorderRadius.circular(8),
+                  ),
+                  child: pw.Column(
+                    children: [
+                      pw.Text(
+                        'Event Cost Report',
+                        style: pw.TextStyle(
+                          fontSize: 24,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.white,
+                        ),
+                      ),
+                      pw.SizedBox(height: 8),
+                      pw.Text(
+                        widget.eventData['name'] ?? 'Event',
+                        style: pw.TextStyle(
+                          fontSize: 18,
+                          color: PdfColors.white,
+                        ),
+                      ),
+                      pw.SizedBox(height: 4),
+                      pw.Text(
+                        'Generated on: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now())}',
+                        style: pw.TextStyle(
+                          fontSize: 12,
+                          color: PdfColors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                pw.SizedBox(height: 20),
+                
+                // Summary
+                pw.Container(
+                  width: double.infinity,
+                  padding: const pw.EdgeInsets.all(16),
+                  decoration: pw.BoxDecoration(
+                    color: PdfColors.grey100,
+                    borderRadius: pw.BorderRadius.circular(8),
+                  ),
+                  child: pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: [
+                      pw.Text(
+                        'Total Cost Items:',
+                        style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+                      ),
+                      pw.Text(
+                        '${costs.length}',
+                        style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                pw.SizedBox(height: 20),
+                
+                // Cost items table
+                pw.Table(
+                  border: pw.TableBorder.all(color: PdfColors.grey300),
+                  children: [
+                    // Header row
+                    pw.TableRow(
+                      decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8),
+                          child: pw.Text('Description', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8),
+                          child: pw.Text('Amount (Rs)', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8),
+                          child: pw.Text('Date', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                    // Data rows
+                    ...costs.map((cost) => pw.TableRow(
+                      children: [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8),
+                          child: pw.Text(cost['description'] ?? ''),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8),
+                          child: pw.Text('Rs${_formatAmount(cost['amount'])}'),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(8),
+                          child: pw.Text(
+                            cost['uploaded_at'] != null 
+                              ? DateFormat('dd MMM yyyy').format(DateTime.parse(cost['uploaded_at']))
+                              : 'N/A'
+                          ),
+                        ),
+                      ],
+                    )).toList(),
+                  ],
+                ),
+                
+                pw.SizedBox(height: 20),
+                
+                // Total
+                pw.Container(
+                  width: double.infinity,
+                  padding: const pw.EdgeInsets.all(16),
+                  decoration: pw.BoxDecoration(
+                    color: PdfColors.blue50,
+                    borderRadius: pw.BorderRadius.circular(8),
+                    border: pw.Border.all(color: PdfColors.blue300),
+                  ),
+                  child: pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: [
+                      pw.Text(
+                        'Total Amount:',
+                        style: pw.TextStyle(
+                          fontSize: 16,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.blue800,
+                        ),
+                      ),
+                      pw.Text(
+                        'Rs${totalCost.toStringAsFixed(2)}',
+                        style: pw.TextStyle(
+                          fontSize: 18,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.blue800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+
+      // Close loading dialog
+      Navigator.of(context).pop();
+
+      // Show PDF preview and allow printing/sharing
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save(),
+        name: 'Event_Cost_Report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf',
+      );
+
+    } catch (e) {
+      // Close loading dialog if it's open
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error generating PDF: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Future<List<dynamic>> _fetchEventCosts() async {
