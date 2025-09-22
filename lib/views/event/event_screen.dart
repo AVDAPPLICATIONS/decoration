@@ -603,15 +603,16 @@ class _EventScreenState extends ConsumerState<EventScreen> {
       direction: DismissDirection.horizontal,
       background: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: colorScheme.primary,
-          borderRadius: BorderRadius.circular(16),
-        ),
+
         child: Row(
           children: [
             // Edit Button (Left side)
             Expanded(
               child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.green,
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -637,20 +638,24 @@ class _EventScreenState extends ConsumerState<EventScreen> {
             // Delete Button (Right side)
             Expanded(
               child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
                       Icons.delete,
-                      color: colorScheme.error,
+                      color: colorScheme.onPrimary,
                       size: 28,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Delete',
                       style: TextStyle(
-                        color: colorScheme.error,
+                        color: colorScheme.onPrimary,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
