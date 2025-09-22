@@ -33,44 +33,38 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
   File? _selectedImage;
   bool _isLoading = false;
 
-  Future<void> _selectDate() async {
-    final DateTime now = DateTime.now();
-    // Set a more explicit future date - 10 years from now
-    final DateTime futureDate = DateTime(now.year + 10, 12, 31);
 
-    print(
-        '🔍 Debug: Date picker range - First: 2012, Last: ${futureDate.year}-${futureDate.month}-${futureDate.day}');
-    print('🔍 Debug: Current date: ${now.year}-${now.month}-${now.day}');
+Future<void> _selectDate() async {
+  final DateTime now = DateTime.now();
+final DateTime lastDate = DateTime(now.year + 1, 12, 31);
 
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate ?? now,
-      firstDate: DateTime(2012, 1, 1),
-      lastDate: futureDate, // Allow dates up to 10 years in the future
-      helpText: 'Select Event Date',
-      cancelText: 'Cancel',
-      confirmText: 'OK',
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-                  primary: AppColors.primary,
-                ),
-          ),
-          child: child!,
-        );
-      },
-    );
+  final DateTime? picked = await showDatePicker(
+    context: context,
+    initialDate: _selectedDate ?? now,
+    firstDate: now,           // today or any future date
+    lastDate: lastDate,   // restrict to 1 year from now
+    helpText: 'Select EvSDent Date',
+    cancelText: 'Cancel',
+    confirmText: 'OK',
+    builder: (context, child) {
+      return Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: Theme.of(context).colorScheme.copyWith(
+                primary: AppColors.primary,
+              ),
+        ),
+        child: child!,
+      );
+    },
+  );
 
-    print('🔍 Debug: Selected date: $picked');
-
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-      print('🔍 Debug: Date updated to: $_selectedDate');
-    }
+  if (picked != null && picked != _selectedDate) {
+    setState(() {
+      _selectedDate = picked;
+    });
   }
+}
+
 
   Future<void> _pickImage() async {
     showModalBottomSheet(
@@ -654,7 +648,7 @@ class _AddEventScreenState extends ConsumerState<AddEventScreen> {
                             Text(
                               _selectedDate != null
                                   ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
-                                  : 'Select Event Date',
+                                  : 'Select Event  xDate',
                               style: TextStyle(
                                 fontSize: 16,
                                 color: _selectedDate != null

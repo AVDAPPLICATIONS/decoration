@@ -2,8 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'add_inventory_screen.dart';
-import '../../themes/app_theme.dart'; // Import your AppTheme file
-import '../../themes/color_schemes.dart';
 import '../../providers/category_provider.dart';
 import '../../models/category_model.dart';
 import '../../providers/inventory_provider.dart';
@@ -289,7 +287,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Choose from the categories above to fill out the inventory form',
+            'Choose from the categories above to fill out the inventory form.\nAll fields are optional - fill in what you know.',
             style: TextStyle(
               fontSize: 15,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -440,6 +438,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
     String? Function(String?)? validator,
     TextInputType? keyboardType,
     int? maxLines,
+    bool isOptional = true,
   }) {
     return TextFormField(
       initialValue: value,
@@ -448,7 +447,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
       keyboardType: keyboardType,
       maxLines: maxLines ?? 1,
       decoration: InputDecoration(
-        labelText: label,
+        labelText: isOptional ? '$label (optional)' : label,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),
@@ -1212,6 +1211,14 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
         print('🔍 Debug: Image path in form data: ${formData['imagePath']}');
 
         try {
+          // Test API connection first
+          print('🔍 Testing API connection before creating item...');
+          final isConnected = await ref.read(inventoryProvider.notifier).testApiConnection();
+          if (!isConnected) {
+            throw Exception('Cannot connect to server. Please check your internet connection and try again.');
+          }
+          print('✅ API connection test passed');
+
           // Show loading dialog with progress indicator
           showDialog(
             context: context,
@@ -1394,7 +1401,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
         print('Business validation failed');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Please fill in all required fields'),
+            content: const Text('Please select a category and fill in at least one field'),
             backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(

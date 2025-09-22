@@ -22,6 +22,15 @@ class InventoryListScreen extends ConsumerStatefulWidget {
 
 class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
   String _selectedCategory = 'All';
+  bool _isSearchVisible = false;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   // Get unique categories from inventory items
   List<String> _getCategories(List<InventoryItem> items) {
@@ -30,14 +39,38 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
     return ['All', ...categories];
   }
 
-  // Get filtered inventory items based on selected category
+  // Get filtered inventory items based on selected category and search query
   List<InventoryItem> _getFilteredItems(List<InventoryItem> items) {
-    if (_selectedCategory == 'All') {
-      return items;
+    List<InventoryItem> filteredItems = items;
+    
+    // Filter by category
+    if (_selectedCategory != 'All') {
+      filteredItems = filteredItems
+          .where((item) => item.categoryName == _selectedCategory)
+          .toList();
     }
-    return items
-        .where((item) => item.categoryName == _selectedCategory)
-        .toList();
+    
+    // Filter by search query
+    if (_searchQuery.isNotEmpty) {
+      filteredItems = filteredItems
+          .where((item) => 
+              item.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+              item.categoryName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+              (item.material?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
+              item.storageLocation.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+              (item.dimensions?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
+              (item.color?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
+              (item.size?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
+              (item.fabricType?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
+              (item.pattern?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
+              (item.carpetType?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
+              (item.frameType?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
+              (item.setNumber?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
+              (item.thermocolType?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false))
+          .toList();
+    }
+    
+    return filteredItems;
   }
   @override
   Widget build(BuildContext context) {
@@ -172,6 +205,18 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
         showBackButton: false,
         actions: [
           IconButton(
+            icon: Icon(_isSearchVisible ? Icons.search_off : Icons.search),
+            onPressed: () {
+              setState(() {
+                _isSearchVisible = !_isSearchVisible;
+                if (!_isSearchVisible) {
+                  _searchController.clear();
+                  _searchQuery = '';
+                }
+              });
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.filter_list),
             onPressed: () {
               final inventoryItems = ref.watch(inventoryProvider); // This is already a List<InventoryItem>
@@ -215,7 +260,16 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
           ),
           padding: const EdgeInsets.only(
               bottom: 100), // Add bottom padding to avoid nav bar
-          child: _buildBody(inventoryItems, inventoryNotifier, isAdmin),
+          child: Column(
+            children: [
+              // Search Bar
+              if (_isSearchVisible) _buildSearchBar(),
+              // Main Body
+              Expanded(
+                child: _buildBody(inventoryItems, inventoryNotifier, isAdmin),
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: isAdmin
@@ -293,6 +347,78 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
             )
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+  Widget _buildSearchBar() {
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: colorScheme.outline.withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.shadow.withOpacity(0.04),
+            spreadRadius: 0,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.search,
+            color: colorScheme.onSurfaceVariant,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
+              decoration: InputDecoration(
+                hintText: 'Search items, categories, materials, dimensions...',
+                hintStyle: TextStyle(
+                  color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+                  fontSize: 14,
+                ),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+              ),
+              style: TextStyle(
+                color: colorScheme.onSurface,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          if (_searchQuery.isNotEmpty)
+            GestureDetector(
+              onTap: () {
+                _searchController.clear();
+                setState(() {
+                  _searchQuery = '';
+                });
+              },
+              child: Icon(
+                Icons.clear,
+                color: colorScheme.onSurfaceVariant,
+                size: 20,
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -534,6 +660,72 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
     );
   }
 
+  // Helper method to get formatted dimensions display
+  String _getDimensionsDisplay(InventoryItem item) {
+    List<String> dimensionParts = [];
+    
+    // Add general dimensions if available
+    if (item.dimensions != null && item.dimensions!.isNotEmpty) {
+      dimensionParts.add(item.dimensions!);
+    }
+    
+    // Add width and length if available
+    if (item.width != null && item.length != null) {
+      dimensionParts.add('${item.width} × ${item.length}');
+    } else if (item.width != null) {
+      dimensionParts.add('W: ${item.width}');
+    } else if (item.length != null) {
+      dimensionParts.add('L: ${item.length}');
+    }
+    
+    // Add size if available
+    if (item.size != null && item.size!.isNotEmpty) {
+      dimensionParts.add('Size: ${item.size}');
+    }
+    
+    // Add color if available
+    if (item.color != null && item.color!.isNotEmpty) {
+      dimensionParts.add('Color: ${item.color}');
+    }
+    
+    // Add category-specific dimensions
+    switch (item.categoryName) {
+      case 'Fabric':
+        if (item.fabricType != null && item.fabricType!.isNotEmpty) {
+          dimensionParts.add('Type: ${item.fabricType}');
+        }
+        if (item.pattern != null && item.pattern!.isNotEmpty) {
+          dimensionParts.add('Pattern: ${item.pattern}');
+        }
+        break;
+      case 'Carpet':
+        if (item.carpetType != null && item.carpetType!.isNotEmpty) {
+          dimensionParts.add('Type: ${item.carpetType}');
+        }
+        break;
+      case 'Frame Structure':
+        if (item.frameType != null && item.frameType!.isNotEmpty) {
+          dimensionParts.add('Frame: ${item.frameType}');
+        }
+        break;
+      case 'Murti Set':
+        if (item.setNumber != null && item.setNumber!.isNotEmpty) {
+          dimensionParts.add('Set: ${item.setNumber}');
+        }
+        break;
+      case 'Thermocol Material':
+        if (item.thermocolType != null && item.thermocolType!.isNotEmpty) {
+          dimensionParts.add('Type: ${item.thermocolType}');
+        }
+        if (item.density != null) {
+          dimensionParts.add('Density: ${item.density}');
+        }
+        break;
+    }
+    
+    return dimensionParts.isNotEmpty ? dimensionParts.join(' • ') : 'No dimensions';
+  }
+
   Widget _buildInventoryCard(InventoryItem item, bool isAdmin) {
     return Opacity(
       opacity: isAdmin ? 1.0 : 0.7,
@@ -605,6 +797,29 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                 ),
               ),
               const SizedBox(height: 4),
+              // Dimensions display
+              Row(
+                children: [
+                  Icon(
+                    Icons.straighten,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.tertiary,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      _getDimensionsDisplay(item),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.tertiary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
               Row(
                 children: [
                   Icon(
@@ -651,6 +866,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                 ),
               ),
               const SizedBox(height: 4),
+
               Text(
                 'Qty: ${item.availableQuantity.toStringAsFixed(0)}',
                 style: TextStyle(

@@ -236,87 +236,84 @@ class InventoryFormNotifier extends StateNotifier<InventoryFormState> {
   }
 
   bool validateForm() {
+    // Only require category selection - all other fields are optional
     if (state.selectedCategory == null) return false;
 
     final categoryName = state.selectedCategory!.name.toLowerCase();
 
+    // Check if at least one field has some data for the selected category
     switch (categoryName) {
       case 'furniture':
-        return state.furniture.name?.isNotEmpty == true &&
-            state.furniture.material?.isNotEmpty == true &&
-            state.furniture.dimensions?.isNotEmpty == true &&
-            state.furniture.unit?.isNotEmpty == true &&
-            state.furniture.notes?.isNotEmpty == true &&
-            state.furniture.storageLocation?.isNotEmpty == true &&
+        return state.furniture.name?.isNotEmpty == true ||
+            state.furniture.material?.isNotEmpty == true ||
+            state.furniture.dimensions?.isNotEmpty == true ||
+            state.furniture.unit?.isNotEmpty == true ||
+            state.furniture.notes?.isNotEmpty == true ||
+            state.furniture.storageLocation?.isNotEmpty == true ||
             (state.furniture.quantity ?? 0) > 0;
       case 'fabric':
       case 'fabrics':
-        return state.fabric.name?.isNotEmpty == true &&
-            state.fabric.type?.isNotEmpty == true &&
-            state.fabric.pattern?.isNotEmpty == true &&
-            state.fabric.width != null &&
-            state.fabric.width! > 0 &&
-            state.fabric.length != null &&
-            state.fabric.length! > 0 &&
-            state.fabric.color?.isNotEmpty == true &&
-            state.fabric.unit?.isNotEmpty == true &&
-            state.fabric.storageLocation?.isNotEmpty == true &&
-            state.fabric.notes?.isNotEmpty == true &&
-            state.fabric.stock != null &&
-            state.fabric.stock! > 0;
+        return state.fabric.name?.isNotEmpty == true ||
+            state.fabric.type?.isNotEmpty == true ||
+            state.fabric.pattern?.isNotEmpty == true ||
+            (state.fabric.width ?? 0) > 0 ||
+            (state.fabric.length ?? 0) > 0 ||
+            state.fabric.color?.isNotEmpty == true ||
+            state.fabric.unit?.isNotEmpty == true ||
+            state.fabric.storageLocation?.isNotEmpty == true ||
+            state.fabric.notes?.isNotEmpty == true ||
+            (state.fabric.stock ?? 0) > 0;
       case 'frame structure':
       case 'frame structures':
-        return state.frame.name?.isNotEmpty == true &&
-            state.frame.unit?.isNotEmpty == true &&
-            state.frame.storageLocation?.isNotEmpty == true &&
-            state.frame.notes?.isNotEmpty == true &&
-            state.frame.type?.isNotEmpty == true &&
-            state.frame.material?.isNotEmpty == true &&
-            state.frame.dimensions?.isNotEmpty == true &&
+        return state.frame.name?.isNotEmpty == true ||
+            state.frame.unit?.isNotEmpty == true ||
+            state.frame.storageLocation?.isNotEmpty == true ||
+            state.frame.notes?.isNotEmpty == true ||
+            state.frame.type?.isNotEmpty == true ||
+            state.frame.material?.isNotEmpty == true ||
+            state.frame.dimensions?.isNotEmpty == true ||
             (state.frame.quantity ?? 0) > 0;
       case 'carpet':
       case 'carpets':
-        return state.carpet.name?.isNotEmpty == true &&
-            state.carpet.unit?.isNotEmpty == true &&
-            state.carpet.storageLocation?.isNotEmpty == true &&
-            state.carpet.notes?.isNotEmpty == true &&
-            state.carpet.type?.isNotEmpty == true &&
-            state.carpet.material?.isNotEmpty == true &&
-            state.carpet.size?.isNotEmpty == true &&
+        return state.carpet.name?.isNotEmpty == true ||
+            state.carpet.unit?.isNotEmpty == true ||
+            state.carpet.storageLocation?.isNotEmpty == true ||
+            state.carpet.notes?.isNotEmpty == true ||
+            state.carpet.type?.isNotEmpty == true ||
+            state.carpet.material?.isNotEmpty == true ||
+            state.carpet.size?.isNotEmpty == true ||
             (state.carpet.stock ?? 0) > 0;
       case 'thermocol':
       case 'thermocol material':
       case 'thermocol materials':
-        return state.thermocol.name?.isNotEmpty == true &&
-            state.thermocol.unit?.isNotEmpty == true &&
-            state.thermocol.storageLocation?.isNotEmpty == true &&
-            state.thermocol.notes?.isNotEmpty == true &&
-            state.thermocol.thermocolType?.isNotEmpty == true &&
-            state.thermocol.dimensions?.isNotEmpty == true &&
-            (state.thermocol.density ?? 0) > 0 &&
+        return state.thermocol.name?.isNotEmpty == true ||
+            state.thermocol.unit?.isNotEmpty == true ||
+            state.thermocol.storageLocation?.isNotEmpty == true ||
+            state.thermocol.notes?.isNotEmpty == true ||
+            state.thermocol.thermocolType?.isNotEmpty == true ||
+            state.thermocol.dimensions?.isNotEmpty == true ||
+            (state.thermocol.density ?? 0) > 0 ||
             (state.thermocol.quantity ?? 0) > 0;
       case 'stationery':
-        return state.stationery.name?.isNotEmpty == true &&
-            state.stationery.unit?.isNotEmpty == true &&
-            state.stationery.storageLocation?.isNotEmpty == true &&
-            state.stationery.notes?.isNotEmpty == true &&
-            state.stationery.specifications?.isNotEmpty == true &&
+        return state.stationery.name?.isNotEmpty == true ||
+            state.stationery.unit?.isNotEmpty == true ||
+            state.stationery.storageLocation?.isNotEmpty == true ||
+            state.stationery.notes?.isNotEmpty == true ||
+            state.stationery.specifications?.isNotEmpty == true ||
             (state.stationery.quantity ?? 0) > 0;
       case 'murti set':
       case 'murti sets':
-        return state.murti.name?.isNotEmpty == true &&
-            state.murti.unit?.isNotEmpty == true &&
-            state.murti.storageLocation?.isNotEmpty == true &&
-            state.murti.notes?.isNotEmpty == true &&
-            state.murti.setNumber?.isNotEmpty == true &&
-            state.murti.material?.isNotEmpty == true &&
-            state.murti.dimensions?.isNotEmpty == true &&
+        return state.murti.name?.isNotEmpty == true ||
+            state.murti.unit?.isNotEmpty == true ||
+            state.murti.storageLocation?.isNotEmpty == true ||
+            state.murti.notes?.isNotEmpty == true ||
+            state.murti.setNumber?.isNotEmpty == true ||
+            state.murti.material?.isNotEmpty == true ||
+            state.murti.dimensions?.isNotEmpty == true ||
             (state.murti.quantity ?? 0) > 0;
       default:
-        // For any other category, use furniture validation as default
-        return state.furniture.name?.isNotEmpty == true &&
-            state.furniture.material?.isNotEmpty == true &&
-            (state.furniture.quantity ?? 0) > 0;
+        // For any other category, just check if category is selected
+        return true;
     }
   }
 }

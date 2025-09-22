@@ -9,11 +9,54 @@ class InventoryService {
 
   InventoryService(this.baseUrl);
 
+  // Helper method to safely parse JSON response
+  Map<String, dynamic> _parseJsonResponse(http.Response response, String operation) {
+    try {
+      return jsonDecode(response.body);
+    } catch (e) {
+      print('❌ Error parsing JSON response for $operation: $e');
+      print('❌ Status code: ${response.statusCode}');
+      print('❌ Response body: ${response.body}');
+      
+      // If JSON parsing fails, it's likely HTML (404, 500 error page)
+      String errorMessage = 'Server error (${response.statusCode})';
+      if (response.statusCode == 404) {
+        errorMessage = 'API endpoint not found. Please check server configuration.';
+      } else if (response.statusCode == 500) {
+        errorMessage = 'Internal server error. Please try again later.';
+      } else if (response.statusCode == 401) {
+        errorMessage = 'Authentication required. Please login again.';
+      } else if (response.statusCode == 403) {
+        errorMessage = 'Access denied. You do not have permission to perform this action.';
+      }
+      
+      throw Exception(errorMessage);
+    }
+  }
+
   // Helper method to get full image URL
   String getImageUrl(String? imagePath) {
     if (imagePath == null || imagePath.isEmpty) return '';
     if (imagePath.startsWith('http')) return imagePath;
     return '$baseUrl$imagePath';
+  }
+
+  // Test API connection
+  Future<bool> testConnection() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/inventory/categories/getAll'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(const Duration(seconds: 10));
+      
+      print('🔍 API Connection Test: Status ${response.statusCode}');
+      print('🔍 API Connection Test: Response ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}...');
+      
+      return response.statusCode == 200;
+    } catch (e) {
+      print('❌ API Connection Test Failed: $e');
+      return false;
+    }
   }
 
   // Get all inventory items
@@ -265,7 +308,7 @@ class InventoryService {
       print('🔍 Debug Furniture API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final responseData = jsonDecode(response.body);
+        final responseData = _parseJsonResponse(response, 'createFurnitureItem');
         if (responseData['success'] == true) {
           return responseData;
         } else {
@@ -273,7 +316,7 @@ class InventoryService {
               responseData['message'] ?? 'Failed to create furniture item');
         }
       } else {
-        final errorData = jsonDecode(response.body);
+        final errorData = _parseJsonResponse(response, 'createFurnitureItem');
         throw Exception(
             errorData['message'] ?? 'Failed to create furniture item');
       }

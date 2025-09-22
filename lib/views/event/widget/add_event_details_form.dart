@@ -40,22 +40,29 @@ class _AddEventDetailsFormState extends State<AddEventDetailsForm> {
   }
 
   Future<void> _selectDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
-      firstDate: DateTime(2012, 1, 1), // Allow dates from January 1, 2012
-      lastDate:
-          DateTime.now(), // Only allow dates up to today (no future dates)
-    );
+  final DateTime now = DateTime.now();
+  final DateTime lastDate = DateTime(now.year + 1, 12, 31);
 
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-        _dateController.text =
-            "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
-      });
-    }
+  final DateTime? picked = await showDatePicker(
+    context: context,
+    initialDate: _selectedDate != null
+        ? _selectedDate!.isAfter(lastDate)
+            ? lastDate
+            : _selectedDate!
+        : now, // Start from today
+    firstDate: DateTime(2012, 1, 1),
+    lastDate: lastDate,
+  );
+
+  if (picked != null) {
+    setState(() {
+      _selectedDate = picked;
+      _dateController.text =
+          "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+    });
   }
+}
+
 
   Future<void> _pickImage() async {
     try {

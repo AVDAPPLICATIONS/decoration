@@ -358,6 +358,16 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
     }
   }
 
+  // Test API connection
+  Future<bool> testApiConnection() async {
+    try {
+      return await _inventoryService.testConnection();
+    } catch (e) {
+      print('❌ API Connection test failed: $e');
+      return false;
+    }
+  }
+
   // Create furniture item using specific API
   Future<void> createFurnitureItem({
     required String name,
@@ -399,9 +409,40 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
             response['message'] ?? 'Failed to create furniture item');
       }
     } catch (e) {
-      _error = e.toString();
-      print('❌ Error creating furniture item: $e');
-      rethrow;
+      print('❌ Error creating furniture item with specific API: $e');
+      print('🔄 Attempting fallback to general inventory API...');
+      
+      // Fallback to general inventory API
+      try {
+        final fallbackResponse = await _inventoryService.createItem(
+          name: name,
+          categoryId: 1, // Default furniture category
+          unit: unit,
+          storageLocation: storageLocation,
+          notes: notes,
+          quantityAvailable: quantityAvailable,
+          itemImage: itemImage,
+          itemImagePath: itemImagePath,
+          itemImageBytes: itemImageBytes,
+          itemImageName: itemImageName,
+          categoryDetails: {
+            'material': material,
+            'dimensions': dimensions,
+          },
+        );
+
+        if (fallbackResponse['success'] == true) {
+          await loadInventoryData();
+          print('✅ Furniture item created successfully via fallback API: ${fallbackResponse['data']}');
+        } else {
+          throw Exception(
+              fallbackResponse['message'] ?? 'Failed to create furniture item via fallback');
+        }
+      } catch (fallbackError) {
+        _error = fallbackError.toString();
+        print('❌ Error creating furniture item via fallback: $fallbackError');
+        rethrow;
+      }
     } finally {
       _isLoading = false;
     }
