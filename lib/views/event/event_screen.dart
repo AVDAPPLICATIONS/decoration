@@ -603,7 +603,6 @@ class _EventScreenState extends ConsumerState<EventScreen> {
       direction: DismissDirection.horizontal,
       background: Container(
         margin: const EdgeInsets.only(bottom: 12),
-
         child: Row(
           children: [
             // Edit Button (Left side)
@@ -951,7 +950,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
             backgroundColor: AppColors.primary,
             duration: const Duration(seconds: 1),
             behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(bottom: 100, left: 16, right: 16),
+            margin: const EdgeInsets.only(bottom: 120, left: 16, right: 16),
           ),
         );
       }
@@ -967,7 +966,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
             content: Text('Template "$name" created successfully'),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(bottom: 100, left: 16, right: 16),
+            margin: const EdgeInsets.only(bottom: 120, left: 16, right: 16),
           ),
         );
       }
@@ -984,7 +983,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
             content: Text('Failed to create template: ${e.toString()}'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(bottom: 100, left: 16, right: 16),
+            margin: const EdgeInsets.only(bottom: 120, left: 16, right: 16),
           ),
         );
       }
@@ -1047,7 +1046,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                 tablet: 28.0,
                 desktop: 32.0,
               )),
-          
+
               // Empty state title
               ResponsiveText(
                 'No Event Templates',
@@ -1063,7 +1062,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                 tablet: 14.0,
                 desktop: 16.0,
               )),
-          
+
               // Empty state description
               ResponsiveText(
                 'Create your first event template to get started with organizing your events.',
@@ -1079,7 +1078,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                 tablet: 36.0,
                 desktop: 40.0,
               )),
-          
+
               // Add Template button
               Container(
                 width: double.infinity,
@@ -1187,7 +1186,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                 tablet: 18.0,
                 desktop: 20.0,
               )),
-          
+
               // Refresh button
               TextButton.icon(
                 onPressed: () {

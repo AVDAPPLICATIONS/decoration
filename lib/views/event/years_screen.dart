@@ -7,6 +7,7 @@ import '../../services/api_service.dart';
 import '../../models/year_model.dart';
 import '../../providers/year_provider.dart';
 import '../../utils/constants.dart';
+import '../../utils/snackbar_manager.dart';
 import 'event_details_screen.dart';
 import 'widget/add_event_details_form.dart';
 
@@ -58,6 +59,7 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
       });
     }
   }
+
   PreferredSizeWidget _buildResponsiveAppBar(ColorScheme colorScheme) {
     return CustomAppBarWithLoading(
       title: widget.templateName != null
@@ -72,6 +74,9 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
   Widget build(BuildContext context) {
     final years = ref.watch(yearProvider);
     final colorScheme = Theme.of(context).colorScheme;
+
+    // Debug: Print current years count
+    print('YearsScreen: Building with ${years.length} years');
 
     return ResponsiveBuilder(
       mobile: _buildMobileLayout(context, years, colorScheme),
@@ -95,7 +100,8 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
     return _buildYearsScreen(context, years, colorScheme);
   }
 
-  Widget _buildYearsScreen(BuildContext context, List<YearModel> years, ColorScheme colorScheme) {
+  Widget _buildYearsScreen(
+      BuildContext context, List<YearModel> years, ColorScheme colorScheme) {
     return Scaffold(
       appBar: _buildResponsiveAppBar(colorScheme),
       backgroundColor: colorScheme.background,
@@ -141,8 +147,8 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
           child: _isLoadingYears
               ? Center(
                   child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                        colorScheme.primary),
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(colorScheme.primary),
                   ),
                 )
               : RefreshIndicator(
@@ -180,8 +186,6 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
       ),
     );
   }
-
-
 
   Widget _buildAddYearSection() {
     final colorScheme = Theme.of(context).colorScheme;
@@ -356,10 +360,16 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
             eventDetails['success'] == true &&
             eventDetails['data'] != null;
 
+        // Check for server database errors
+        final hasServerError = eventDetails != null &&
+            eventDetails['success'] == false &&
+            eventDetails['error_type'] == 'server_database_error';
+
         print('🔍 Debug: FutureBuilder for year ${year.id}');
         print('  - snapshot.connectionState: ${snapshot.connectionState}');
         print('  - eventDetails: $eventDetails');
         print('  - hasEventDetails: $hasEventDetails');
+        print('  - hasServerError: $hasServerError');
 
         if (hasEventDetails) {
           print(
@@ -422,49 +432,34 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
             );
           },
           onDismissed: (direction) async {
-            // Immediately remove from local state to prevent the error
-            ref.read(yearProvider.notifier).removeYearFromState(year.id);
-
+            print(
+                'YearsScreen: Starting deletion of year ${year.id} (${year.yearName})');
             try {
+              // First call the API to delete the year
               await ref.read(yearProvider.notifier).deleteYear(year.id);
+              print('YearsScreen: API deletion successful for year ${year.id}');
+
+              // Only remove from state if API deletion succeeds
+              ref.read(yearProvider.notifier).removeYearFromState(year.id);
+              print('YearsScreen: Removed year ${year.id} from state');
+
+              // Force refresh the years list to ensure UI updates
+              await _loadYears();
+              print('YearsScreen: Refreshed years list after deletion');
+
               if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content:
-                        Text('Year ${year.yearName} deleted successfully!'),
-                    backgroundColor: colorScheme.primary,
-                    behavior: SnackBarBehavior.floating,
-                    margin: const EdgeInsets.only(
-                      bottom:
-                          100, // Adjust this value based on your bottom nav height
-                      left: 16,
-                      right: 16,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
+                SnackBarManager.showSuccess(
+                  context: context,
+                  message: 'Year ${year.yearName} deleted successfully!',
                 );
               }
             } catch (e) {
-              // If deletion fails, re-add the year to the state
-              ref.read(yearProvider.notifier).addYearBackToState(year);
+              print('YearsScreen: Error deleting year ${year.id}: $e');
+              // If deletion fails, show error but don't remove from state
               if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Error deleting year: ${e.toString()}'),
-                    backgroundColor: colorScheme.error,
-                    behavior: SnackBarBehavior.floating,
-                    margin: const EdgeInsets.only(
-                      bottom:
-                          100, // Adjust this value based on your bottom nav height
-                      left: 16,
-                      right: 16,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
+                SnackBarManager.showError(
+                  context: context,
+                  message: 'Error deleting year: ${e.toString()}',
                 );
               }
             }
@@ -517,71 +512,103 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
                             ),
                           ],
                         ),
-                        child: hasEventDetails &&
-                                eventDetails['data']['event']['cover_image'] !=
-                                    null
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(16),
-                                child: Image.network(
-                                  apiBaseUrl +
-                                      eventDetails['data']['event']
-                                          ['cover_image'],
-                                  width: 60,
-                                  height: 60,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    // Fallback to calendar icon if image fails to load
-                                    return Container(
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [
-                                            colorScheme.primary,
-                                            colorScheme.secondary,
-                                          ],
-                                        ),
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: Icon(
-                                        Icons.calendar_today,
-                                        color: colorScheme.onPrimary,
-                                        size: 28,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              )
-                            : Container(
+                        child: hasServerError
+                            ? Container(
                                 decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      colorScheme.primary,
-                                      colorScheme.secondary,
-                                    ],
-                                  ),
+                                  color: colorScheme.errorContainer,
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Icon(
-                                  Icons.calendar_today,
-                                  color: colorScheme.onPrimary,
+                                  Icons.error_outline,
+                                  color: colorScheme.onErrorContainer,
                                   size: 28,
                                 ),
-                              ),
+                              )
+                            : hasEventDetails &&
+                                    eventDetails['data']['event']
+                                            ['cover_image'] !=
+                                        null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: Image.network(
+                                      apiBaseUrl +
+                                          eventDetails['data']['event']
+                                              ['cover_image'],
+                                      width: 60,
+                                      height: 60,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        // Fallback to calendar icon if image fails to load
+                                        return Container(
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                              colors: [
+                                                colorScheme.primary,
+                                                colorScheme.secondary,
+                                              ],
+                                            ),
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                          ),
+                                          child: Icon(
+                                            Icons.calendar_today,
+                                            color: colorScheme.onPrimary,
+                                            size: 28,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  )
+                                : Container(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          colorScheme.primary,
+                                          colorScheme.secondary,
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Icon(
+                                      Icons.calendar_today,
+                                      color: colorScheme.onPrimary,
+                                      size: 28,
+                                    ),
+                                  ),
                       ),
                       const SizedBox(width: 16),
 
                       // Year Details
                       Expanded(
-                        child: Text(
-                          year.yearName,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: colorScheme.primary,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              year.yearName,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: colorScheme.primary,
+                              ),
+                            ),
+                            if (hasServerError) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                'Server Error',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colorScheme.error,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
 
@@ -638,6 +665,22 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
       return eventDetails;
     } catch (e) {
       print('❌ Error fetching event details for year ${year.id}: $e');
+
+      // Check if it's a server database error
+      if (e.toString().contains('500') ||
+          e.toString().contains('column') ||
+          e.toString().contains('does not exist')) {
+        print('🔍 Server database error detected for year ${year.id}');
+        // Return a structured error response instead of null
+        return {
+          'success': false,
+          'message': 'Server database error',
+          'error_type': 'server_database_error',
+          'details':
+              'The server encountered a database error. Please contact the administrator.'
+        };
+      }
+
       return null;
     }
   }
@@ -645,39 +688,17 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
   void _addYear() async {
     final yearName = _yearController.text.trim();
     if (yearName.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Please enter a valid year'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.only(
-            bottom: 100,
-            left: 16,
-            right: 16,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
+      SnackBarManager.showError(
+        context: context,
+        message: 'Please enter a valid year',
       );
       return;
     }
 
     if (widget.templateId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Template information not available'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.only(
-            bottom: 100,
-            left: 16,
-            right: 16,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
+      SnackBarManager.showError(
+        context: context,
+        message: 'Template information not available',
       );
       return;
     }
@@ -686,20 +707,9 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
     final years = ref.read(yearProvider);
     if (years.any((year) =>
         year.yearName == yearName && year.templateId == widget.templateId)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Year already exists for this template!'),
-          backgroundColor: Theme.of(context).colorScheme.tertiary,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.only(
-            bottom: 100,
-            left: 16,
-            right: 16,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
+      SnackBarManager.showWarning(
+        context: context,
+        message: 'Year already exists for this template!',
       );
       return;
     }
@@ -718,20 +728,9 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
       _yearController.clear();
 
       // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Year $yearName added successfully!'),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.only(
-            bottom: 100,
-            left: 16,
-            right: 16,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
+      SnackBarManager.showSuccess(
+        context: context,
+        message: 'Year $yearName added successfully!',
       );
 
       // Open Add Event Details Form for the newly created year
@@ -739,40 +738,18 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
         _showAddEventDetailsForm(yearId: createdYear.id);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error adding year: ${e.toString()}'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.only(
-            bottom: 100,
-            left: 16,
-            right: 16,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
+      SnackBarManager.showError(
+        context: context,
+        message: 'Error adding year: ${e.toString()}',
       );
     }
   }
 
   Future<void> _showEventDetails(YearModel year) async {
     if (widget.templateId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Template information not available'),
-          backgroundColor: Theme.of(context).colorScheme.tertiary,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.only(
-            bottom: 100,
-            left: 16,
-            right: 16,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
+      SnackBarManager.showWarning(
+        context: context,
+        message: 'Template information not available',
       );
       return;
     }
@@ -799,6 +776,14 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
         if (eventDetails['success'] == true && eventDetails['data'] != null) {
           // Event exists, navigate to EventDetailsScreen
           _navigateToEventDetails(eventDetails, yearId: year.id);
+        } else if (eventDetails['success'] == false &&
+            eventDetails['error_type'] == 'server_database_error') {
+          // Server database error, show error message
+          SnackBarManager.showError(
+            context: context,
+            message: 'Server database error. Please contact the administrator.',
+            duration: const Duration(seconds: 5),
+          );
         } else {
           // Event not found, show Add Event Details form
           _showAddEventDetailsForm(yearId: year.id);
@@ -810,20 +795,9 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error loading event details: ${e.toString()}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(
-              bottom: 100,
-              left: 16,
-              right: 16,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
+        SnackBarManager.showError(
+          context: context,
+          message: 'Error loading event details: ${e.toString()}',
         );
       }
     }
@@ -882,17 +856,9 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
             Navigator.pop(context);
 
             // Show success message
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Event created successfully!'),
-                backgroundColor: Colors.green,
-                behavior: SnackBarBehavior.floating,
-                margin: EdgeInsets.only(
-                  bottom: 100,
-                  left: 16,
-                  right: 16,
-                ),
-              ),
+            SnackBarManager.showSuccess(
+              context: context,
+              message: 'Event created successfully!',
             );
 
             // Navigate to event details after creation

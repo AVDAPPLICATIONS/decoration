@@ -2,15 +2,14 @@ import 'package:avd_decoration_application/utils/responsive_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
-import 'dart:typed_data';
 import 'inventory_screen.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/inventory_provider.dart';
 import '../../utils/snackbar_manager.dart';
-import 'issue_inventory_screen.dart';
+// import 'issue_inventory_screen.dart'; // Hidden as Issue to Event option is removed
 import 'item_issue_history_screen.dart';
 import 'edit_inventory_screen.dart';
-import '../custom_widget/custom_appbar.dart';
+import 'fullscreen_image_viewer.dart';
 
 class InventoryListScreen extends ConsumerStatefulWidget {
   const InventoryListScreen({super.key});
@@ -22,6 +21,7 @@ class InventoryListScreen extends ConsumerStatefulWidget {
 
 class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
   String _selectedCategory = 'All';
+  String _selectedItemName = 'All';
   bool _isSearchVisible = false;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
@@ -39,173 +39,167 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
     return ['All', ...categories];
   }
 
-  // Get filtered inventory items based on selected category and search query
+  // Get item names within a specific category (only items with same names that appear more than once)
+  List<String> _getItemNamesInCategory(
+      List<InventoryItem> items, String category) {
+    if (category == 'All') {
+      // For 'All' category, get all item names that appear more than once across all categories
+      final nameCounts = <String, int>{};
+      for (final item in items) {
+        nameCounts[item.name] = (nameCounts[item.name] ?? 0) + 1;
+      }
+      final duplicateNames = nameCounts.entries
+          .where((entry) => entry.value > 1)
+          .map((entry) => entry.key)
+          .toList();
+      duplicateNames.sort();
+      return ['All', ...duplicateNames];
+    } else {
+      // For specific category, get item names that appear more than once in that category
+      final categoryItems =
+          items.where((item) => item.categoryName == category).toList();
+
+      print(
+          '🔍 Checking category: $category, found ${categoryItems.length} items');
+
+      // Debug: Print all items in this category
+      for (final item in categoryItems) {
+        print(
+            '  - "${item.name}" (ID: ${item.id}) -> normalized: "${item.name.trim().toLowerCase()}"');
+      }
+
+      final nameCounts = <String, int>{};
+      for (final item in categoryItems) {
+        // Normalize the name by trimming whitespace and converting to lowercase
+        final normalizedName = item.name.trim().toLowerCase();
+        nameCounts[normalizedName] = (nameCounts[normalizedName] ?? 0) + 1;
+      }
+
+      print('🔍 Name counts for $category: $nameCounts');
+
+      final duplicateNames = nameCounts.entries
+          .where((entry) => entry.value > 1)
+          .map((entry) => entry.key)
+          .toList();
+      duplicateNames.sort();
+
+      print('🔍 Duplicate names found: $duplicateNames');
+
+      return ['All', ...duplicateNames];
+    }
+  }
+
+  // Get filtered inventory items based on selected category, item name, and search query
   List<InventoryItem> _getFilteredItems(List<InventoryItem> items) {
     List<InventoryItem> filteredItems = items;
-    
+
+    print('🔍 Starting filter with ${items.length} total items');
+    print('🔍 Selected category: $_selectedCategory');
+    print('🔍 Selected item name: $_selectedItemName');
+
     // Filter by category
     if (_selectedCategory != 'All') {
+      final beforeCount = filteredItems.length;
       filteredItems = filteredItems
           .where((item) => item.categoryName == _selectedCategory)
           .toList();
+      print(
+          '🔍 After category filter ($_selectedCategory): ${filteredItems.length} items (was $beforeCount)');
+
+      // Debug: Show items in this category
+      for (final item in filteredItems) {
+        print('  - ${item.name} (ID: ${item.id})');
+      }
     }
-    
+
+    // Filter by item name (only if category is selected and item name is not 'All')
+    if (_selectedCategory != 'All' && _selectedItemName != 'All') {
+      final beforeCount = filteredItems.length;
+      filteredItems = filteredItems
+          .where((item) =>
+              item.name.trim().toLowerCase() ==
+              _selectedItemName.trim().toLowerCase())
+          .toList();
+      print(
+          '🔍 After item name filter ($_selectedItemName): ${filteredItems.length} items (was $beforeCount)');
+
+      // Debug: Show filtered items
+      for (final item in filteredItems) {
+        print('  - ${item.name} (ID: ${item.id})');
+      }
+    }
+
     // Filter by search query
     if (_searchQuery.isNotEmpty) {
       filteredItems = filteredItems
-          .where((item) => 
+          .where((item) =>
               item.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-              item.categoryName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-              (item.material?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
-              item.storageLocation.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-              (item.dimensions?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
-              (item.color?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
-              (item.size?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
-              (item.fabricType?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
-              (item.pattern?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
-              (item.carpetType?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
-              (item.frameType?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
-              (item.setNumber?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false) ||
-              (item.thermocolType?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false))
+              item.categoryName
+                  .toLowerCase()
+                  .contains(_searchQuery.toLowerCase()) ||
+              (item.material?.toLowerCase().contains(_searchQuery.toLowerCase()) ??
+                  false) ||
+              item.storageLocation
+                  .toLowerCase()
+                  .contains(_searchQuery.toLowerCase()) ||
+              (item.dimensions?.toLowerCase().contains(_searchQuery.toLowerCase()) ??
+                  false) ||
+              (item.color?.toLowerCase().contains(_searchQuery.toLowerCase()) ??
+                  false) ||
+              (item.size?.toLowerCase().contains(_searchQuery.toLowerCase()) ??
+                  false) ||
+              (item.fabricType?.toLowerCase().contains(_searchQuery.toLowerCase()) ??
+                  false) ||
+              (item.pattern?.toLowerCase().contains(_searchQuery.toLowerCase()) ??
+                  false) ||
+              (item.carpetType
+                      ?.toLowerCase()
+                      .contains(_searchQuery.toLowerCase()) ??
+                  false) ||
+              (item.frameType?.toLowerCase().contains(_searchQuery.toLowerCase()) ??
+                  false) ||
+              (item.setNumber?.toLowerCase().contains(_searchQuery.toLowerCase()) ??
+                  false) ||
+              (item.thermocolType
+                      ?.toLowerCase()
+                      .contains(_searchQuery.toLowerCase()) ??
+                  false))
           .toList();
     }
-    
+
     return filteredItems;
   }
-  @override
-  Widget build(BuildContext context) {
-    final inventoryItems = ref.watch(inventoryProvider);
-    final inventoryNotifier = ref.watch(inventoryProvider.notifier);
-    final currentUser = ref.watch(authProvider);
-    final isAdmin = currentUser?.role == 'admin';
-    final colorScheme = Theme.of(context).colorScheme;
 
-    // Add ONLY this method to your existing _InventoryListScreenState class
-    void _showFilterBottomSheet(BuildContext context, List<InventoryItem> inventoryItems) {
-      final colorScheme = Theme.of(context).colorScheme;
-
-      showModalBottomSheet(
-
-
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (context) => Container(
-          height: MediaQuery.of(context).size.height * 0.6, // 60% of screen
-
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(20),
+  PreferredSizeWidget _buildResponsiveAppBar(ColorScheme colorScheme) {
+    return AppBar(
+      backgroundColor: colorScheme.primary,
+      elevation: 0,
+      shadowColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
+      toolbarHeight: context.responsive(
+        mobile: 56.0,
+        tablet: 64.0,
+        desktop: 72.0,
+      ),
+      title: ResponsiveText(
+        'Inventory Overview',
+        mobileFontSize: 20.0,
+        tabletFontSize: 22.0,
+        desktopFontSize: 24.0,
+        fontWeight: FontWeight.bold,
+        color: colorScheme.onPrimary,
+      ),
+      centerTitle: true,
+      actions: [
+        Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: context.responsive(
+              mobile: 8.0,
+              tablet: 12.0,
+              desktop: 16.0,
             ),
           ),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Handle bar
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: colorScheme.onSurfaceVariant.withOpacity(0.4),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-
-                // Title
-                Text(
-                  'Filter by Category',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                // Filter chips
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _getCategories(inventoryItems).map((category) {
-                    final isSelected = _selectedCategory == category;
-                    return Container(
-                      margin: const EdgeInsets.only(right: 8),
-                      child: FilterChip(
-                        label: Text(
-                          category,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: isSelected
-                                ? colorScheme.onPrimary
-                                : colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          setState(() {
-                            _selectedCategory = category;
-                          });
-                          Navigator.pop(context);
-                        },
-                        backgroundColor: colorScheme.surface,
-                        selectedColor: colorScheme.primary,
-                        checkmarkColor: colorScheme.onPrimary,
-                        side: BorderSide(
-                          color: isSelected
-                              ? colorScheme.primary
-                              : colorScheme.outline.withOpacity(0.3),
-                          width: 1,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 4),
-                      ),
-                    );
-                  }).toList(),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Clear filter button
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _selectedCategory = 'All';
-                      });
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Clear Filter'),
-                  ),
-                ),
-
-                // Bottom padding
-                SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-    return Scaffold(
-      appBar: CustomAppBar(
-        title: 'Inventory Overview',
-        showBackButton: false,
-        actions: [
-          IconButton(
-            icon: Icon(_isSearchVisible ? Icons.search_off : Icons.search),
+          child: IconButton(
             onPressed: () {
               setState(() {
                 _isSearchVisible = !_isSearchVisible;
@@ -215,146 +209,670 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                 }
               });
             },
+            icon: Icon(
+              _isSearchVisible ? Icons.search_off : Icons.search,
+              color: colorScheme.onPrimary,
+              size: context.responsive(
+                mobile: 20.0,
+                tablet: 22.0,
+                desktop: 24.0,
+              ),
+            ),
+            tooltip: _isSearchVisible ? 'Hide Search' : 'Search',
+            padding: EdgeInsets.all(
+              context.responsive(
+                mobile: 8.0,
+                tablet: 10.0,
+                desktop: 12.0,
+              ),
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.filter_list),
+        ),
+        Padding(
+          padding: EdgeInsets.only(
+            right: context.responsive(
+              mobile: 8.0,
+              tablet: 12.0,
+              desktop: 16.0,
+            ),
+          ),
+          child: IconButton(
             onPressed: () {
-              final inventoryItems = ref.watch(inventoryProvider); // This is already a List<InventoryItem>
+              final inventoryItems = ref.watch(inventoryProvider);
               _showFilterBottomSheet(context, inventoryItems);
             },
-          ),
-        ],
-      ),
-      backgroundColor: colorScheme.background,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              colorScheme.primary,
-              colorScheme.background,
-            ],
-            stops: const [0.0, 0.25],
-          ),
-        ),
-        child: Container(
-          margin: EdgeInsets.only(
-            top: context.responsive(
-              mobile: 15.0,
-              tablet: 18.0,
-              desktop: 24.0,
+            icon: Icon(
+              Icons.filter_list,
+              color: colorScheme.onPrimary,
+              size: context.responsive(
+                mobile: 20.0,
+                tablet: 22.0,
+                desktop: 24.0,
+              ),
+            ),
+            tooltip: 'Filter',
+            padding: EdgeInsets.all(
+              context.responsive(
+                mobile: 8.0,
+                tablet: 10.0,
+                desktop: 12.0,
+              ),
             ),
           ),
+        ),
+      ],
+    );
+  }
+
+  void _showFilterBottomSheet(
+      BuildContext context, List<InventoryItem> inventoryItems) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    showDialog(
+        context: context,
+        // barrierDismissible: true,
+        useRootNavigator: true, // This completely hides the bottom navigation
+        barrierColor:
+            Colors.black.withOpacity(0.5), // Semi-transparent background
+        builder: (context) => StatefulBuilder(
+              builder: (context, setModalState) => Material(
+                color: Colors.transparent,
+                child: GestureDetector(
+                  onTap: () => Navigator.of(context)
+                      .pop(), // Dismiss when tapping outside
+                  child: Container(
+                    height: MediaQuery.of(context).size.height,
+                    width: MediaQuery.of(context).size.width,
+                    decoration: BoxDecoration(
+                      color: colorScheme.surface,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(20),
+                      ),
+                    ),
+                    child: GestureDetector(
+                      onTap: () {}, // Prevent tap from propagating to parent
+                      child: Column(
+                        children: [
+                          // Handle bar
+                          Container(
+                            margin: const EdgeInsets.only(top: 12),
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color:
+                                  colorScheme.onSurfaceVariant.withOpacity(0.4),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+
+                          // Header
+                          Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Filter Options',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: colorScheme.onSurface,
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  icon: Icon(
+                                    Icons.close,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Filter content
+                          Expanded(
+                            child: SingleChildScrollView(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Category Filter Section
+                                  Text(
+                                    'Filter by Category',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: colorScheme.onSurface,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: _getCategories(inventoryItems)
+                                        .map((category) {
+                                      final isSelected =
+                                          _selectedCategory == category;
+                                      return FilterChip(
+                                        label: Text(
+                                          category,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                            color: isSelected
+                                                ? colorScheme.onPrimary
+                                                : colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                        selected: isSelected,
+                                        onSelected: (selected) {
+                                          setState(() {
+                                            _selectedCategory = category;
+                                            _selectedItemName =
+                                                'All'; // Reset item name when category changes
+                                          });
+                                          print(
+                                              '🔄 Category selected: $category - Updating modal state');
+                                          setModalState(() {
+                                            // This ensures the modal rebuilds immediately
+                                          });
+                                        },
+                                        backgroundColor:
+                                            colorScheme.surfaceVariant,
+                                        selectedColor: colorScheme.primary,
+                                        checkmarkColor: colorScheme.onPrimary,
+                                        side: BorderSide(
+                                          color: isSelected
+                                              ? colorScheme.primary
+                                              : colorScheme.outline,
+                                          width: 1,
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+
+                                  const SizedBox(height: 24),
+
+                                  // Item Name Filter Section (only show if category is selected)
+                                  if (_selectedCategory != 'All') ...[
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'Filter by Item Name (${_selectedCategory})',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            color: colorScheme.onSurface,
+                                          ),
+                                        ),
+                                        // const SizedBox(width: 8),
+                                        // Container(
+                                        //   padding: const EdgeInsets.symmetric(
+                                        //       horizontal: 8, vertical: 2),
+                                        //   decoration: BoxDecoration(
+                                        //     color: colorScheme.primary.withOpacity(0.1),
+                                        //     borderRadius: BorderRadius.circular(12),
+                                        //   ),
+                                        //   child: Text(
+                                        //     'Available Now',
+                                        //     style: TextStyle(
+                                        //       fontSize: 10,
+                                        //       fontWeight: FontWeight.w500,
+                                        //       color: colorScheme.primary,
+                                        //     ),
+                                        //   ),
+                                        // ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Builder(
+                                      builder: (context) {
+                                        final itemNames =
+                                            _getItemNamesInCategory(
+                                                inventoryItems,
+                                                _selectedCategory);
+
+                                        print(
+                                            '🔍 Filter UI - Category: $_selectedCategory');
+                                        print(
+                                            '🔍 Filter UI - Item names found: $itemNames');
+                                        print(
+                                            '🔍 Filter UI - Item names length: ${itemNames.length}');
+
+                                        // Show loading indicator while processing
+                                        if (itemNames.isEmpty) {
+                                          return Container(
+                                            padding: const EdgeInsets.all(16),
+                                            child: Row(
+                                              children: [
+                                                SizedBox(
+                                                  width: 16,
+                                                  height: 16,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    color: colorScheme.primary,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Text(
+                                                  'Loading item names...',
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    color: colorScheme
+                                                        .onSurfaceVariant,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        }
+
+                                        if (itemNames.length <= 1) {
+                                          // Get all unique item names in this category for display
+                                          final categoryItems = inventoryItems
+                                              .where((item) =>
+                                                  item.categoryName ==
+                                                  _selectedCategory)
+                                              .toList();
+                                          final uniqueNames = categoryItems
+                                              .map((item) => item.name)
+                                              .toSet()
+                                              .toList();
+                                          uniqueNames.sort();
+
+                                          return Container(
+                                            padding: const EdgeInsets.all(16),
+                                            decoration: BoxDecoration(
+                                              color: colorScheme.surfaceVariant
+                                                  .withOpacity(0.3),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'No duplicate item names found in ${_selectedCategory}',
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: colorScheme
+                                                        .onSurfaceVariant,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Text(
+                                                  'Available items: ${uniqueNames.length}',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: colorScheme
+                                                        .onSurfaceVariant
+                                                        .withOpacity(0.7),
+                                                  ),
+                                                ),
+                                                if (uniqueNames.isNotEmpty) ...[
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    'Items: ${uniqueNames.take(3).join(', ')}${uniqueNames.length > 3 ? '...' : ''}',
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      color: colorScheme
+                                                          .onSurfaceVariant
+                                                          .withOpacity(0.6),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                          );
+                                        }
+                                        return Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            // Success indicator
+                                            Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: colorScheme.primary
+                                                    .withOpacity(0.1),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    Icons.check_circle,
+                                                    size: 14,
+                                                    color: colorScheme.primary,
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Text(
+                                                    '${itemNames.length - 1} duplicate item names found',
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      color:
+                                                          colorScheme.primary,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            Wrap(
+                                              spacing: 8,
+                                              runSpacing: 8,
+                                              children:
+                                                  itemNames.map((itemName) {
+                                                final isSelected =
+                                                    _selectedItemName ==
+                                                        itemName;
+                                                return FilterChip(
+                                                  label: Text(
+                                                    itemName,
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      color: isSelected
+                                                          ? colorScheme
+                                                              .onPrimary
+                                                          : colorScheme
+                                                              .onSurfaceVariant,
+                                                    ),
+                                                  ),
+                                                  selected: isSelected,
+                                                  onSelected: (selected) {
+                                                    setState(() {
+                                                      _selectedItemName =
+                                                          itemName;
+                                                    });
+                                                    print(
+                                                        '🔄 Item name selected: $itemName - Updating modal state');
+                                                    setModalState(() {
+                                                      // This ensures the modal rebuilds immediately
+                                                    });
+                                                  },
+                                                  backgroundColor: colorScheme
+                                                      .surfaceVariant,
+                                                  selectedColor:
+                                                      colorScheme.primary,
+                                                  checkmarkColor:
+                                                      colorScheme.onPrimary,
+                                                  side: BorderSide(
+                                                    color: isSelected
+                                                        ? colorScheme.primary
+                                                        : colorScheme.outline,
+                                                    width: 1,
+                                                  ),
+                                                );
+                                              }).toList(),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    ),
+                                  ],
+
+                                  // const SizedBox(height: 24),
+                                  //
+                                  // // Current Filter Status
+                                  // Container(
+                                  //   padding: const EdgeInsets.all(16),
+                                  //   decoration: BoxDecoration(
+                                  //     color: colorScheme.primary.withOpacity(0.1),
+                                  //     borderRadius: BorderRadius.circular(12),
+                                  //     border: Border.all(
+                                  //       color: colorScheme.primary.withOpacity(0.3),
+                                  //       width: 1,
+                                  //     ),
+                                  //   ),
+                                  //   child: Column(
+                                  //     crossAxisAlignment: CrossAxisAlignment.start,
+                                  //     children: [
+                                  //       Text(
+                                  //         'Current Filters:',
+                                  //         style: TextStyle(
+                                  //           fontSize: 14,
+                                  //           fontWeight: FontWeight.w600,
+                                  //           color: colorScheme.primary,
+                                  //         ),
+                                  //       ),
+                                  //       const SizedBox(height: 8),
+                                  //       Text(
+                                  //         'Category: $_selectedCategory',
+                                  //         style: TextStyle(
+                                  //           fontSize: 12,
+                                  //           color: colorScheme.onSurfaceVariant,
+                                  //         ),
+                                  //       ),
+                                  //       if (_selectedCategory != 'All') ...[
+                                  //         Text(
+                                  //           'Item Name: $_selectedItemName',
+                                  //           style: TextStyle(
+                                  //             fontSize: 12,
+                                  //             color: colorScheme.onSurfaceVariant,
+                                  //           ),
+                                  //         ),
+                                  //         const SizedBox(height: 4),
+                                  //         Builder(
+                                  //           builder: (context) {
+                                  //             final categoryItems = inventoryItems
+                                  //                 .where((item) =>
+                                  //                     item.categoryName ==
+                                  //                     _selectedCategory)
+                                  //                 .toList();
+                                  //             final filteredItems =
+                                  //                 _getFilteredItems(inventoryItems);
+                                  //             return Text(
+                                  //               'Showing ${filteredItems.length} of ${categoryItems.length} items in $_selectedCategory',
+                                  //               style: TextStyle(
+                                  //                 fontSize: 11,
+                                  //                 color:
+                                  //                     colorScheme.primary.withOpacity(0.8),
+                                  //                 fontWeight: FontWeight.w500,
+                                  //               ),
+                                  //             );
+                                  //           },
+                                  //         ),
+                                  //       ],
+                                  //     ],
+                                  //   ),
+                                  // ),
+                                  //
+                                  // const SizedBox(height: 20),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          // Action buttons
+                          Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        _selectedCategory = 'All';
+                                        _selectedItemName = 'All';
+                                      });
+                                      setModalState(() {
+                                        // This ensures the modal rebuilds immediately
+                                      });
+                                    },
+                                    child: const Text('Clear All'),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: const Text('Apply Filters'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Bottom padding
+                          // SizedBox(
+                          //     height:
+                          //         MediaQuery.of(context).padding.bottom + 8),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final inventoryItems = ref.watch(inventoryProvider);
+    final inventoryNotifier = ref.watch(inventoryProvider.notifier);
+    final currentUser = ref.watch(authProvider);
+    final isAdmin = currentUser?.role == 'admin';
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return PopScope(
+      canPop: true,
+      onPopInvoked: (didPop) {
+        if (didPop) {
+          print('Inventory list screen back button pressed');
+        }
+      },
+      child: Scaffold(
+        appBar: _buildResponsiveAppBar(colorScheme),
+        backgroundColor: colorScheme.background,
+        body: Container(
           decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(
-                context.responsive(
-                  mobile: 28.0,
-                  tablet: 28.0,
-                  desktop: 28.0,
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                colorScheme.primary,
+                colorScheme.background,
+              ],
+              stops: const [0.0, 0.25],
+            ),
+          ),
+          child: Container(
+            margin: const EdgeInsets.only(top: 15),
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(28)),
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.primary,
+                  blurRadius: 25,
+                  offset: const Offset(0, -8),
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(28)),
+              child: Container(
+                padding: const EdgeInsets.only(
+                    bottom: 100), // Add bottom padding to avoid nav bar
+                child: Column(
+                  children: [
+                    // Search Bar
+                    if (_isSearchVisible) _buildSearchBar(),
+                    // Main Body
+                    Expanded(
+                      child: _buildBody(
+                          inventoryItems, inventoryNotifier, isAdmin),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-          padding: const EdgeInsets.only(
-              bottom: 100), // Add bottom padding to avoid nav bar
-          child: Column(
-            children: [
-              // Search Bar
-              if (_isSearchVisible) _buildSearchBar(),
-              // Main Body
-              Expanded(
-                child: _buildBody(inventoryItems, inventoryNotifier, isAdmin),
-              ),
-            ],
-          ),
         ),
-      ),
-      floatingActionButton: isAdmin
-          ? Container(
-              margin: const EdgeInsets.only(
-                  bottom: 100), // Space above bottom nav bar
-              child: FloatingActionButton.extended(
-                heroTag: "inventory_add_button",
-                onPressed: () async {
-                  final result = await PersistentNavBarNavigator.pushNewScreen(
-                    context,
-                    screen: const InventoryFormPage(),
-                    withNavBar: false,
-                    pageTransitionAnimation: PageTransitionAnimation.cupertino,
-                  );
+        floatingActionButton: isAdmin
+            ? Container(
+                margin: const EdgeInsets.only(
+                    bottom: 100), // Space above bottom nav bar
+                child: FloatingActionButton.extended(
+                  heroTag: "inventory_add_button",
+                  onPressed: () async {
+                    final result =
+                        await PersistentNavBarNavigator.pushNewScreen(
+                      context,
+                      screen: const InventoryFormPage(),
+                      withNavBar: false,
+                      pageTransitionAnimation:
+                          PageTransitionAnimation.cupertino,
+                    );
 
-                  // Handle the result from form submission and refresh data
-                  if (result != null && result is Map && result['success'] == true) {
-                    // Refresh inventory data to show the new item
-                    try {
-                      await ref.read(inventoryProvider.notifier).refreshInventoryData();
-                      print('✅ Inventory data refreshed after adding new item');
-                    } catch (e) {
-                      print('⚠️ Warning: Could not refresh inventory data: $e');
+                    // Handle the result from form submission and refresh data
+                    if (result != null &&
+                        result is Map &&
+                        result['success'] == true) {
+                      // Refresh inventory data to show the new item
+                      try {
+                        await ref
+                            .read(inventoryProvider.notifier)
+                            .silentRefreshInventoryData();
+                        print(
+                            '✅ Inventory data silently refreshed after adding new item');
+                      } catch (e) {
+                        print(
+                            '⚠️ Warning: Could not refresh inventory data: $e');
+                      }
                     }
-                  }
-                  print('Form result received: $result');
-                  if (result != null && result is Map<String, dynamic>) {
-                    print('Result is valid map, adding to inventory');
+                    print('Form result received: $result');
+                    if (result != null && result is Map<String, dynamic>) {
+                      print('Result is valid map, showing success message');
 
-                    // Create new inventory item
-                    final newItem = InventoryItem(
-                      id: DateTime.now().millisecondsSinceEpoch.toString(),
-                      name: result['name'] ?? 'New Item',
-                      category: '1', // Default category ID
-                      categoryName: result['category'] ?? 'Unknown',
-                      unit: 'piece', // Default unit
-                      storageLocation: result['location'] ?? 'Unknown',
-                      notes: result['notes'] ?? '',
-                      availableQuantity: (result['quantity'] ?? 1).toDouble(),
-                      material: result['material'] ?? 'Unknown',
-                      createdAt: DateTime.now().toIso8601String(),
-                      status: (result['quantity'] ?? 0) > 5
-                          ? 'In Stock'
-                          : 'Low Stock',
-                      imageBytes: result['imageBytes'] != null
-                          ? Uint8List.fromList(result['imageBytes'])
-                          : null,
-                      imageName: result['imageName'],
-                    );
-
-                    print('New item created: ${newItem.toMap()}');
-
-                    // Add to provider
-                    ref
-                        .read(inventoryProvider.notifier)
-                        .addItem(newItem.toMap());
-                    print('Inventory items count: ${inventoryItems.length}');
-
-                    SnackBarManager.showSuccess(
-                      context: context,
-                      message: '${result['name']} added to inventory successfully!',
-                    );
-                  } else {
-                    print('Result is null or not a map: $result');
-                  }
-                },
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Theme.of(context).colorScheme.surface,
-                // icon: const Icon(Icons.add),
-                label: const Icon(Icons.add),
-                elevation: 12,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                      // Show success message - the item is already in the list via silent refresh
+                      final itemName =
+                          result['data']?['name'] ?? result['name'] ?? 'Item';
+                      SnackBarManager.showSuccessForInventory(
+                        context: context,
+                        message: '$itemName added to inventory successfully!',
+                      );
+                    } else {
+                      print('Result is null or not a map: $result');
+                    }
+                  },
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.surface,
+                  // icon: const Icon(Icons.add),
+                  label: const Icon(Icons.add),
+                  elevation: 12,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
-              ),
-            )
-          : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+              )
+            : null,
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      ),
     );
   }
 
   Widget _buildSearchBar() {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -566,6 +1084,73 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
           const SizedBox(height: 16),
         ],
 
+        // Filter Status Indicator
+        if (_selectedCategory != 'All' ||
+            _selectedItemName != 'All' ||
+            _searchQuery.isNotEmpty) ...[
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: colorScheme.primary.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.filter_list,
+                  color: colorScheme.primary,
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    () {
+                      final filteredItems = _getFilteredItems(inventoryItems);
+                      String status =
+                          'Showing ${filteredItems.length} of ${inventoryItems.length} items';
+                      if (_selectedCategory != 'All') {
+                        status += ' in $_selectedCategory';
+                      }
+                      if (_selectedItemName != 'All') {
+                        status += ' (filtered by "$_selectedItemName")';
+                      }
+                      if (_searchQuery.isNotEmpty) {
+                        status += ' (search: "$_searchQuery")';
+                      }
+                      return status;
+                    }(),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedCategory = 'All';
+                      _selectedItemName = 'All';
+                      _searchQuery = '';
+                      _searchController.clear();
+                    });
+                  },
+                  child: Icon(
+                    Icons.clear,
+                    color: colorScheme.primary,
+                    size: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+
         // Inventory List
         Expanded(
           child: RefreshIndicator(
@@ -665,12 +1250,12 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
   // Helper method to get formatted dimensions display
   String _getDimensionsDisplay(InventoryItem item) {
     List<String> dimensionParts = [];
-    
+
     // Add general dimensions if available
     if (item.dimensions != null && item.dimensions!.isNotEmpty) {
       dimensionParts.add(item.dimensions!);
     }
-    
+
     // Add width and length if available
     if (item.width != null && item.length != null) {
       dimensionParts.add('${item.width} × ${item.length}');
@@ -679,17 +1264,17 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
     } else if (item.length != null) {
       dimensionParts.add('L: ${item.length}');
     }
-    
+
     // Add size if available
     if (item.size != null && item.size!.isNotEmpty) {
       dimensionParts.add('Size: ${item.size}');
     }
-    
+
     // Add color if available
     if (item.color != null && item.color!.isNotEmpty) {
       dimensionParts.add('Color: ${item.color}');
     }
-    
+
     // Add category-specific dimensions
     switch (item.categoryName) {
       case 'Fabric':
@@ -724,8 +1309,10 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
         }
         break;
     }
-    
-    return dimensionParts.isNotEmpty ? dimensionParts.join(' • ') : 'No dimensions';
+
+    return dimensionParts.isNotEmpty
+        ? dimensionParts.join(' • ')
+        : 'No dimensions';
   }
 
   Widget _buildInventoryCard(InventoryItem item, bool isAdmin) {
@@ -747,37 +1334,48 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
         ),
         child: ListTile(
           contentPadding: const EdgeInsets.all(20),
-          leading: Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: item.itemImage != null && item.itemImage!.isNotEmpty
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
+          leading: GestureDetector(
+            onTap: item.itemImage != null && item.itemImage!.isNotEmpty
+                ? () => _showFullScreenImage(
+                      context,
                       ref
                           .read(inventoryServiceProvider)
                           .getImageUrl(item.itemImage),
-                      width: 50,
-                      height: 50,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Icon(
-                          _getCategoryIcon(item.categoryName),
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 24,
-                        );
-                      },
+                      item.name,
+                    )
+                : null,
+            child: Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: item.itemImage != null && item.itemImage!.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        ref
+                            .read(inventoryServiceProvider)
+                            .getImageUrl(item.itemImage),
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            _getCategoryIcon(item.categoryName),
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 24,
+                          );
+                        },
+                      ),
+                    )
+                  : Icon(
+                      _getCategoryIcon(item.categoryName),
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 24,
                     ),
-                  )
-                : Icon(
-                    _getCategoryIcon(item.categoryName),
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 24,
-                  ),
+            ),
           ),
           title: Text(
             item.name,
@@ -868,9 +1466,10 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                 ),
               ),
               const SizedBox(height: 4),
-
               Text(
-                'Qty: ${item.availableQuantity.toStringAsFixed(0)}',
+                item.totalStock != null
+                    ? 'Available: ${item.availableQuantity.toStringAsFixed(0)} / Total: ${item.totalStock!.toStringAsFixed(0)}'
+                    : 'Qty: ${item.availableQuantity.toStringAsFixed(0)}',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -901,6 +1500,19 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
     }
   }
 
+  void _showFullScreenImage(
+      BuildContext context, String imageUrl, String itemName) {
+    PersistentNavBarNavigator.pushNewScreen(
+      context,
+      screen: FullScreenImageViewer(
+        imageUrl: imageUrl,
+        itemName: itemName,
+      ),
+      withNavBar: false, // This will hide the bottom navigation bar
+      pageTransitionAnimation: PageTransitionAnimation.cupertino,
+    );
+  }
+
   void _showItemOptions(BuildContext context, Map<String, dynamic> item) {
     final currentUser = ref.read(authProvider);
     final isAdmin = currentUser?.role == 'admin';
@@ -909,112 +1521,124 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.7,
-        ),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.shadow.withOpacity(0.26),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                borderRadius: BorderRadius.circular(2),
+      isDismissible: true,
+      enableDrag: true,
+      useSafeArea: true,
+      builder: (context) => PopScope(
+        canPop: true,
+        onPopInvoked: (didPop) {
+          // Modal will be dismissed automatically
+          if (didPop) {
+            print('Modal dismissed by back button');
+          }
+        },
+        child: Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(context).colorScheme.shadow.withOpacity(0.26),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
               ),
-            ),
-            const SizedBox(height: 24),
-
-            // Title
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'Item Options',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.primary,
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
-            // Options - Use Expanded instead of Flexible
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    // Admin-only actions
-                    if (isAdmin) ...[
+              // Title
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'Item Options',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Options - Use Expanded instead of Flexible
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // Admin-only actions
+                      if (isAdmin) ...[
+                        _buildOptionTile(
+                          icon: Icons.edit,
+                          iconColor: Theme.of(context).colorScheme.primary,
+                          title: 'Edit ${item['name']}',
+                          onTap: () {
+                            Navigator.pop(context);
+                            _editItem(item);
+                          },
+                        ),
+                        _buildOptionTile(
+                          icon: Icons.delete_outline,
+                          iconColor: Theme.of(context).colorScheme.error,
+                          title: 'Delete ${item['name']}',
+                          onTap: () {
+                            Navigator.pop(context);
+                            _deleteItem(item);
+                          },
+                        ),
+                      ],
+                      // Issue to Event option hidden as requested
+                      // _buildOptionTile(
+                      //   icon: Icons.event_note,
+                      //   iconColor: Theme.of(context).colorScheme.tertiary,
+                      //   title: 'Issue to Event',
+                      //   onTap: () {
+                      //     Navigator.pop(context);
+                      //     _issueToEvent(item);
+                      //   },
+                      // ),
                       _buildOptionTile(
-                        icon: Icons.edit,
-                        iconColor: Theme.of(context).colorScheme.primary,
-                        title: 'Edit ${item['name']}',
+                        icon: Icons.history,
+                        iconColor: Theme.of(context).colorScheme.tertiary,
+                        title: 'View Issue History',
                         onTap: () {
                           Navigator.pop(context);
-                          _editItem(item);
+                          PersistentNavBarNavigator.pushNewScreen(
+                            context,
+                            screen: ItemIssueHistoryPage(
+                              itemId: item['id'],
+                              itemName: item['name'],
+                            ),
+                            withNavBar: false,
+                            pageTransitionAnimation:
+                                PageTransitionAnimation.cupertino,
+                          );
                         },
                       ),
-                      _buildOptionTile(
-                        icon: Icons.delete_outline,
-                        iconColor: Theme.of(context).colorScheme.error,
-                        title: 'Delete ${item['name']}',
-                        onTap: () {
-                          Navigator.pop(context);
-                          _deleteItem(item);
-                        },
-                      ),
+
+                      // Extra bottom padding to ensure last item is fully visible
+                      const SizedBox(height: 40),
                     ],
-                    // Both admin and user can issue to events
-                    _buildOptionTile(
-                      icon: Icons.event_note,
-                      iconColor: Theme.of(context).colorScheme.tertiary,
-                      title: 'Issue to Event',
-                      onTap: () {
-                        Navigator.pop(context);
-                        _issueToEvent(item);
-                      },
-                    ),
-                    _buildOptionTile(
-                      icon: Icons.history,
-                      iconColor: Theme.of(context).colorScheme.tertiary,
-                      title: 'View Issue History',
-                      onTap: () {
-                        Navigator.pop(context);
-                        PersistentNavBarNavigator.pushNewScreen(
-                          context,
-                          screen: ItemIssueHistoryPage(
-                            itemId: item['id'],
-                            itemName: item['name'],
-                          ),
-                          withNavBar: false,
-                          pageTransitionAnimation:
-                              PageTransitionAnimation.cupertino,
-                        );
-                      },
-                    ),
-
-                    // Extra bottom padding to ensure last item is fully visible
-                    const SizedBox(height: 40),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1115,34 +1739,35 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
 
     try {
       await ref.read(inventoryProvider.notifier).deleteInventoryItem(
-        id: int.parse(item['id'].toString()),
-      );
+            id: int.parse(item['id'].toString()),
+          );
 
       Navigator.of(context, rootNavigator: true).pop(); // close loader
 
-      SnackBarManager.showSuccess(
+      SnackBarManager.showSuccessForInventory(
         context: context,
         message: '${item['name']} deleted successfully!',
       );
     } catch (e) {
       Navigator.of(context, rootNavigator: true).pop(); // close loader
 
-      SnackBarManager.showError(
+      SnackBarManager.showErrorForInventory(
         context: context,
         message: 'Failed to delete ${item['name']}: ${e.toString()}',
       );
     }
   }
 
-  void _issueToEvent(Map<String, dynamic> item) {
-    print('Opening issue screen for item: ${item['name']}');
-    PersistentNavBarNavigator.pushNewScreen(
-      context,
-      screen: IssueInventoryPage(inventoryItem: item),
-      withNavBar: false,
-      pageTransitionAnimation: PageTransitionAnimation.cupertino,
-    );
-  }
+  // Issue to Event functionality hidden as requested
+  // void _issueToEvent(Map<String, dynamic> item) {
+  //   print('Opening issue screen for item: ${item['name']}');
+  //   PersistentNavBarNavigator.pushNewScreen(
+  //     context,
+  //     screen: IssueInventoryPage(inventoryItem: item),
+  //     withNavBar: false,
+  //     pageTransitionAnimation: PageTransitionAnimation.cupertino,
+  //   );
+  // }
 
   IconData _getCategoryIcon(String category) {
     switch (category) {
@@ -1213,7 +1838,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
               ),
             ),
             const SizedBox(height: 24),
-        
+
             // "No Inventory Available" text
             Text(
               'No Inventory Available',
@@ -1225,7 +1850,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
-        
+
             // Descriptive text
             Text(
               'There are no inventory items to display.\nAdd some items to get started.',
@@ -1237,7 +1862,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-        
+
             // Add Inventory button
             ElevatedButton.icon(
               onPressed: () async {
@@ -1248,13 +1873,18 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                   withNavBar: false,
                   pageTransitionAnimation: PageTransitionAnimation.cupertino,
                 );
-        
+
                 // Handle the result from form submission and refresh data
-                if (result != null && result is Map && result['success'] == true) {
+                if (result != null &&
+                    result is Map &&
+                    result['success'] == true) {
                   // Refresh inventory data to show the new item
                   try {
-                    await ref.read(inventoryProvider.notifier).refreshInventoryData();
-                    print('✅ Inventory data refreshed after adding new item');
+                    await ref
+                        .read(inventoryProvider.notifier)
+                        .silentRefreshInventoryData();
+                    print(
+                        '✅ Inventory data silently refreshed after adding new item');
                   } catch (e) {
                     print('⚠️ Warning: Could not refresh inventory data: $e');
                   }
@@ -1276,7 +1906,8 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),

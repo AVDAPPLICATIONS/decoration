@@ -9,6 +9,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:intl/intl.dart';
 import '../../utils/constants.dart';
+import '../../utils/snackbar_manager.dart';
 import '../../services/gallery_service.dart';
 import '../../services/event_service.dart';
 import '../../services/api_service.dart';
@@ -84,16 +85,15 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
     _inventoryTabController.dispose();
     super.dispose();
   }
+
   void _handleFabAction() {
     if (_subTabController.index == 0 && _mainTabController.index == 1) {
       _addDesignImage(); // when first tab is active
     } else if (_subTabController.index == 1 && _mainTabController.index == 1) {
       _addFinalDecorationImage(); // when second tab is active
-    }
-    else if (_mainTabController.index == 2){
+    } else if (_mainTabController.index == 2) {
       _showAddCostDialog();
-    }
-    else if (_mainTabController.index == 0){
+    } else if (_mainTabController.index == 0) {
       // _IssueItemDialogState();
       _showIssueItemDialog();
     }
@@ -144,22 +144,16 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
             };
           });
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Event data refreshed successfully'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
-            ),
+          SnackBarManager.showSuccess(
+            context: context,
+            message: 'Event data refreshed successfully',
           );
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to refresh: $e'),
-          backgroundColor: colorScheme.error,
-          duration: const Duration(seconds: 3),
-        ),
+      SnackBarManager.showError(
+        context: context,
+        message: 'Failed to refresh: $e',
       );
     } finally {
       setState(() {
@@ -204,7 +198,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
             color: colorScheme.onPrimary,
           ),
         ),
-
         backgroundColor: colorScheme.background,
         body: Column(
           children: [
@@ -671,7 +664,8 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
 
               // Total Cost Card
               Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                margin:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: colorScheme.primary,
@@ -754,7 +748,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
 
               const SizedBox(height: 8),
 
-
               // Content Area
               Expanded(
                 child:
@@ -824,7 +817,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
           ),
 
           // Bottom add button
-
         ],
       ),
     );
@@ -967,7 +959,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
     );
   }
 
-
   void _showDeleteConfirmation() {
     showDialog(
       context: context,
@@ -984,11 +975,9 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
             onPressed: () {
               Navigator.pop(context);
               // TODO: Implement delete functionality
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Image deleted successfully'),
-                  backgroundColor: Colors.green,
-                ),
+              SnackBarManager.showSuccess(
+                context: context,
+                message: 'Image deleted successfully',
               );
             },
             style: ElevatedButton.styleFrom(
@@ -1069,11 +1058,9 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         );
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('File URL not available'),
-          backgroundColor: Colors.red,
-        ),
+      SnackBarManager.showError(
+        context: context,
+        message: 'File URL not available',
       );
     }
   }
@@ -1096,7 +1083,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
       },
     );
   }
-
 
   void _addFinalDecorationImage() {
     showDialog(
@@ -2693,9 +2679,9 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
                     ],
                   ),
                 ),
-                
+
                 pw.SizedBox(height: 20),
-                
+
                 // Summary
                 pw.Container(
                   width: double.infinity,
@@ -2709,66 +2695,77 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
                     children: [
                       pw.Text(
                         'Total Cost Items:',
-                        style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+                        style: pw.TextStyle(
+                            fontSize: 14, fontWeight: pw.FontWeight.bold),
                       ),
                       pw.Text(
                         '${costs.length}',
-                        style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+                        style: pw.TextStyle(
+                            fontSize: 14, fontWeight: pw.FontWeight.bold),
                       ),
                     ],
                   ),
                 ),
-                
+
                 pw.SizedBox(height: 20),
-                
+
                 // Cost items table
                 pw.Table(
                   border: pw.TableBorder.all(color: PdfColors.grey300),
                   children: [
                     // Header row
                     pw.TableRow(
-                      decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                      decoration:
+                          const pw.BoxDecoration(color: PdfColors.grey200),
                       children: [
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(8),
-                          child: pw.Text('Description', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                          child: pw.Text('Description',
+                              style:
+                                  pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(8),
-                          child: pw.Text('Amount (Rs)', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                          child: pw.Text('Amount (Rs)',
+                              style:
+                                  pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(8),
-                          child: pw.Text('Date', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                          child: pw.Text('Date',
+                              style:
+                                  pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                         ),
                       ],
                     ),
                     // Data rows
-                    ...costs.map((cost) => pw.TableRow(
-                      children: [
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(8),
-                          child: pw.Text(cost['description'] ?? ''),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(8),
-                          child: pw.Text('Rs${_formatAmount(cost['amount'])}'),
-                        ),
-                        pw.Padding(
-                          padding: const pw.EdgeInsets.all(8),
-                          child: pw.Text(
-                            cost['uploaded_at'] != null 
-                              ? DateFormat('dd MMM yyyy').format(DateTime.parse(cost['uploaded_at']))
-                              : 'N/A'
-                          ),
-                        ),
-                      ],
-                    )).toList(),
+                    ...costs
+                        .map((cost) => pw.TableRow(
+                              children: [
+                                pw.Padding(
+                                  padding: const pw.EdgeInsets.all(8),
+                                  child: pw.Text(cost['description'] ?? ''),
+                                ),
+                                pw.Padding(
+                                  padding: const pw.EdgeInsets.all(8),
+                                  child: pw.Text(
+                                      'Rs${_formatAmount(cost['amount'])}'),
+                                ),
+                                pw.Padding(
+                                  padding: const pw.EdgeInsets.all(8),
+                                  child: pw.Text(cost['uploaded_at'] != null
+                                      ? DateFormat('dd MMM yyyy').format(
+                                          DateTime.parse(cost['uploaded_at']))
+                                      : 'N/A'),
+                                ),
+                              ],
+                            ))
+                        .toList(),
                   ],
                 ),
-                
+
                 pw.SizedBox(height: 20),
-                
+
                 // Total
                 pw.Container(
                   width: double.infinity,
@@ -2812,15 +2809,15 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
       // Show PDF preview and allow printing/sharing
       await Printing.layoutPdf(
         onLayout: (PdfPageFormat format) async => pdf.save(),
-        name: 'Event_Cost_Report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf',
+        name:
+            'Event_Cost_Report_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf',
       );
-
     } catch (e) {
       // Close loading dialog if it's open
       if (Navigator.of(context).canPop()) {
         Navigator.of(context).pop();
       }
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error generating PDF: $e'),

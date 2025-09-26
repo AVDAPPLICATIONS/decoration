@@ -69,6 +69,15 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
           SnackBar(
             content: Text('Error loading item: $e'),
             backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.only(
+              bottom: 100, // Position above bottom navigation bar
+              left: 16,
+              right: 16,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
         Navigator.of(context).pop();
@@ -96,6 +105,18 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
         widthCtrl.text = item.width?.toString() ?? '';
         lengthCtrl.text = item.length?.toString() ?? '';
         colorCtrl.text = item.color ?? '';
+        // Set size field with combined width and length or use item.size if available
+        if (item.size != null && item.size!.isNotEmpty) {
+          sizeCtrl.text = item.size!;
+          print('🔍 Debug Fabric Edit: Using item.size = ${item.size}');
+        } else if (item.width != null && item.length != null) {
+          sizeCtrl.text = '${item.width}x${item.length}';
+          print(
+              '🔍 Debug Fabric Edit: Combined width and length = ${item.width}x${item.length}');
+        } else {
+          print(
+              '🔍 Debug Fabric Edit: No size data available - item.size: ${item.size}, width: ${item.width}, length: ${item.length}');
+        }
         break;
       case 'carpet':
       case 'carpets':
@@ -131,7 +152,7 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Scaffold(
       backgroundColor: colorScheme.background,
       appBar: CustomAppBar(
@@ -216,113 +237,79 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
       case 'furniture':
         return [
           _buildTextField('Furniture Name', nameCtrl, required: true),
-          _buildTextField('Material', materialCtrl, required: true),
-          _buildTextField(
-              'Dimensions (e.g., 45cm x 45cm x 90cm)', dimensionsCtrl,
-              required: true),
-          _buildTextField('Unit (e.g., piece, set)', unitCtrl, required: true),
+          _buildSizeField('Dimensions (e.g., 45x45x90)', dimensionsCtrl),
+          _buildTextField('Material', materialCtrl),
+          _buildTextField('Total Stock', quantityCtrl,
+              keyboardType: TextInputType.numberWithOptions(decimal: true)),
+          _buildTextField('Storage Location', storageLocationCtrl),
           _buildTextField('Notes', notesCtrl, maxLines: 3),
-          _buildTextField('Storage Location', storageLocationCtrl,
-              required: true),
-          _buildTextField('Quantity Available', quantityCtrl,
-              keyboardType: TextInputType.number, required: true),
         ];
       case 'fabric':
       case 'fabrics':
         return [
           _buildTextField('Fabric Name', nameCtrl, required: true),
-          _buildTextField('Fabric Type', fabricTypeCtrl, required: true),
-          _buildTextField('Pattern', patternCtrl, required: true),
-          _buildTextField('Width', widthCtrl,
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              required: true),
-          _buildTextField('Length', lengthCtrl,
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              required: true),
-          _buildTextField('Color', colorCtrl, required: true),
-          _buildTextField('Unit (e.g., meter, yard)', unitCtrl, required: true),
-          _buildTextField('Storage Location', storageLocationCtrl,
-              required: true),
+          _buildTextField('Fabric Type', fabricTypeCtrl),
+          _buildSizeField('Size (e.g., 1x2)', sizeCtrl),
+          _buildTextField('Total Stock', quantityCtrl,
+              keyboardType: TextInputType.numberWithOptions(decimal: true)),
+          _buildTextField('Storage Location', storageLocationCtrl),
           _buildTextField('Notes', notesCtrl, maxLines: 3),
-          _buildTextField('Quantity Available', quantityCtrl,
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              required: true),
         ];
       case 'carpet':
       case 'carpets':
         return [
           _buildTextField('Carpet Name', nameCtrl, required: true),
-          _buildTextField('Unit (e.g., piece, set)', unitCtrl, required: true),
-          _buildTextField('Storage Location', storageLocationCtrl,
-              required: true),
+          _buildSizeField('Size (e.g., 4x3)', sizeCtrl),
+          _buildTextField('Total Stock', quantityCtrl,
+              keyboardType: TextInputType.number),
+          _buildTextField('Storage Location', storageLocationCtrl),
           _buildTextField('Notes', notesCtrl, maxLines: 3),
-          _buildTextField('Carpet Type', carpetTypeCtrl, required: true),
-          _buildTextField('Material', materialCtrl, required: true),
-          _buildTextField('Size', sizeCtrl, required: true),
-          _buildTextField('Quantity Available', quantityCtrl,
-              keyboardType: TextInputType.number, required: true),
         ];
       case 'frame structure':
       case 'frame structures':
         return [
-          _buildTextField('Frame Structure Name', nameCtrl, required: true),
-          _buildTextField('Unit (e.g., piece, set)', unitCtrl, required: true),
-          _buildTextField('Storage Location', storageLocationCtrl,
-              required: true),
+          _buildTextField('Frame Structures Name', nameCtrl, required: true),
+          _buildTextField('Frame Type', frameTypeCtrl),
+          _buildSizeField('Dimensions (e.g., 1x2)', dimensionsCtrl),
+          _buildTextField('Total Stock', quantityCtrl,
+              keyboardType: TextInputType.number),
+          _buildTextField('Storage Location', storageLocationCtrl),
           _buildTextField('Notes', notesCtrl, maxLines: 3),
-          _buildTextField('Frame Type', frameTypeCtrl, required: true),
-          _buildTextField('Material', materialCtrl, required: true),
-          _buildTextField(
-              'Dimensions (e.g., 3.5m x 2.8m x 0.6m)', dimensionsCtrl,
-              required: true),
-          _buildTextField('Quantity Available', quantityCtrl,
-              keyboardType: TextInputType.number, required: true),
         ];
       case 'murti set':
       case 'murti sets':
         return [
           _buildTextField('Murti Set Name', nameCtrl, required: true),
-          _buildTextField('Unit (e.g., set, piece)', unitCtrl, required: true),
-          _buildTextField('Storage Location', storageLocationCtrl,
-              required: true),
+          _buildSizeField('Dimensions (e.g., 8x12)', dimensionsCtrl),
+          _buildTextField('Set Number', setNumberCtrl),
+          _buildTextField('Total Stock', quantityCtrl,
+              keyboardType: TextInputType.number),
+          _buildTextField('Material', materialCtrl),
+          _buildTextField('Storage Location', storageLocationCtrl),
           _buildTextField('Notes', notesCtrl, maxLines: 3),
-          _buildTextField('Set Number', setNumberCtrl, required: true),
-          _buildTextField('Material', materialCtrl, required: true),
-          _buildTextField('Dimensions (e.g., 8inch x 12inch)', dimensionsCtrl,
-              required: true),
-          _buildTextField('Quantity Available', quantityCtrl,
-              keyboardType: TextInputType.number, required: true),
         ];
       case 'stationery':
         return [
           _buildTextField('Stationery Name', nameCtrl, required: true),
-          _buildTextField('Unit (e.g., piece, set)', unitCtrl, required: true),
-          _buildTextField('Storage Location', storageLocationCtrl,
-              required: true),
+          _buildTextField('Total Stock', quantityCtrl,
+              keyboardType: TextInputType.number),
+          _buildTextField('Specifications', specificationsCtrl, maxLines: 3),
+          _buildTextField('Storage Location', storageLocationCtrl),
           _buildTextField('Notes', notesCtrl, maxLines: 3),
-          _buildTextField('Specifications', specificationsCtrl,
-              maxLines: 3, required: true),
-          _buildTextField('Quantity Available', quantityCtrl,
-              keyboardType: TextInputType.number, required: true),
         ];
       case 'thermocol':
       case 'thermocol material':
       case 'thermocol materials':
         return [
           _buildTextField('Thermocol Material Name', nameCtrl, required: true),
-          _buildTextField('Unit (e.g., set, piece)', unitCtrl, required: true),
-          _buildTextField('Storage Location', storageLocationCtrl,
-              required: true),
-          _buildTextField('Notes', notesCtrl, maxLines: 3),
-          _buildTextField('Thermocol Type', thermocolTypeCtrl, required: true),
-          _buildTextField(
-              'Dimensions (e.g., 70cm x 50cm x 12cm)', dimensionsCtrl,
-              required: true),
+          _buildSizeField('Dimensions (e.g., 70x50x12)', dimensionsCtrl),
+          _buildTextField('Total Stock', quantityCtrl,
+              keyboardType: TextInputType.number),
+          _buildThicknessDropdown('Thickness', thermocolTypeCtrl),
           _buildTextField('Density', densityCtrl,
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              required: true),
-          _buildTextField('Quantity Available', quantityCtrl,
-              keyboardType: TextInputType.number, required: true),
+              keyboardType: TextInputType.numberWithOptions(decimal: true)),
+          _buildTextField('Storage Location', storageLocationCtrl),
+          _buildTextField('Notes', notesCtrl, maxLines: 3),
         ];
       default:
         return [
@@ -345,7 +332,7 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
     int? maxLines,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: TextFormField(
@@ -381,9 +368,225 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
     );
   }
 
+  // Build size/dimensions field with dropdown for units
+  Widget _buildSizeField(
+    String label,
+    TextEditingController controller, {
+    bool required = false,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return StatefulBuilder(
+      builder: (context, setState) {
+        // Parse the current value to extract size and unit
+        String sizeValue = '';
+        String selectedUnit = 'm'; // Default unit
+
+        print(
+            '🔍 Debug _buildSizeField: controller.text = "${controller.text}"');
+        if (controller.text.isNotEmpty) {
+          // Try to extract unit from the end of the string
+          final units = ['mm', 'cm', 'm', 'in', 'ft', 'Roll'];
+          for (String unit in units) {
+            if (controller.text.endsWith(' $unit') ||
+                controller.text.endsWith(unit)) {
+              selectedUnit = unit;
+              sizeValue = controller.text
+                  .replaceAll(' $unit', '')
+                  .replaceAll(unit, '')
+                  .trim();
+              print(
+                  '🔍 Debug _buildSizeField: Found unit "$unit", sizeValue = "$sizeValue"');
+              break;
+            }
+          }
+          // If no unit found, treat the whole value as size
+          if (sizeValue.isEmpty) {
+            sizeValue = controller.text;
+            print(
+                '🔍 Debug _buildSizeField: No unit found, using full text as sizeValue = "$sizeValue"');
+          }
+        } else {
+          print('🔍 Debug _buildSizeField: controller.text is empty');
+        }
+
+        // Create a separate controller for the size input field
+        final sizeController = TextEditingController(text: sizeValue);
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: TextFormField(
+                  controller: sizeController,
+                  onChanged: (newValue) {
+                    final combinedValue =
+                        newValue.isNotEmpty ? '$newValue $selectedUnit' : '';
+                    controller.text = combinedValue;
+                  },
+                  validator: required
+                      ? (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'This field is required';
+                          }
+                          return null;
+                        }
+                      : null,
+                  decoration: InputDecoration(
+                    labelText: label,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: colorScheme.outline),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: colorScheme.outline),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: colorScheme.primary),
+                    ),
+                    filled: true,
+                    fillColor: colorScheme.surface,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 1,
+                child: DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  value: selectedUnit,
+                  onChanged: (String? newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        selectedUnit = newValue;
+                      });
+                      final combinedValue = sizeController.text.isNotEmpty
+                          ? '${sizeController.text} $newValue'
+                          : '';
+                      controller.text = combinedValue;
+                    }
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'Unit',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: colorScheme.outline),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: colorScheme.outline),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: colorScheme.primary),
+                    ),
+                    filled: true,
+                    fillColor: colorScheme.surface,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 15, vertical: 15),
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                        value: 'mm', child: Text('Millimeter (mm)')),
+                    DropdownMenuItem(
+                        value: 'cm', child: Text('Centimeter (cm)')),
+                    DropdownMenuItem(value: 'm', child: Text('Meter (m)')),
+                    DropdownMenuItem(value: 'in', child: Text('Inch (in)')),
+                    DropdownMenuItem(value: 'ft', child: Text('Foot (ft)')),
+                    DropdownMenuItem(value: 'Roll', child: Text('Roll')),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildThicknessDropdown(
+    String label,
+    TextEditingController controller, {
+    bool required = false,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return StatefulBuilder(
+      builder: (context, setState) {
+        // Parse the current value to extract thickness
+        String selectedThickness = '';
+
+        if (controller.text.isNotEmpty) {
+          // Try to extract thickness value from the controller text
+          final thicknessOptions = ['10', '15', '20', '25', '35', '50'];
+          for (String thickness in thicknessOptions) {
+            if (controller.text.contains(thickness)) {
+              selectedThickness = thickness;
+              break;
+            }
+          }
+        }
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          child: DropdownButtonFormField<String>(
+            isExpanded: true,
+            value: selectedThickness.isNotEmpty ? selectedThickness : null,
+            onChanged: (String? newValue) {
+              if (newValue != null) {
+                setState(() {
+                  selectedThickness = newValue;
+                });
+                controller.text = '$newValue mm';
+              }
+            },
+            validator: required
+                ? (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'This field is required';
+                    }
+                    return null;
+                  }
+                : null,
+            decoration: InputDecoration(
+              labelText: label,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colorScheme.outline),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colorScheme.outline),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: colorScheme.primary),
+              ),
+              filled: true,
+              fillColor: colorScheme.surface,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+            ),
+            items: const [
+              DropdownMenuItem(value: '10', child: Text('10 mm')),
+              DropdownMenuItem(value: '15', child: Text('15 mm')),
+              DropdownMenuItem(value: '20', child: Text('20 mm')),
+              DropdownMenuItem(value: '25', child: Text('25 mm')),
+              DropdownMenuItem(value: '35', child: Text('35 mm')),
+              DropdownMenuItem(value: '50', child: Text('50 mm')),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildImagePicker() {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -465,11 +668,14 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
                               color: colorScheme.surfaceVariant,
-                              child: Icon(Icons.image, size: 50, color: colorScheme.onSurfaceVariant),
+                              child: Icon(Icons.image,
+                                  size: 50,
+                                  color: colorScheme.onSurfaceVariant),
                             );
                           },
                         )
-                      : Icon(Icons.image, size: 50, color: colorScheme.onSurfaceVariant),
+                      : Icon(Icons.image,
+                          size: 50, color: colorScheme.onSurfaceVariant),
             ),
           ),
         ],
@@ -484,6 +690,15 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
         SnackBar(
           content: const Text('Please fill in all required fields'),
           backgroundColor: Theme.of(context).colorScheme.tertiary,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(
+            bottom: 100, // Position above bottom navigation bar
+            left: 16,
+            right: 16,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
       return;
@@ -514,7 +729,6 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
                 name: formData['name'],
                 material: formData['material'],
                 dimensions: formData['dimensions'],
-                unit: formData['unit'],
                 notes: formData['notes'],
                 storageLocation: formData['storage_location'],
                 quantityAvailable: formData['quantity_available'],
@@ -528,7 +742,6 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
           await ref.read(inventoryProvider.notifier).updateCarpetItem(
                 id: int.parse(item.id),
                 name: formData['name'],
-                unit: formData['unit'],
                 storageLocation: formData['storage_location'],
                 notes: formData['notes'],
                 quantityAvailable: formData['quantity_available'],
@@ -545,15 +758,11 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
           await ref.read(inventoryProvider.notifier).updateFabricItem(
                 id: int.parse(item.id),
                 name: formData['name'],
-                unit: formData['unit'],
+                fabricType: formData['fabric_type'],
+                size: formData['size'] ?? '',
                 storageLocation: formData['storage_location'],
                 notes: formData['notes'],
                 quantityAvailable: formData['quantity_available'],
-                fabricType: formData['fabric_type'],
-                pattern: formData['pattern'],
-                width: formData['width'],
-                length: formData['length'],
-                color: formData['color'],
                 itemImagePath: imagePath,
                 itemImageBytes: imageBytes,
                 itemImageName: imageName,
@@ -564,7 +773,6 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
           await ref.read(inventoryProvider.notifier).updateFrameStructureItem(
                 id: int.parse(item.id),
                 name: formData['name'],
-                unit: formData['unit'],
                 storageLocation: formData['storage_location'],
                 notes: formData['notes'],
                 quantityAvailable: formData['quantity_available'],
@@ -584,7 +792,6 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
               .updateThermocolMaterialsItem(
                 id: int.parse(item.id),
                 name: formData['name'],
-                unit: formData['unit'],
                 storageLocation: formData['storage_location'],
                 notes: formData['notes'],
                 quantityAvailable: formData['quantity_available'],
@@ -601,7 +808,6 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
           await ref.read(inventoryProvider.notifier).updateMurtiSetsItem(
                 id: int.parse(item.id),
                 name: formData['name'],
-                unit: formData['unit'],
                 storageLocation: formData['storage_location'],
                 notes: formData['notes'],
                 quantityAvailable: formData['quantity_available'],
@@ -617,7 +823,6 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
           await ref.read(inventoryProvider.notifier).updateStationeryItem(
                 id: int.parse(item.id),
                 name: formData['name'],
-                unit: formData['unit'],
                 storageLocation: formData['storage_location'],
                 notes: formData['notes'],
                 quantityAvailable: formData['quantity_available'],
@@ -631,7 +836,6 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
           // For other categories, use general update method for now
           final updated = item.copyWith(
             name: formData['name'],
-            unit: formData['unit'],
             storageLocation: formData['storage_location'],
             notes: formData['notes'],
             availableQuantity: formData['quantity_available'],
@@ -649,6 +853,15 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
         SnackBar(
           content: const Text('Item updated successfully'),
           backgroundColor: Theme.of(context).colorScheme.primary,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(
+            bottom: 100, // Position above bottom navigation bar
+            left: 16,
+            right: 16,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
       Navigator.of(context).pop();
@@ -679,6 +892,15 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
           content: Text(errorMessage),
           backgroundColor: Theme.of(context).colorScheme.error,
           duration: const Duration(seconds: 5),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.only(
+            bottom: 100, // Position above bottom navigation bar
+            left: 16,
+            right: 16,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     }
@@ -687,7 +909,6 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
   Map<String, dynamic> _prepareFormData() {
     final data = {
       'name': nameCtrl.text.trim(),
-      'unit': unitCtrl.text.trim(),
       'storage_location': storageLocationCtrl.text.trim(),
       'notes': notesCtrl.text.trim(),
       'quantity_available': double.tryParse(quantityCtrl.text.trim()) ?? 0.0,
@@ -702,10 +923,7 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
       case 'fabric':
       case 'fabrics':
         data['fabric_type'] = fabricTypeCtrl.text.trim();
-        data['pattern'] = patternCtrl.text.trim();
-        data['width'] = double.tryParse(widthCtrl.text.trim()) ?? 0.0;
-        data['length'] = double.tryParse(lengthCtrl.text.trim()) ?? 0.0;
-        data['color'] = colorCtrl.text.trim();
+        data['size'] = sizeCtrl.text.trim();
         break;
       case 'carpet':
       case 'carpets':

@@ -68,6 +68,15 @@ class InventoryFormNotifier extends StateNotifier<InventoryFormState> {
     String? storageLocation,
     int? quantity,
   }) {
+    print('🔍 Debug updateFurnitureData called with:');
+    print('  - name: $name');
+    print('  - material: $material');
+    print('  - dimensions: $dimensions');
+    print('  - unit: $unit');
+    print('  - notes: $notes');
+    print('  - storageLocation: $storageLocation');
+    print('  - quantity: $quantity');
+
     final furniture = state.furniture.copyWith(
       name: name,
       material: material,
@@ -78,6 +87,9 @@ class InventoryFormNotifier extends StateNotifier<InventoryFormState> {
       quantity: quantity,
     );
     state = state.copyWith(furniture: furniture);
+
+    print('🔍 Debug furniture state updated:');
+    print('  - furniture.dimensions: ${state.furniture.dimensions}');
   }
 
   void updateFabricData({
@@ -117,6 +129,15 @@ class InventoryFormNotifier extends StateNotifier<InventoryFormState> {
     String? dimensions,
     int? quantity,
   }) {
+    print('🔍 Debug updateFrameData called with:');
+    print('  - name: $name');
+    print('  - type: $type');
+    print('  - dimensions: $dimensions');
+    print('  - material: $material');
+    print('  - storageLocation: $storageLocation');
+    print('  - notes: $notes');
+    print('  - quantity: $quantity');
+
     final frame = state.frame.copyWith(
       name: name,
       unit: unit,
@@ -128,6 +149,9 @@ class InventoryFormNotifier extends StateNotifier<InventoryFormState> {
       quantity: quantity,
     );
     state = state.copyWith(frame: frame);
+
+    print('🔍 Debug frame state updated:');
+    print('  - frame.dimensions: ${state.frame.dimensions}');
   }
 
   void updateCarpetData({
@@ -140,6 +164,13 @@ class InventoryFormNotifier extends StateNotifier<InventoryFormState> {
     String? size,
     int? stock,
   }) {
+    print('🔍 Debug updateCarpetData called with:');
+    print('  - name: $name');
+    print('  - size: $size');
+    print('  - storageLocation: $storageLocation');
+    print('  - notes: $notes');
+    print('  - stock: $stock');
+
     final carpet = state.carpet.copyWith(
       name: name,
       unit: unit,
@@ -151,6 +182,9 @@ class InventoryFormNotifier extends StateNotifier<InventoryFormState> {
       stock: stock,
     );
     state = state.copyWith(carpet: carpet);
+
+    print('🔍 Debug carpet state updated:');
+    print('  - carpet.size: ${state.carpet.size}');
   }
 
   void updateThermocolData({
@@ -162,7 +196,18 @@ class InventoryFormNotifier extends StateNotifier<InventoryFormState> {
     String? thermocolType,
     String? dimensions,
     double? density,
+    double? thickness,
   }) {
+    print('🔍 Debug updateThermocolData called with:');
+    print('  - name: $name');
+    print('  - thermocolType: $thermocolType');
+    print('  - dimensions: $dimensions');
+    print('  - density: $density');
+    print('  - thickness: $thickness');
+    print('  - storageLocation: $storageLocation');
+    print('  - notes: $notes');
+    print('  - quantity: $quantity');
+
     final thermocol = state.thermocol.copyWith(
       name: name,
       unit: unit,
@@ -172,8 +217,12 @@ class InventoryFormNotifier extends StateNotifier<InventoryFormState> {
       thermocolType: thermocolType,
       dimensions: dimensions,
       density: density,
+      thickness: thickness,
     );
     state = state.copyWith(thermocol: thermocol);
+
+    print('🔍 Debug thermocol state updated:');
+    print('  - thermocol.dimensions: ${state.thermocol.dimensions}');
   }
 
   void updateStationeryData({
@@ -205,6 +254,15 @@ class InventoryFormNotifier extends StateNotifier<InventoryFormState> {
     String? material,
     String? dimensions,
   }) {
+    print('🔍 Debug updateMurtiData called with:');
+    print('  - name: $name');
+    print('  - setNumber: $setNumber');
+    print('  - dimensions: $dimensions');
+    print('  - material: $material');
+    print('  - storageLocation: $storageLocation');
+    print('  - notes: $notes');
+    print('  - quantity: $quantity');
+
     final murti = state.murti.copyWith(
       name: name,
       unit: unit,
@@ -216,6 +274,9 @@ class InventoryFormNotifier extends StateNotifier<InventoryFormState> {
       dimensions: dimensions,
     );
     state = state.copyWith(murti: murti);
+
+    print('🔍 Debug murti state updated:');
+    print('  - murti.dimensions: ${state.murti.dimensions}');
   }
 
   void resetForm() {
@@ -236,81 +297,33 @@ class InventoryFormNotifier extends StateNotifier<InventoryFormState> {
   }
 
   bool validateForm() {
-    // Only require category selection - all other fields are optional
+    // Only require category selection and name field - all other fields are optional
     if (state.selectedCategory == null) return false;
 
     final categoryName = state.selectedCategory!.name.toLowerCase();
 
-    // Check if at least one field has some data for the selected category
+    // Check if name field is filled for the selected category
     switch (categoryName) {
       case 'furniture':
-        return state.furniture.name?.isNotEmpty == true ||
-            state.furniture.material?.isNotEmpty == true ||
-            state.furniture.dimensions?.isNotEmpty == true ||
-            state.furniture.unit?.isNotEmpty == true ||
-            state.furniture.notes?.isNotEmpty == true ||
-            state.furniture.storageLocation?.isNotEmpty == true ||
-            (state.furniture.quantity ?? 0) > 0;
+        return state.furniture.name?.isNotEmpty == true;
       case 'fabric':
       case 'fabrics':
-        return state.fabric.name?.isNotEmpty == true ||
-            state.fabric.type?.isNotEmpty == true ||
-            state.fabric.pattern?.isNotEmpty == true ||
-            (state.fabric.width ?? 0) > 0 ||
-            (state.fabric.length ?? 0) > 0 ||
-            state.fabric.color?.isNotEmpty == true ||
-            state.fabric.unit?.isNotEmpty == true ||
-            state.fabric.storageLocation?.isNotEmpty == true ||
-            state.fabric.notes?.isNotEmpty == true ||
-            (state.fabric.stock ?? 0) > 0;
+        return state.fabric.name?.isNotEmpty == true;
       case 'frame structure':
       case 'frame structures':
-        return state.frame.name?.isNotEmpty == true ||
-            state.frame.unit?.isNotEmpty == true ||
-            state.frame.storageLocation?.isNotEmpty == true ||
-            state.frame.notes?.isNotEmpty == true ||
-            state.frame.type?.isNotEmpty == true ||
-            state.frame.material?.isNotEmpty == true ||
-            state.frame.dimensions?.isNotEmpty == true ||
-            (state.frame.quantity ?? 0) > 0;
+        return state.frame.name?.isNotEmpty == true;
       case 'carpet':
       case 'carpets':
-        return state.carpet.name?.isNotEmpty == true ||
-            state.carpet.unit?.isNotEmpty == true ||
-            state.carpet.storageLocation?.isNotEmpty == true ||
-            state.carpet.notes?.isNotEmpty == true ||
-            state.carpet.type?.isNotEmpty == true ||
-            state.carpet.material?.isNotEmpty == true ||
-            state.carpet.size?.isNotEmpty == true ||
-            (state.carpet.stock ?? 0) > 0;
+        return state.carpet.name?.isNotEmpty == true;
       case 'thermocol':
       case 'thermocol material':
       case 'thermocol materials':
-        return state.thermocol.name?.isNotEmpty == true ||
-            state.thermocol.unit?.isNotEmpty == true ||
-            state.thermocol.storageLocation?.isNotEmpty == true ||
-            state.thermocol.notes?.isNotEmpty == true ||
-            state.thermocol.thermocolType?.isNotEmpty == true ||
-            state.thermocol.dimensions?.isNotEmpty == true ||
-            (state.thermocol.density ?? 0) > 0 ||
-            (state.thermocol.quantity ?? 0) > 0;
+        return state.thermocol.name?.isNotEmpty == true;
       case 'stationery':
-        return state.stationery.name?.isNotEmpty == true ||
-            state.stationery.unit?.isNotEmpty == true ||
-            state.stationery.storageLocation?.isNotEmpty == true ||
-            state.stationery.notes?.isNotEmpty == true ||
-            state.stationery.specifications?.isNotEmpty == true ||
-            (state.stationery.quantity ?? 0) > 0;
+        return state.stationery.name?.isNotEmpty == true;
       case 'murti set':
       case 'murti sets':
-        return state.murti.name?.isNotEmpty == true ||
-            state.murti.unit?.isNotEmpty == true ||
-            state.murti.storageLocation?.isNotEmpty == true ||
-            state.murti.notes?.isNotEmpty == true ||
-            state.murti.setNumber?.isNotEmpty == true ||
-            state.murti.material?.isNotEmpty == true ||
-            state.murti.dimensions?.isNotEmpty == true ||
-            (state.murti.quantity ?? 0) > 0;
+        return state.murti.name?.isNotEmpty == true;
       default:
         // For any other category, just check if category is selected
         return true;
@@ -572,6 +585,7 @@ class ThermocolData {
   final String? thermocolType;
   final String? dimensions;
   final double? density;
+  final double? thickness;
 
   const ThermocolData({
     this.name,
@@ -582,6 +596,7 @@ class ThermocolData {
     this.thermocolType,
     this.dimensions,
     this.density,
+    this.thickness,
   });
 
   ThermocolData copyWith({
@@ -593,6 +608,7 @@ class ThermocolData {
     String? thermocolType,
     String? dimensions,
     double? density,
+    double? thickness,
   }) {
     return ThermocolData(
       name: name ?? this.name,
@@ -603,6 +619,7 @@ class ThermocolData {
       thermocolType: thermocolType ?? this.thermocolType,
       dimensions: dimensions ?? this.dimensions,
       density: density ?? this.density,
+      thickness: thickness ?? this.thickness,
     );
   }
 }

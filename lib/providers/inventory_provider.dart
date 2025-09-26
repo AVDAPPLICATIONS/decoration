@@ -13,6 +13,7 @@ class InventoryItem {
   final String storageLocation;
   final String notes;
   final double availableQuantity;
+  final double? totalStock;
   final String? material;
   final String? createdAt;
   final String? itemImage;
@@ -44,6 +45,7 @@ class InventoryItem {
     required this.storageLocation,
     required this.notes,
     required this.availableQuantity,
+    this.totalStock,
     this.material,
     this.createdAt,
     this.itemImage,
@@ -75,6 +77,7 @@ class InventoryItem {
       'storageLocation': storageLocation,
       'notes': notes,
       'availableQuantity': availableQuantity,
+      'totalStock': totalStock,
       'material': material,
       'createdAt': createdAt,
       'itemImage': itemImage,
@@ -154,6 +157,7 @@ class InventoryItem {
       notes: map['notes'] ?? '',
       availableQuantity:
           double.tryParse(map['available_quantity']?.toString() ?? '0') ?? 0.0,
+      totalStock: double.tryParse(map['total_stock']?.toString() ?? '0'),
       material: categoryDetails?['material'] ?? map['material'],
       createdAt: map['created_at'],
       itemImage: map['item_image'],
@@ -194,6 +198,7 @@ class InventoryItem {
     String? storageLocation,
     String? notes,
     double? availableQuantity,
+    double? totalStock,
     String? material,
     String? createdAt,
     String? itemImage,
@@ -223,6 +228,7 @@ class InventoryItem {
       storageLocation: storageLocation ?? this.storageLocation,
       notes: notes ?? this.notes,
       availableQuantity: availableQuantity ?? this.availableQuantity,
+      totalStock: totalStock ?? this.totalStock,
       material: material ?? this.material,
       createdAt: createdAt ?? this.createdAt,
       itemImage: itemImage ?? this.itemImage,
@@ -288,6 +294,13 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
     } catch (e) {
       _error = e.toString();
       print('❌ Error loading inventory data: $e');
+
+      // If it's a FormatException (HTML response), provide a more user-friendly error
+      if (e.toString().contains('FormatException') ||
+          e.toString().contains('HTML')) {
+        _error =
+            'Server configuration error. Please contact the administrator.';
+      }
     } finally {
       _isLoading = false;
     }
@@ -296,6 +309,43 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
   // Refresh inventory data
   Future<void> refreshInventoryData() async {
     await loadInventoryData();
+  }
+
+  // Silent refresh inventory data (doesn't set error state)
+  Future<void> silentRefreshInventoryData() async {
+    _isLoading = true;
+    // Don't clear error state for silent refresh
+
+    try {
+      // Load both items and categories
+      final itemsResponse = await _inventoryService.getAllItems();
+      final categoriesResponse = await _inventoryService.getAllCategories();
+
+      if (itemsResponse['success'] == true) {
+        final itemsData = itemsResponse['data'] as List;
+        final items =
+            itemsData.map((item) => InventoryItem.fromMap(item)).toList();
+        state = items;
+      }
+
+      if (categoriesResponse['success'] == true) {
+        _categories =
+            List<Map<String, dynamic>>.from(categoriesResponse['data']);
+      }
+
+      print('✅ Inventory data silently refreshed successfully');
+    } catch (e) {
+      // Don't set error state for silent refresh
+      print('⚠️ Warning: Silent refresh failed: $e');
+
+      // If it's a FormatException (HTML response), log it but don't show to user
+      if (e.toString().contains('FormatException') ||
+          e.toString().contains('HTML')) {
+        print('⚠️ Server configuration error during silent refresh');
+      }
+    } finally {
+      _isLoading = false;
+    }
   }
 
   // Add new item
@@ -373,7 +423,6 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
     required String name,
     required String material,
     required String dimensions,
-    required String unit,
     required String notes,
     required String storageLocation,
     required double quantityAvailable,
@@ -390,7 +439,6 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
         name: name,
         material: material,
         dimensions: dimensions,
-        unit: unit,
         notes: notes,
         storageLocation: storageLocation,
         quantityAvailable: quantityAvailable,
@@ -411,13 +459,12 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
     } catch (e) {
       print('❌ Error creating furniture item with specific API: $e');
       print('🔄 Attempting fallback to general inventory API...');
-      
+
       // Fallback to general inventory API
       try {
         final fallbackResponse = await _inventoryService.createItem(
           name: name,
           categoryId: 1, // Default furniture category
-          unit: unit,
           storageLocation: storageLocation,
           notes: notes,
           quantityAvailable: quantityAvailable,
@@ -433,10 +480,11 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
 
         if (fallbackResponse['success'] == true) {
           await loadInventoryData();
-          print('✅ Furniture item created successfully via fallback API: ${fallbackResponse['data']}');
+          print(
+              '✅ Furniture item created successfully via fallback API: ${fallbackResponse['data']}');
         } else {
-          throw Exception(
-              fallbackResponse['message'] ?? 'Failed to create furniture item via fallback');
+          throw Exception(fallbackResponse['message'] ??
+              'Failed to create furniture item via fallback');
         }
       } catch (fallbackError) {
         _error = fallbackError.toString();
@@ -451,13 +499,12 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
   // Create murti sets item using specific API
   Future<void> createMurtiSetsItem({
     required String name,
-    required String unit,
-    required String storageLocation,
-    required String notes,
-    required double quantityAvailable,
     required String setNumber,
     required String material,
     required String dimensions,
+    required String storageLocation,
+    required String notes,
+    required double quantityAvailable,
     File? itemImage,
     String? itemImagePath,
     Uint8List? itemImageBytes,
@@ -469,13 +516,12 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
     try {
       final response = await _inventoryService.createMurtiSetsItem(
         name: name,
-        unit: unit,
-        storageLocation: storageLocation,
-        notes: notes,
-        quantityAvailable: quantityAvailable,
         setNumber: setNumber,
         material: material,
         dimensions: dimensions,
+        storageLocation: storageLocation,
+        notes: notes,
+        quantityAvailable: quantityAvailable,
         itemImage: itemImage,
         itemImagePath: itemImagePath,
         itemImageBytes: itemImageBytes,
@@ -502,11 +548,10 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
   // Create stationery item using specific API
   Future<void> createStationeryItem({
     required String name,
-    required String unit,
+    required String specifications,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
-    required String specifications,
     File? itemImage,
     String? itemImagePath,
     Uint8List? itemImageBytes,
@@ -518,11 +563,10 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
     try {
       final response = await _inventoryService.createStationeryItem(
         name: name,
-        unit: unit,
+        specifications: specifications,
         storageLocation: storageLocation,
         notes: notes,
         quantityAvailable: quantityAvailable,
-        specifications: specifications,
         itemImage: itemImage,
         itemImagePath: itemImagePath,
         itemImageBytes: itemImageBytes,
@@ -549,13 +593,13 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
   // Create thermocol materials item using specific API
   Future<void> createThermocolMaterialsItem({
     required String name,
-    required String unit,
+    required String thermocolType,
+    required String dimensions,
+    required String thickness,
+    required double density,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
-    required String thermocolType,
-    required String dimensions,
-    required double density,
     File? itemImage,
     String? itemImagePath,
     Uint8List? itemImageBytes,
@@ -567,13 +611,13 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
     try {
       final response = await _inventoryService.createThermocolMaterialsItem(
         name: name,
-        unit: unit,
+        thermocolType: thermocolType,
+        dimensions: dimensions,
+        thickness: thickness,
+        density: density,
         storageLocation: storageLocation,
         notes: notes,
         quantityAvailable: quantityAvailable,
-        thermocolType: thermocolType,
-        dimensions: dimensions,
-        density: density,
         itemImage: itemImage,
         itemImagePath: itemImagePath,
         itemImageBytes: itemImageBytes,
@@ -604,7 +648,6 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
     required String name,
     required String material,
     required String dimensions,
-    required String unit,
     required String notes,
     required String storageLocation,
     required double quantityAvailable,
@@ -622,7 +665,6 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
         name: name,
         material: material,
         dimensions: dimensions,
-        unit: unit,
         notes: notes,
         storageLocation: storageLocation,
         quantityAvailable: quantityAvailable,
@@ -653,7 +695,6 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
   Future<void> updateCarpetItem({
     required int id,
     required String name,
-    required String unit,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
@@ -672,7 +713,6 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       final response = await _inventoryService.updateCarpetItem(
         id: id,
         name: name,
-        unit: unit,
         storageLocation: storageLocation,
         notes: notes,
         quantityAvailable: quantityAvailable,
@@ -705,15 +745,11 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
   Future<void> updateFabricItem({
     required int id,
     required String name,
-    required String unit,
+    required String fabricType,
+    required String size,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
-    required String fabricType,
-    required String pattern,
-    required double width,
-    required double length,
-    required String color,
     File? itemImage,
     String? itemImagePath,
     Uint8List? itemImageBytes,
@@ -726,15 +762,11 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       final response = await _inventoryService.updateFabricItem(
         id: id,
         name: name,
-        unit: unit,
+        fabricType: fabricType,
+        size: size,
         storageLocation: storageLocation,
         notes: notes,
         quantityAvailable: quantityAvailable,
-        fabricType: fabricType,
-        pattern: pattern,
-        width: width,
-        length: length,
-        color: color,
         itemImage: itemImage,
         itemImagePath: itemImagePath,
         itemImageBytes: itemImageBytes,
@@ -761,7 +793,6 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
   Future<void> updateFrameStructureItem({
     required int id,
     required String name,
-    required String unit,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
@@ -780,7 +811,6 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       final response = await _inventoryService.updateFrameStructureItem(
         id: id,
         name: name,
-        unit: unit,
         storageLocation: storageLocation,
         notes: notes,
         quantityAvailable: quantityAvailable,
@@ -815,7 +845,6 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
   Future<void> updateThermocolMaterialsItem({
     required int id,
     required String name,
-    required String unit,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
@@ -834,7 +863,6 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       final response = await _inventoryService.updateThermocolMaterialsItem(
         id: id,
         name: name,
-        unit: unit,
         storageLocation: storageLocation,
         notes: notes,
         quantityAvailable: quantityAvailable,
@@ -869,7 +897,6 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
   Future<void> updateMurtiSetsItem({
     required int id,
     required String name,
-    required String unit,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
@@ -888,7 +915,6 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       final response = await _inventoryService.updateMurtiSetsItem(
         id: id,
         name: name,
-        unit: unit,
         storageLocation: storageLocation,
         notes: notes,
         quantityAvailable: quantityAvailable,
@@ -922,7 +948,6 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
   Future<void> updateStationeryItem({
     required int id,
     required String name,
-    required String unit,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
@@ -939,7 +964,6 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       final response = await _inventoryService.updateStationeryItem(
         id: id,
         name: name,
-        unit: unit,
         storageLocation: storageLocation,
         notes: notes,
         quantityAvailable: quantityAvailable,
@@ -1107,13 +1131,11 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
   // Create frame structure item using specific API
   Future<void> createFrameStructureItem({
     required String name,
-    required String unit,
+    required String frameType,
+    required String dimensions,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
-    required String frameType,
-    required String material,
-    required String dimensions,
     File? itemImage,
     String? itemImagePath,
     Uint8List? itemImageBytes,
@@ -1125,13 +1147,11 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
     try {
       final response = await _inventoryService.createFrameStructureItem(
         name: name,
-        unit: unit,
+        frameType: frameType,
+        dimensions: dimensions,
         storageLocation: storageLocation,
         notes: notes,
         quantityAvailable: quantityAvailable,
-        frameType: frameType,
-        material: material,
-        dimensions: dimensions,
         itemImage: itemImage,
         itemImagePath: itemImagePath,
         itemImageBytes: itemImageBytes,
@@ -1160,11 +1180,7 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
   Future<void> createFabricItem({
     required String name,
     required String fabricType,
-    required String pattern,
-    required double width,
-    required double length,
-    required String color,
-    required String unit,
+    required String size,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
@@ -1180,11 +1196,7 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       final response = await _inventoryService.createFabricItem(
         name: name,
         fabricType: fabricType,
-        pattern: pattern,
-        width: width,
-        length: length,
-        color: color,
-        unit: unit,
+        size: size,
         storageLocation: storageLocation,
         notes: notes,
         quantityAvailable: quantityAvailable,
@@ -1213,13 +1225,10 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
   // Create carpet item using specific API
   Future<void> createCarpetItem({
     required String name,
-    required String unit,
+    required String size,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
-    required String carpetType,
-    required String material,
-    required String size,
     File? itemImage,
     String? itemImagePath,
     Uint8List? itemImageBytes,
@@ -1231,13 +1240,10 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
     try {
       final response = await _inventoryService.createCarpetItem(
         name: name,
-        unit: unit,
+        size: size,
         storageLocation: storageLocation,
         notes: notes,
         quantityAvailable: quantityAvailable,
-        carpetType: carpetType,
-        material: material,
-        size: size,
         itemImage: itemImage,
         itemImagePath: itemImagePath,
         itemImageBytes: itemImageBytes,
@@ -1273,40 +1279,62 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
     Uint8List? itemImageBytes,
     String? itemImageName,
     required Map<String, dynamic> categoryDetails,
+    int maxRetries = 2,
   }) async {
     _isLoading = true;
     _error = null;
 
-    try {
-      final response = await _inventoryService.createItem(
-        name: name,
-        categoryId: categoryId,
-        unit: unit,
-        storageLocation: storageLocation,
-        notes: notes,
-        quantityAvailable: quantityAvailable,
-        itemImage: itemImage,
-        itemImagePath: itemImagePath,
-        itemImageBytes: itemImageBytes,
-        itemImageName: itemImageName,
-        categoryDetails: categoryDetails,
-      );
+    for (int attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        final response = await _inventoryService.createItem(
+          name: name,
+          categoryId: categoryId,
+          storageLocation: storageLocation,
+          notes: notes,
+          quantityAvailable: quantityAvailable,
+          itemImage: itemImage,
+          itemImagePath: itemImagePath,
+          itemImageBytes: itemImageBytes,
+          itemImageName: itemImageName,
+          categoryDetails: categoryDetails,
+        );
 
-      if (response['success'] == true) {
-        // Reload inventory data to get the updated list
-        await loadInventoryData();
+        if (response['success'] == true) {
+          // Reload inventory data to get the updated list
+          await loadInventoryData();
+          print(
+              '✅ Inventory item created successfully: ${response['data']['name']}');
+          return; // Success, exit retry loop
+        } else {
+          throw Exception(response['message'] ?? 'Failed to create item');
+        }
+      } catch (e) {
+        _error = e.toString();
         print(
-            '✅ Inventory item created successfully: ${response['data']['name']}');
-      } else {
-        throw Exception(response['message'] ?? 'Failed to create item');
+            '❌ Error creating inventory item (attempt ${attempt + 1}/${maxRetries + 1}): $e');
+
+        // Check if it's a server configuration error
+        if (e.toString().contains('Server returned invalid response') ||
+            e.toString().contains('API endpoint not found') ||
+            e.toString().contains('Internal server error')) {
+          print('🔍 Server configuration error detected');
+          _error =
+              'Server configuration error. Please contact the administrator.';
+        }
+
+        // If this is the last attempt, rethrow the error
+        if (attempt == maxRetries) {
+          rethrow;
+        } else {
+          // Wait before retrying (exponential backoff)
+          final delay = Duration(milliseconds: 500 * (attempt + 1));
+          print('Retrying in ${delay.inMilliseconds}ms...');
+          await Future.delayed(delay);
+        }
       }
-    } catch (e) {
-      _error = e.toString();
-      print('❌ Error creating inventory item: $e');
-      rethrow;
-    } finally {
-      _isLoading = false;
     }
+
+    _isLoading = false;
   }
 
   void clear() => state = [];

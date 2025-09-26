@@ -1,5 +1,5 @@
 const String appName = "Your App Name";
-const String apiBaseUrl = "https://e5e581aa0352.ngrok-free.app";
+const String apiBaseUrl = "http://10.107.251.136:5000";
 
 const int defaultTimeout = 5000; // in milliseconds
 

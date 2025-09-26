@@ -37,8 +37,7 @@ class MyApp extends ConsumerWidget {
       title: 'AVD Decoration App',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.light,
       home: const AppRoot(),
     );
   }

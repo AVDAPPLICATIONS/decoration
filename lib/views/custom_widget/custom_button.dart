@@ -27,7 +27,8 @@ class CustomButton extends StatelessWidget {
         onPressed: onPressed,
         child: Text(
           label,
-          style: ResponsiveTextStyle.body(context).copyWith(color: AppColors.background),
+          style: ResponsiveTextStyle.body(context)
+              .copyWith(color: AppColors.background),
         ),
       ),
     );

@@ -222,7 +222,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             tabletFontSize: 32.0,
             desktopFontSize: 36.0,
             fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.primary,
+            color: Theme.of(context).colorScheme.surface,
             textAlign: TextAlign.center,
           ),
 

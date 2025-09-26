@@ -52,7 +52,7 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Scaffold(
       backgroundColor: colorScheme.background,
       appBar: CustomAppBar(
@@ -72,7 +72,7 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
 
   Widget _buildBody() {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     if (isLoading) {
       return Center(
         child: CircularProgressIndicator(
@@ -92,7 +92,8 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
                 style: TextStyle(color: colorScheme.error)),
             const SizedBox(height: 8),
             Text(error!,
-                style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12)),
+                style: TextStyle(
+                    color: colorScheme.onSurfaceVariant, fontSize: 12)),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _loadHistory,
@@ -112,7 +113,8 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.inventory_2_outlined, size: 80, color: colorScheme.onSurfaceVariant),
+            Icon(Icons.inventory_2_outlined,
+                size: 80, color: colorScheme.onSurfaceVariant),
             const SizedBox(height: 12),
             Text('No history data available',
                 style: TextStyle(color: colorScheme.onSurfaceVariant)),
@@ -131,7 +133,8 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.inventory_2_outlined, size: 80, color: colorScheme.onSurfaceVariant),
+            Icon(Icons.inventory_2_outlined,
+                size: 80, color: colorScheme.onSurfaceVariant),
             const SizedBox(height: 12),
             Text('No issues for this item yet',
                 style: TextStyle(color: colorScheme.onSurfaceVariant)),
@@ -172,7 +175,7 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
 
   Widget _buildItemInfoCard(Map<String, dynamic> itemInfo) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -206,10 +209,11 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
             ],
           ),
           const SizedBox(height: 12),
-          _buildInfoRow('Name', itemInfo['name']),
-          _buildInfoRow('Category', itemInfo['category_name']),
-          _buildInfoRow('Unit', itemInfo['unit']),
-          _buildInfoRow('Storage Location', itemInfo['storage_location']),
+          _buildInfoRow('Name', itemInfo['name'] ?? 'N/A'),
+          _buildInfoRow('Category', itemInfo['category_name'] ?? 'N/A'),
+          _buildInfoRow('Unit', itemInfo['unit'] ?? 'N/A'),
+          _buildInfoRow(
+              'Storage Location', itemInfo['storage_location'] ?? 'N/A'),
         ],
       ),
     );
@@ -217,7 +221,7 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
 
   Widget _buildSummaryCard(Map<String, dynamic> summary) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -255,11 +259,11 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
             children: [
               Expanded(
                 child: _buildSummaryItem('Total Transactions',
-                    summary['total_transactions'].toString()),
+                    (summary['total_transactions'] ?? 0).toString()),
               ),
               Expanded(
                 child: _buildSummaryItem(
-                    'Total Issued', summary['total_issued'].toString()),
+                    'Total Issued', (summary['total_issued'] ?? 0).toString()),
               ),
             ],
           ),
@@ -267,18 +271,18 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
           Row(
             children: [
               Expanded(
-                child: _buildSummaryItem(
-                    'Total Returned', summary['total_returned'].toString()),
+                child: _buildSummaryItem('Total Returned',
+                    (summary['total_returned'] ?? 0).toString()),
               ),
               Expanded(
                 child: _buildSummaryItem(
-                    'Net Issued', summary['net_issued'].toString()),
+                    'Net Issued', (summary['net_issued'] ?? 0).toString()),
               ),
             ],
           ),
           const SizedBox(height: 8),
           _buildSummaryItem(
-              'Current Stock', summary['current_stock'].toString()),
+              'Current Stock', (summary['current_stock'] ?? 0).toString()),
         ],
       ),
     );
@@ -286,7 +290,7 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
 
   Widget _buildSummaryItem(String label, String value) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -312,7 +316,7 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
 
   Widget _buildInfoRow(String label, String value) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -411,7 +415,7 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '${issue['quantity_issued']} ${issue['unit']}',
+                  '${issue['quantity_issued']} units',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -420,29 +424,89 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
                 ),
               ],
             ),
+            // Event information
+            if (issue['event_name'] != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(
+                    Icons.event,
+                    size: 16,
+                    color: colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Event: ${issue['event_name']}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            // Purpose information
+            if (issue['purpose'] != null &&
+                issue['purpose'].toString().isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 16,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Purpose: ${issue['purpose']}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            // Notes information
             if (issue['notes'] != null &&
                 issue['notes'].toString().isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Notes: ${issue['notes']}',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: colorScheme.onSurfaceVariant,
-                ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Icon(
+                    Icons.note,
+                    size: 16,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Notes: ${issue['notes']}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
             if (isOut) ...[
               const SizedBox(height: 12),
-              // Only show return button if there are items available to return
+              // Only show return button if the item is still issued (not returned)
               Builder(
                 builder: (context) {
                   final totalIssued =
                       double.parse(issue['quantity_issued'].toString());
-                  final totalReturned = double.parse(
-                      issue['quantity_returned']?.toString() ?? '0');
-                  final maxReturnable = totalIssued - totalReturned;
+                  final status = issue['status']?.toString() ?? 'issued';
+                  final isReturned = status == 'returned';
 
-                  if (maxReturnable <= 0) {
+                  if (isReturned) {
                     return Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -459,7 +523,8 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
                           const SizedBox(width: 8),
                           Text(
                             'All items returned',
-                            style: TextStyle(color: colorScheme.onSurfaceVariant),
+                            style:
+                                TextStyle(color: colorScheme.onSurfaceVariant),
                           ),
                         ],
                       ),
@@ -472,7 +537,7 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
                       onPressed: () => _showReturnDialog(issue),
                       icon: const Icon(Icons.undo, size: 16),
                       label: Text(
-                          'Return to Inventory (${maxReturnable.toStringAsFixed(0)} available)'),
+                          'Return to Inventory (${totalIssued.toStringAsFixed(0)} units)'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: colorScheme.primary,
                         foregroundColor: colorScheme.onPrimary,
@@ -499,14 +564,13 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
 
     // Calculate how much can still be returned
     final totalIssued = double.parse(issue['quantity_issued'].toString());
-    final totalReturned =
-        double.parse(issue['quantity_returned']?.toString() ?? '0');
-    final maxReturnable = totalIssued - totalReturned;
+    final status = issue['status']?.toString() ?? 'issued';
+    final isReturned = status == 'returned';
 
-    // Set initial return quantity to the maximum returnable amount
-    quantityController.text = maxReturnable.toStringAsFixed(0);
+    // Set initial return quantity to the total issued amount
+    quantityController.text = totalIssued.toStringAsFixed(0);
 
-    double returnQuantity = maxReturnable;
+    double returnQuantity = totalIssued;
 
     showDialog(
       context: context,
@@ -525,23 +589,19 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Total Issued: ${totalIssued.toStringAsFixed(0)} ${issue['unit']}',
+                    'Total Issued: ${totalIssued.toStringAsFixed(0)} units',
                     style: const TextStyle(fontSize: 14),
                   ),
                   Text(
-                    'Already Returned: ${totalReturned.toStringAsFixed(0)} ${issue['unit']}',
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                  Text(
-                    'Available to Return: ${maxReturnable.toStringAsFixed(0)} ${issue['unit']}',
+                    'Status: ${status.toUpperCase()}',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: maxReturnable > 0 ? colorScheme.primary : colorScheme.error,
+                      color: isReturned ? Colors.green : colorScheme.primary,
                     ),
                   ),
                   const SizedBox(height: 16),
-                  if (maxReturnable > 0) ...[
+                  if (!isReturned) ...[
                     TextField(
                       controller: quantityController,
                       keyboardType: TextInputType.number,
@@ -549,14 +609,14 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
                         labelText: 'Quantity to Return',
                         hintText: 'Enter quantity to return...',
                         border: const OutlineInputBorder(),
-                        suffixText: issue['unit'] ?? '',
+                        suffixText: 'units',
                       ),
                       onChanged: (value) {
                         final parsed = double.tryParse(value) ?? 0;
-                        if (parsed > maxReturnable) {
+                        if (parsed > totalIssued) {
                           quantityController.text =
-                              maxReturnable.toStringAsFixed(0);
-                          returnQuantity = maxReturnable;
+                              totalIssued.toStringAsFixed(0);
+                          returnQuantity = totalIssued;
                         } else if (parsed < 0) {
                           quantityController.text = '0';
                           returnQuantity = 0;
@@ -598,7 +658,7 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
                   onPressed: () => Navigator.of(context).pop(),
                   child: const Text('Cancel'),
                 ),
-                if (maxReturnable > 0)
+                if (!isReturned)
                   ElevatedButton(
                     onPressed: returnQuantity > 0
                         ? () async {
@@ -631,9 +691,8 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
   }) async {
     // Validate return quantity
     final totalIssued = double.parse(issue['quantity_issued'].toString());
-    final totalReturned =
-        double.parse(issue['quantity_returned']?.toString() ?? '0');
-    final maxReturnable = totalIssued - totalReturned;
+    final status = issue['status']?.toString() ?? 'issued';
+    final isReturned = status == 'returned';
 
     if (quantity <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -645,11 +704,11 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
       return;
     }
 
-    if (quantity > maxReturnable) {
+    if (quantity > totalIssued) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              'Cannot return more than ${maxReturnable.toStringAsFixed(0)} items. Only ${maxReturnable.toStringAsFixed(0)} items are available to return.'),
+              'Cannot return more than ${totalIssued.toStringAsFixed(0)} items. Only ${totalIssued.toStringAsFixed(0)} items were issued.'),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
