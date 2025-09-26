@@ -10,26 +10,29 @@ class InventoryService {
   InventoryService(this.baseUrl);
 
   // Helper method to safely parse JSON response
-  Map<String, dynamic> _parseJsonResponse(http.Response response, String operation) {
+  Map<String, dynamic> _parseJsonResponse(
+      http.Response response, String operation) {
     try {
       return jsonDecode(response.body);
     } catch (e) {
       print('❌ Error parsing JSON response for $operation: $e');
       print('❌ Status code: ${response.statusCode}');
       print('❌ Response body: ${response.body}');
-      
+
       // If JSON parsing fails, it's likely HTML (404, 500 error page)
       String errorMessage = 'Server error (${response.statusCode})';
       if (response.statusCode == 404) {
-        errorMessage = 'API endpoint not found. Please check server configuration.';
+        errorMessage =
+            'API endpoint not found. Please check server configuration.';
       } else if (response.statusCode == 500) {
         errorMessage = 'Internal server error. Please try again later.';
       } else if (response.statusCode == 401) {
         errorMessage = 'Authentication required. Please login again.';
       } else if (response.statusCode == 403) {
-        errorMessage = 'Access denied. You do not have permission to perform this action.';
+        errorMessage =
+            'Access denied. You do not have permission to perform this action.';
       }
-      
+
       throw Exception(errorMessage);
     }
   }
@@ -44,15 +47,18 @@ class InventoryService {
   // Test API connection
   Future<bool> testConnection() async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/inventory/categories/getAll'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({}),
-      ).timeout(const Duration(seconds: 10));
-      
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/api/inventory/categories/getAll'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({}),
+          )
+          .timeout(const Duration(seconds: 10));
+
       print('🔍 API Connection Test: Status ${response.statusCode}');
-      print('🔍 API Connection Test: Response ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}...');
-      
+      print(
+          '🔍 API Connection Test: Response ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}...');
+
       return response.statusCode == 200;
     } catch (e) {
       print('❌ API Connection Test Failed: $e');
@@ -68,8 +74,8 @@ class InventoryService {
       body: jsonEncode({}),
     );
 
-    if (response.statusCode == 200) {
-      final responseData = jsonDecode(response.body);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final responseData = _parseJsonResponse(response, 'getAllItems');
       if (responseData['success'] == true) {
         return responseData;
       } else {
@@ -77,7 +83,7 @@ class InventoryService {
             responseData['message'] ?? 'Failed to fetch inventory items');
       }
     } else {
-      final errorData = jsonDecode(response.body);
+      final errorData = _parseJsonResponse(response, 'getAllItems');
       throw Exception(
           errorData['message'] ?? 'Failed to fetch inventory items');
     }
@@ -91,8 +97,8 @@ class InventoryService {
       body: jsonEncode({}),
     );
 
-    if (response.statusCode == 200) {
-      final responseData = jsonDecode(response.body);
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final responseData = _parseJsonResponse(response, 'getAllCategories');
       if (responseData['success'] == true) {
         return responseData;
       } else {
@@ -100,7 +106,7 @@ class InventoryService {
             responseData['message'] ?? 'Failed to fetch categories');
       }
     } else {
-      final errorData = jsonDecode(response.body);
+      final errorData = _parseJsonResponse(response, 'getAllCategories');
       throw Exception(errorData['message'] ?? 'Failed to fetch categories');
     }
   }
@@ -114,15 +120,39 @@ class InventoryService {
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      final responseData = jsonDecode(response.body);
-      if (responseData['success'] == true) {
-        return responseData;
-      } else {
-        throw Exception(responseData['message'] ?? 'Failed to create category');
+      try {
+        final responseData = jsonDecode(response.body);
+        if (responseData['success'] == true) {
+          return responseData;
+        } else {
+          throw Exception(
+              responseData['message'] ?? 'Failed to create category');
+        }
+      } catch (e) {
+        // If JSON parsing fails, it's likely HTML (server error page)
+        throw Exception(
+            'Server returned invalid response. Please check server configuration.');
       }
     } else {
-      final errorData = jsonDecode(response.body);
-      throw Exception(errorData['message'] ?? 'Failed to create category');
+      try {
+        final errorData = jsonDecode(response.body);
+        throw Exception(errorData['message'] ?? 'Failed to create category');
+      } catch (e) {
+        // If JSON parsing fails, it's likely HTML (404, 500 error page)
+        String errorMessage = 'Server error (${response.statusCode})';
+        if (response.statusCode == 404) {
+          errorMessage =
+              'API endpoint not found. Please check server configuration.';
+        } else if (response.statusCode == 500) {
+          errorMessage = 'Internal server error. Please try again later.';
+        } else if (response.statusCode == 401) {
+          errorMessage = 'Authentication required. Please login again.';
+        } else if (response.statusCode == 403) {
+          errorMessage =
+              'Access denied. You do not have permission to perform this action.';
+        }
+        throw Exception(errorMessage);
+      }
     }
   }
 
@@ -199,7 +229,6 @@ class InventoryService {
     required String name,
     required String material,
     required String dimensions,
-    required String unit,
     required String notes,
     required String storageLocation,
     required double quantityAvailable,
@@ -218,7 +247,6 @@ class InventoryService {
       request.fields['name'] = name;
       request.fields['material'] = material;
       request.fields['dimensions'] = dimensions;
-      request.fields['unit'] = unit;
       request.fields['notes'] = notes;
       request.fields['storage_location'] = storageLocation;
       request.fields['quantity_available'] = quantityAvailable.toString();
@@ -309,7 +337,8 @@ class InventoryService {
       print('🔍 Debug Furniture API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final responseData = _parseJsonResponse(response, 'createFurnitureItem');
+        final responseData =
+            _parseJsonResponse(response, 'createFurnitureItem');
         if (responseData['success'] == true) {
           return responseData;
         } else {
@@ -330,13 +359,12 @@ class InventoryService {
   // Create murti sets item with specific API endpoint
   Future<Map<String, dynamic>> createMurtiSetsItem({
     required String name,
-    required String unit,
-    required String storageLocation,
-    required String notes,
-    required double quantityAvailable,
     required String setNumber,
     required String material,
     required String dimensions,
+    required String storageLocation,
+    required String notes,
+    required double quantityAvailable,
     File? itemImage,
     String? itemImagePath,
     Uint8List? itemImageBytes,
@@ -348,15 +376,14 @@ class InventoryService {
         Uri.parse('$baseUrl/api/inventory/murti-sets/create'),
       );
 
-      // Add form fields
+      // Add form fields - only the fields required by the API
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
-      request.fields['storage_location'] = storageLocation;
-      request.fields['notes'] = notes;
-      request.fields['quantity_available'] = quantityAvailable.toString();
       request.fields['set_number'] = setNumber;
       request.fields['material'] = material;
       request.fields['dimensions'] = dimensions;
+      request.fields['storage_location'] = storageLocation;
+      request.fields['notes'] = notes;
+      request.fields['quantity_available'] = quantityAvailable.toString();
 
       // Add image file if provided
       print('🔍 Debug Murti Sets API: itemImage = $itemImage');
@@ -445,7 +472,8 @@ class InventoryService {
       print('🔍 Debug Murti Sets API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final responseData = jsonDecode(response.body);
+        final responseData =
+            _parseJsonResponse(response, 'createMurtiSetsItem');
         if (responseData['success'] == true) {
           return responseData;
         } else {
@@ -453,7 +481,7 @@ class InventoryService {
               responseData['message'] ?? 'Failed to create murti sets item');
         }
       } else {
-        final errorData = jsonDecode(response.body);
+        final errorData = _parseJsonResponse(response, 'createMurtiSetsItem');
         throw Exception(
             errorData['message'] ?? 'Failed to create murti sets item');
       }
@@ -466,11 +494,10 @@ class InventoryService {
   // Create stationery item with specific API endpoint
   Future<Map<String, dynamic>> createStationeryItem({
     required String name,
-    required String unit,
+    required String specifications,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
-    required String specifications,
     File? itemImage,
     String? itemImagePath,
     Uint8List? itemImageBytes,
@@ -482,13 +509,12 @@ class InventoryService {
         Uri.parse('$baseUrl/api/inventory/stationery/create'),
       );
 
-      // Add form fields
+      // Add form fields - only the fields required by the API
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
+      request.fields['specifications'] = specifications;
       request.fields['storage_location'] = storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
-      request.fields['specifications'] = specifications;
 
       // Add image file if provided
       print('🔍 Debug Stationery API: itemImage = $itemImage');
@@ -577,7 +603,8 @@ class InventoryService {
       print('🔍 Debug Stationery API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final responseData = jsonDecode(response.body);
+        final responseData =
+            _parseJsonResponse(response, 'createStationeryItem');
         if (responseData['success'] == true) {
           return responseData;
         } else {
@@ -585,7 +612,7 @@ class InventoryService {
               responseData['message'] ?? 'Failed to create stationery item');
         }
       } else {
-        final errorData = jsonDecode(response.body);
+        final errorData = _parseJsonResponse(response, 'createStationeryItem');
         throw Exception(
             errorData['message'] ?? 'Failed to create stationery item');
       }
@@ -598,13 +625,13 @@ class InventoryService {
   // Create thermocol materials item with specific API endpoint
   Future<Map<String, dynamic>> createThermocolMaterialsItem({
     required String name,
-    required String unit,
+    required String thermocolType,
+    required String dimensions,
+    required String thickness,
+    required double density,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
-    required String thermocolType,
-    required String dimensions,
-    required double density,
     File? itemImage,
     String? itemImagePath,
     Uint8List? itemImageBytes,
@@ -616,15 +643,15 @@ class InventoryService {
         Uri.parse('$baseUrl/api/inventory/thermocol-materials/create'),
       );
 
-      // Add form fields
+      // Add form fields - only the fields required by the API
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
+      request.fields['thermocol_type'] = thermocolType;
+      request.fields['dimensions'] = dimensions;
+      request.fields['thickness'] = thickness;
+      request.fields['density'] = density.toString();
       request.fields['storage_location'] = storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
-      request.fields['thermocol_type'] = thermocolType;
-      request.fields['dimensions'] = dimensions;
-      request.fields['density'] = density.toString();
 
       // Add image file if provided
       print('🔍 Debug Thermocol Materials API: itemImage = $itemImage');
@@ -722,7 +749,8 @@ class InventoryService {
           '🔍 Debug Thermocol Materials API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final responseData = jsonDecode(response.body);
+        final responseData =
+            _parseJsonResponse(response, 'createThermocolMaterialsItem');
         if (responseData['success'] == true) {
           return responseData;
         } else {
@@ -730,7 +758,8 @@ class InventoryService {
               'Failed to create thermocol materials item');
         }
       } else {
-        final errorData = jsonDecode(response.body);
+        final errorData =
+            _parseJsonResponse(response, 'createThermocolMaterialsItem');
         throw Exception(errorData['message'] ??
             'Failed to create thermocol materials item');
       }
@@ -746,7 +775,6 @@ class InventoryService {
     required String name,
     required String material,
     required String dimensions,
-    required String unit,
     required String notes,
     required String storageLocation,
     required double quantityAvailable,
@@ -766,7 +794,6 @@ class InventoryService {
       request.fields['name'] = name;
       request.fields['material'] = material;
       request.fields['dimensions'] = dimensions;
-      request.fields['unit'] = unit;
       request.fields['notes'] = notes;
       request.fields['storage_location'] = storageLocation;
       request.fields['quantity_available'] = quantityAvailable.toString();
@@ -884,7 +911,6 @@ class InventoryService {
   Future<Map<String, dynamic>> updateCarpetItem({
     required int id,
     required String name,
-    required String unit,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
@@ -905,7 +931,6 @@ class InventoryService {
       // Add form fields
       request.fields['id'] = id.toString();
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
       request.fields['storage_location'] = storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
@@ -1022,15 +1047,11 @@ class InventoryService {
   Future<Map<String, dynamic>> updateFabricItem({
     required int id,
     required String name,
-    required String unit,
+    required String fabricType,
+    required String size,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
-    required String fabricType,
-    required String pattern,
-    required double width,
-    required double length,
-    required String color,
     File? itemImage,
     String? itemImagePath,
     Uint8List? itemImageBytes,
@@ -1042,18 +1063,14 @@ class InventoryService {
         Uri.parse('$baseUrl/api/inventory/fabric/update'),
       );
 
-      // Add form fields
+      // Add form fields as per API specification
       request.fields['id'] = id.toString();
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
+      request.fields['fabric_type'] = fabricType;
+      request.fields['size'] = size;
       request.fields['storage_location'] = storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
-      request.fields['fabric_type'] = fabricType;
-      request.fields['pattern'] = pattern;
-      request.fields['width'] = width.toString();
-      request.fields['length'] = length.toString();
-      request.fields['color'] = color;
 
       // Add image file if provided
       print('🔍 Debug Fabric Update API: itemImage = $itemImage');
@@ -1143,7 +1160,7 @@ class InventoryService {
       print('🔍 Debug Fabric Update API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final responseData = jsonDecode(response.body);
+        final responseData = _parseJsonResponse(response, 'updateFabricItem');
         if (responseData['success'] == true) {
           return responseData;
         } else {
@@ -1151,7 +1168,7 @@ class InventoryService {
               responseData['message'] ?? 'Failed to update fabric item');
         }
       } else {
-        final errorData = jsonDecode(response.body);
+        final errorData = _parseJsonResponse(response, 'updateFabricItem');
         throw Exception(errorData['message'] ?? 'Failed to update fabric item');
       }
     } catch (e) {
@@ -1164,7 +1181,6 @@ class InventoryService {
   Future<Map<String, dynamic>> updateFrameStructureItem({
     required int id,
     required String name,
-    required String unit,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
@@ -1185,7 +1201,6 @@ class InventoryService {
       // Add form fields
       request.fields['id'] = id.toString();
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
       request.fields['storage_location'] = storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
@@ -1314,7 +1329,6 @@ class InventoryService {
   Future<Map<String, dynamic>> updateThermocolMaterialsItem({
     required int id,
     required String name,
-    required String unit,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
@@ -1335,7 +1349,6 @@ class InventoryService {
       // Add form fields
       request.fields['id'] = id.toString();
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
       request.fields['storage_location'] = storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
@@ -1464,7 +1477,6 @@ class InventoryService {
   Future<Map<String, dynamic>> updateMurtiSetsItem({
     required int id,
     required String name,
-    required String unit,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
@@ -1485,7 +1497,6 @@ class InventoryService {
       // Add form fields
       request.fields['id'] = id.toString();
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
       request.fields['storage_location'] = storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
@@ -1608,7 +1619,6 @@ class InventoryService {
   Future<Map<String, dynamic>> updateStationeryItem({
     required int id,
     required String name,
-    required String unit,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
@@ -1627,7 +1637,6 @@ class InventoryService {
       // Add form fields
       request.fields['id'] = id.toString();
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
       request.fields['storage_location'] = storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
@@ -1990,13 +1999,11 @@ class InventoryService {
   // Create frame structure item with specific API endpoint
   Future<Map<String, dynamic>> createFrameStructureItem({
     required String name,
-    required String unit,
+    required String frameType,
+    required String dimensions,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
-    required String frameType,
-    required String material,
-    required String dimensions,
     File? itemImage,
     String? itemImagePath,
     Uint8List? itemImageBytes,
@@ -2008,15 +2015,13 @@ class InventoryService {
         Uri.parse('$baseUrl/api/inventory/frame-structures/create'),
       );
 
-      // Add form fields
+      // Add form fields as per API specification
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
+      request.fields['frame_type'] = frameType;
+      request.fields['dimensions'] = dimensions;
       request.fields['storage_location'] = storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
-      request.fields['frame_type'] = frameType;
-      request.fields['material'] = material;
-      request.fields['dimensions'] = dimensions;
 
       // Add image file if provided
       print('🔍 Debug Frame Structure API: itemImage = $itemImage');
@@ -2109,7 +2114,8 @@ class InventoryService {
       print('🔍 Debug Frame Structure API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final responseData = jsonDecode(response.body);
+        final responseData =
+            _parseJsonResponse(response, 'createFrameStructureItem');
         if (responseData['success'] == true) {
           return responseData;
         } else {
@@ -2117,7 +2123,8 @@ class InventoryService {
               'Failed to create frame structure item');
         }
       } else {
-        final errorData = jsonDecode(response.body);
+        final errorData =
+            _parseJsonResponse(response, 'createFrameStructureItem');
         throw Exception(
             errorData['message'] ?? 'Failed to create frame structure item');
       }
@@ -2131,11 +2138,7 @@ class InventoryService {
   Future<Map<String, dynamic>> createFabricItem({
     required String name,
     required String fabricType,
-    required String pattern,
-    required double width,
-    required double length,
-    required String color,
-    required String unit,
+    required String size,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
@@ -2150,14 +2153,10 @@ class InventoryService {
         Uri.parse('$baseUrl/api/inventory/fabric/create'),
       );
 
-      // Add form fields
+      // Add form fields as per API specification
       request.fields['name'] = name;
       request.fields['fabric_type'] = fabricType;
-      request.fields['pattern'] = pattern;
-      request.fields['width'] = width.toString();
-      request.fields['length'] = length.toString();
-      request.fields['color'] = color;
-      request.fields['unit'] = unit;
+      request.fields['size'] = size;
       request.fields['storage_location'] = storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
@@ -2246,7 +2245,7 @@ class InventoryService {
       print('🔍 Debug Fabric API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final responseData = jsonDecode(response.body);
+        final responseData = _parseJsonResponse(response, 'createFabricItem');
         if (responseData['success'] == true) {
           return responseData;
         } else {
@@ -2254,7 +2253,7 @@ class InventoryService {
               responseData['message'] ?? 'Failed to create fabric item');
         }
       } else {
-        final errorData = jsonDecode(response.body);
+        final errorData = _parseJsonResponse(response, 'createFabricItem');
         throw Exception(errorData['message'] ?? 'Failed to create fabric item');
       }
     } catch (e) {
@@ -2266,13 +2265,10 @@ class InventoryService {
   // Create carpet item with specific API endpoint
   Future<Map<String, dynamic>> createCarpetItem({
     required String name,
-    required String unit,
+    required String size,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
-    required String carpetType,
-    required String material,
-    required String size,
     File? itemImage,
     String? itemImagePath,
     Uint8List? itemImageBytes,
@@ -2284,15 +2280,12 @@ class InventoryService {
         Uri.parse('$baseUrl/api/inventory/carpets/create'),
       );
 
-      // Add form fields
+      // Add form fields - only the fields required by the API
       request.fields['name'] = name;
-      request.fields['unit'] = unit;
+      request.fields['size'] = size;
       request.fields['storage_location'] = storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
-      request.fields['carpet_type'] = carpetType;
-      request.fields['material'] = material;
-      request.fields['size'] = size;
 
       // Add image file if provided
       print('🔍 Debug Carpet API: itemImage = $itemImage');
@@ -2378,36 +2371,16 @@ class InventoryService {
       print('🔍 Debug Carpet API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        try {
-          final responseData = jsonDecode(response.body);
-          if (responseData['success'] == true) {
-            return responseData;
-          } else {
-            throw Exception(
-                responseData['message'] ?? 'Failed to create carpet item');
-          }
-        } catch (e) {
-          // If JSON parsing fails, it's likely HTML (server error page)
-          throw Exception('Server returned invalid response. Please check server configuration.');
+        final responseData = _parseJsonResponse(response, 'createCarpetItem');
+        if (responseData['success'] == true) {
+          return responseData;
+        } else {
+          throw Exception(
+              responseData['message'] ?? 'Failed to create carpet item');
         }
       } else {
-        try {
-          final errorData = jsonDecode(response.body);
-          throw Exception(errorData['message'] ?? 'Failed to create carpet item');
-        } catch (e) {
-          // If JSON parsing fails, it's likely HTML (404, 500 error page)
-          String errorMessage = 'Server error (${response.statusCode})';
-          if (response.statusCode == 404) {
-            errorMessage = 'API endpoint not found. Please check server configuration.';
-          } else if (response.statusCode == 500) {
-            errorMessage = 'Internal server error. Please try again later.';
-          } else if (response.statusCode == 401) {
-            errorMessage = 'Authentication required. Please login again.';
-          } else if (response.statusCode == 403) {
-            errorMessage = 'Access denied. You do not have permission to perform this action.';
-          }
-          throw Exception(errorMessage);
-        }
+        final errorData = _parseJsonResponse(response, 'createCarpetItem');
+        throw Exception(errorData['message'] ?? 'Failed to create carpet item');
       }
     } catch (e) {
       print('❌ Carpet API Error: $e');
@@ -2419,7 +2392,6 @@ class InventoryService {
   Future<Map<String, dynamic>> createItem({
     required String name,
     required int categoryId,
-    required String unit,
     required String storageLocation,
     required String notes,
     required double quantityAvailable,
@@ -2438,7 +2410,6 @@ class InventoryService {
       // Add basic fields
       request.fields['name'] = name;
       request.fields['category_id'] = categoryId.toString();
-      request.fields['unit'] = unit;
       request.fields['storage_location'] = storageLocation;
       request.fields['notes'] = notes;
       request.fields['quantity_available'] = quantityAvailable.toString();
@@ -2551,7 +2522,8 @@ class InventoryService {
           }
         } catch (e) {
           // If JSON parsing fails, it's likely HTML (server error page)
-          throw Exception('Server returned invalid response. Please check server configuration.');
+          throw Exception(
+              'Server returned invalid response. Please check server configuration.');
         }
       } else {
         try {
@@ -2561,13 +2533,15 @@ class InventoryService {
           // If JSON parsing fails, it's likely HTML (404, 500 error page)
           String errorMessage = 'Server error (${response.statusCode})';
           if (response.statusCode == 404) {
-            errorMessage = 'API endpoint not found. Please check server configuration.';
+            errorMessage =
+                'API endpoint not found. Please check server configuration.';
           } else if (response.statusCode == 500) {
             errorMessage = 'Internal server error. Please try again later.';
           } else if (response.statusCode == 401) {
             errorMessage = 'Authentication required. Please login again.';
           } else if (response.statusCode == 403) {
-            errorMessage = 'Access denied. You do not have permission to perform this action.';
+            errorMessage =
+                'Access denied. You do not have permission to perform this action.';
           }
           throw Exception(errorMessage);
         }

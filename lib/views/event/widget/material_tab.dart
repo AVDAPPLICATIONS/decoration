@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../utils/snackbar_manager.dart';
 
 class MaterialTab extends ConsumerStatefulWidget {
   final Map<String, dynamic> event;
@@ -982,34 +983,11 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
           final stockUpdate = response['data']?['stock_update'];
           final newQuantity = stockUpdate?['new_quantity'] ?? 'Unknown';
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Item returned to inventory successfully!',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text('Item: ${item['name']} (Qty: ${item['quantity']})'),
-                  Text('Stock updated: $newQuantity available'),
-                ],
-              ),
-              backgroundColor: Colors.green,
-              duration: const Duration(seconds: 4),
-              action: SnackBarAction(
-                label: 'Undo',
-                textColor: Colors.white,
-                onPressed: () {
-                  // Add item back to the list
-                  setState(() {
-                    issuedInventoryItems.insert(index, item);
-                  });
-                  _saveIssuedItems();
-                },
-              ),
-            ),
+          SnackBarManager.showSuccess(
+            context: context,
+            message:
+                'Item returned to inventory successfully!\nItem: ${item['name']} (Qty: ${item['quantity']})\nStock updated: $newQuantity available',
+            duration: const Duration(seconds: 4),
           );
         }
       } else {
@@ -1022,24 +1000,11 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
 
         // Show warning message
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Item returned locally (API Error)',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text('Item: ${item['name']} (Qty: ${item['quantity']})'),
-                  Text(
-                      'Error: ${response['message'] ?? 'API connection failed'}'),
-                ],
-              ),
-              backgroundColor: Colors.orange,
-              duration: const Duration(seconds: 4),
-            ),
+          SnackBarManager.showWarning(
+            context: context,
+            message:
+                'Item returned locally (API Error)\nItem: ${item['name']} (Qty: ${item['quantity']})\nError: ${response['message'] ?? 'API connection failed'}',
+            duration: const Duration(seconds: 4),
           );
         }
       }
@@ -1066,23 +1031,11 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
 
       // Show error message
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Item returned locally (Network Error)',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Text('Item: ${item['name']} (Qty: ${item['quantity']})'),
-                Text('Error: ${e.toString()}'),
-              ],
-            ),
-            backgroundColor: Colors.orange,
-            duration: const Duration(seconds: 4),
-          ),
+        SnackBarManager.showWarning(
+          context: context,
+          message:
+              'Item returned locally (Network Error)\nItem: ${item['name']} (Qty: ${item['quantity']})\nError: ${e.toString()}',
+          duration: const Duration(seconds: 4),
         );
       }
     }
@@ -1103,12 +1056,9 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
       print('Cleared all issued items for event $eventId');
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('All issued items cleared'),
-            backgroundColor: Colors.orange,
-            duration: Duration(seconds: 2),
-          ),
+        SnackBarManager.showInfo(
+          context: context,
+          message: 'All issued items cleared',
         );
       }
     } catch (e) {
@@ -1372,12 +1322,9 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
                 onPressed: () async {
                   // Validate inputs
                   if (selectedItem == null || quantityController.text.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content:
-                            Text('Please select an item and enter quantity'),
-                        backgroundColor: colorScheme.error,
-                      ),
+                    SnackBarManager.showError(
+                      context: context,
+                      message: 'Please select an item and enter quantity',
                     );
                     return;
                   }
@@ -1438,25 +1385,11 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
                       final newQuantity =
                           stockUpdate?['new_quantity'] ?? 'Unknown';
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Inventory item issued successfully!',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              Text('Item: ${selectedItem!['name']}'),
-                              Text('Quantity: ${transactionData['quantity']}'),
-                              Text('Stock: $newQuantity remaining'),
-                            ],
-                          ),
-                          backgroundColor: Colors.green,
-                          duration: const Duration(seconds: 4),
-                        ),
+                      SnackBarManager.showSuccess(
+                        context: context,
+                        message:
+                            'Inventory item issued successfully!\nItem: ${selectedItem!['name']}\nQuantity: ${transactionData['quantity']}\nStock: $newQuantity remaining',
+                        duration: const Duration(seconds: 4),
                       );
                     } else {
                       // API call failed, but we can still add item locally for demo purposes
@@ -1481,26 +1414,11 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
                       Navigator.pop(context);
 
                       // Show warning message
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'API Error - Item added locally',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              Text('Item: ${selectedItem!['name']}'),
-                              Text('Quantity: ${transactionData['quantity']}'),
-                              Text(
-                                  'Error: ${response['message'] ?? 'API connection failed'}'),
-                            ],
-                          ),
-                          backgroundColor: Colors.orange,
-                          duration: const Duration(seconds: 5),
-                        ),
+                      SnackBarManager.showWarning(
+                        context: context,
+                        message:
+                            'API Error - Item added locally\nItem: ${selectedItem!['name']}\nQuantity: ${transactionData['quantity']}\nError: ${response['message'] ?? 'API connection failed'}',
+                        duration: const Duration(seconds: 5),
                       );
                     }
                   } catch (e) {
@@ -1529,24 +1447,11 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
                     Navigator.pop(context);
 
                     // Show error message
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Item added locally (Network Error)',
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            Text('Item: ${selectedItem!['name']}'),
-                            Text('Error: ${e.toString()}'),
-                          ],
-                        ),
-                        backgroundColor: Colors.orange,
-                        duration: const Duration(seconds: 4),
-                      ),
+                    SnackBarManager.showWarning(
+                      context: context,
+                      message:
+                          'Item added locally (Network Error)\nItem: ${selectedItem!['name']}\nError: ${e.toString()}',
+                      duration: const Duration(seconds: 4),
                     );
                   }
                 },

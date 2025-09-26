@@ -53,8 +53,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       controller: _controller,
       screens: _buildScreens(isAdmin),
       items: _buildNavBarItems(context),
-      handleAndroidBackButtonPress: false,
-      resizeToAvoidBottomInset: true,
+      handleAndroidBackButtonPress: true, // Enable back button handling
+      resizeToAvoidBottomInset: false,
       stateManagement: true, // Changed to true to better manage state
       hideNavigationBarWhenKeyboardAppears: true,
       navBarStyle: NavBarStyle.style9,

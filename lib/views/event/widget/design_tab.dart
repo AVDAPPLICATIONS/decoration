@@ -7,6 +7,7 @@ import '../../../themes/app_theme.dart';
 import '../../../services/gallery_service.dart';
 import '../../../services/local_storage_service.dart';
 import '../../../utils/constants.dart';
+import '../../../utils/snackbar_manager.dart';
 import 'fullscreen_image_viewer.dart';
 
 class DesignTab extends StatefulWidget {
@@ -243,12 +244,9 @@ class _DesignTabState extends State<DesignTab> {
           _hasLoadedImages = true;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to load images: ${e.toString()}'),
-            backgroundColor: Colors.orange,
-            duration: const Duration(seconds: 3),
-          ),
+        SnackBarManager.showWarning(
+          context: context,
+          message: 'Failed to load images: ${e.toString()}',
         );
       }
     }
@@ -1022,28 +1020,19 @@ class _DesignTabState extends State<DesignTab> {
                                                       }
 
                                                       // Show success message
-                                                      ScaffoldMessenger.of(
-                                                              context)
-                                                          .showSnackBar(
-                                                        const SnackBar(
-                                                          content: Text(
-                                                              'Image deleted successfully'),
-                                                          backgroundColor:
-                                                              Colors.green,
-                                                        ),
+                                                      SnackBarManager
+                                                          .showSuccess(
+                                                        context: context,
+                                                        message:
+                                                            'Image deleted successfully',
                                                       );
                                                     } else {
                                                       // Show error message
-                                                      ScaffoldMessenger.of(
-                                                              context)
-                                                          .showSnackBar(
-                                                        SnackBar(
-                                                          content: Text(result[
-                                                                  'message'] ??
-                                                              'Failed to delete image'),
-                                                          backgroundColor:
-                                                              Colors.red,
-                                                        ),
+                                                      SnackBarManager.showError(
+                                                        context: context,
+                                                        message: result[
+                                                                'message'] ??
+                                                            'Failed to delete image',
                                                       );
                                                     }
                                                   } catch (e) {
@@ -1051,15 +1040,10 @@ class _DesignTabState extends State<DesignTab> {
                                                     Navigator.of(context).pop();
 
                                                     // Show error message
-                                                    ScaffoldMessenger.of(
-                                                            context)
-                                                        .showSnackBar(
-                                                      SnackBar(
-                                                        content: Text(
-                                                            'An error occurred: ${e.toString()}'),
-                                                        backgroundColor:
-                                                            Colors.red,
-                                                      ),
+                                                    SnackBarManager.showError(
+                                                      context: context,
+                                                      message:
+                                                          'An error occurred: ${e.toString()}',
                                                     );
                                                   }
                                                 } else {
@@ -1578,13 +1562,10 @@ class _DesignTabState extends State<DesignTab> {
                                 child: ElevatedButton(
                                   onPressed: () async {
                                     if (pickedImages.isEmpty) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                              'Please select at least one image.'),
-                                          backgroundColor: Colors.red,
-                                        ),
+                                      SnackBarManager.showError(
+                                        context: context,
+                                        message:
+                                            'Please select at least one image.',
                                       );
                                       return;
                                     }
@@ -1606,14 +1587,10 @@ class _DesignTabState extends State<DesignTab> {
                                         if (!_areServicesReady()) {
                                           Navigator.of(context)
                                               .pop(); // Close loading dialog
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                  'Services are still initializing. Please wait a moment and try again.'),
-                                              backgroundColor: Colors.orange,
-                                              duration: Duration(seconds: 3),
-                                            ),
+                                          SnackBarManager.showWarning(
+                                            context: context,
+                                            message:
+                                                'Services are still initializing. Please wait a moment and try again.',
                                           );
                                           return;
                                         }
@@ -1696,30 +1673,24 @@ class _DesignTabState extends State<DesignTab> {
                                               context, successCount, imageType);
                                         } else if (successCount > 0 &&
                                             failCount > 0) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                  'Uploaded $successCount image(s), $failCount failed'),
-                                              backgroundColor: Colors.orange,
-                                              duration:
-                                                  const Duration(seconds: 4),
-                                            ),
+                                          SnackBarManager.showWarning(
+                                            context: context,
+                                            message:
+                                                'Uploaded $successCount image(s), $failCount failed',
+                                            duration:
+                                                const Duration(seconds: 4),
                                           );
                                           Navigator.of(context)
                                               .pop(); // Close add dialog
                                           // Refresh images from server to show the newly uploaded images
                                           _refreshImages();
                                         } else {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                  'Failed to upload all images. ${errorMessages.first}'),
-                                              backgroundColor: Colors.red,
-                                              duration:
-                                                  const Duration(seconds: 5),
-                                            ),
+                                          SnackBarManager.showError(
+                                            context: context,
+                                            message:
+                                                'Failed to upload all images. ${errorMessages.first}',
+                                            duration:
+                                                const Duration(seconds: 5),
                                           );
                                         }
                                       } catch (e) {
@@ -1727,13 +1698,10 @@ class _DesignTabState extends State<DesignTab> {
                                         Navigator.of(context).pop();
 
                                         // Show error message
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                                'An error occurred: ${e.toString()}'),
-                                            backgroundColor: Colors.red,
-                                          ),
+                                        SnackBarManager.showError(
+                                          context: context,
+                                          message:
+                                              'An error occurred: ${e.toString()}',
                                         );
                                       }
                                     }

@@ -94,7 +94,8 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                 color: Theme.of(context).colorScheme.surface,
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).colorScheme.shadow.withOpacity(0.04),
+                    color:
+                        Theme.of(context).colorScheme.shadow.withOpacity(0.04),
                     spreadRadius: 0,
                     blurRadius: 20,
                     offset: const Offset(0, 4),
@@ -109,7 +110,10 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -141,14 +145,16 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                                   children: [
                                     Icon(
                                       Icons.error_outline,
-                                      color: Theme.of(context).colorScheme.error,
+                                      color:
+                                          Theme.of(context).colorScheme.error,
                                       size: 32,
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
                                       'Error loading categories',
                                       style: TextStyle(
-                                        color: Theme.of(context).colorScheme.error,
+                                        color:
+                                            Theme.of(context).colorScheme.error,
                                         fontSize: 12,
                                       ),
                                     ),
@@ -166,7 +172,10 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                                 ? Center(
                                     child: Text(
                                       'No categories available',
-                                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                      style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant),
                                     ),
                                   )
                                 : ListView.builder(
@@ -192,20 +201,30 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                                               const EdgeInsets.only(right: 16),
                                           decoration: BoxDecoration(
                                             color: isSelected
-                                                ? Theme.of(context).colorScheme.primary
-                                                : Theme.of(context).colorScheme.surface,
+                                                ? Theme.of(context)
+                                                    .colorScheme
+                                                    .primary
+                                                : Theme.of(context)
+                                                    .colorScheme
+                                                    .surface,
                                             borderRadius:
                                                 BorderRadius.circular(20),
                                             border: Border.all(
                                               color: isSelected
-                                                  ? Theme.of(context).colorScheme.primary
-                                                  : Theme.of(context).colorScheme.outline,
+                                                  ? Theme.of(context)
+                                                      .colorScheme
+                                                      .primary
+                                                  : Theme.of(context)
+                                                      .colorScheme
+                                                      .outline,
                                               width: isSelected ? 2 : 1.5,
                                             ),
                                             boxShadow: [
                                               BoxShadow(
                                                 color: isSelected
-                                                    ? Theme.of(context).colorScheme.primary
+                                                    ? Theme.of(context)
+                                                        .colorScheme
+                                                        .primary
                                                         .withOpacity(0.3)
                                                     : Colors.black
                                                         .withOpacity(0.06),
@@ -233,8 +252,12 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.w600,
                                                   color: isSelected
-                                                      ? Theme.of(context).colorScheme.surface
-                                                      : Theme.of(context).colorScheme.primary,
+                                                      ? Theme.of(context)
+                                                          .colorScheme
+                                                          .surface
+                                                      : Theme.of(context)
+                                                          .colorScheme
+                                                          .primary,
                                                 ),
                                               ),
                                             ],
@@ -380,7 +403,9 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                 width: double.infinity,
                 height: 60,
                 child: ElevatedButton(
-                  onPressed: (_isLoading || _isSubmitting) ? null : () => _submitForm(),
+                  onPressed: (_isLoading || _isSubmitting)
+                      ? null
+                      : () => _submitForm(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     foregroundColor: Theme.of(context).colorScheme.onPrimary,
@@ -388,7 +413,8 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     elevation: 0,
-                    shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                    shadowColor:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.3),
                   ),
                   child: (_isLoading || _isSubmitting)
                       ? Row(
@@ -472,13 +498,190 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+          borderSide: BorderSide(
+              color: Theme.of(context).colorScheme.primary, width: 2),
         ),
         filled: true,
         fillColor: Theme.of(context).colorScheme.surface,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
+    );
+  }
+
+  // Build size/dimensions field with dropdown for units
+  Widget _buildSizeField({
+    required String label,
+    String? value,
+    required Function(String) onChanged,
+    String? Function(String?)? validator,
+    bool isOptional = true,
+  }) {
+    // Parse the current value to extract size and unit
+    String sizeValue = '';
+    String selectedUnit = 'm'; // Default unit
+
+    if (value != null && value.isNotEmpty) {
+      // Try to extract unit from the end of the string
+      final units = ['mm', 'cm', 'm', 'in', 'ft', 'Roll'];
+      for (String unit in units) {
+        if (value.endsWith(' $unit') || value.endsWith(unit)) {
+          selectedUnit = unit;
+          sizeValue =
+              value.replaceAll(' $unit', '').replaceAll(unit, '').trim();
+          break;
+        }
+      }
+      // If no unit found, treat the whole value as size
+      if (sizeValue.isEmpty) {
+        sizeValue = value;
+      }
+    }
+
+    return StatefulBuilder(
+      builder: (context, setState) {
+        return Row(
+          children: [
+            Expanded(
+              flex: 2,
+              child: TextFormField(
+                initialValue: sizeValue,
+                onChanged: (newValue) {
+                  final combinedValue =
+                      newValue.isNotEmpty ? '$newValue $selectedUnit' : '';
+                  onChanged(combinedValue);
+                },
+                validator: validator,
+                decoration: InputDecoration(
+                  labelText: isOptional ? '$label (optional)' : label,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.outline),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.outline),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary, width: 2),
+                  ),
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surface,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 1,
+              child: DropdownButtonFormField<String>(
+                isExpanded: true,
+                value: selectedUnit,
+                onChanged: (String? newValue) {
+                  if (newValue != null) {
+                    setState(() {
+                      selectedUnit = newValue;
+                    });
+                    final combinedValue =
+                        sizeValue.isNotEmpty ? '$sizeValue $newValue' : '';
+                    onChanged(combinedValue);
+                  }
+                },
+                decoration: InputDecoration(
+                  labelText: 'Unit',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.outline),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.outline),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.primary, width: 2),
+                  ),
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surface,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'mm', child: Text('Millimeter (mm)')),
+                  DropdownMenuItem(value: 'cm', child: Text('Centimeter (cm)')),
+                  DropdownMenuItem(value: 'm', child: Text('Meter (m)')),
+                  DropdownMenuItem(value: 'in', child: Text('Inch (in)')),
+                  DropdownMenuItem(value: 'ft', child: Text('Foot (ft)')),
+                  DropdownMenuItem(value: 'Roll', child: Text('Roll')),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildThicknessDropdown() {
+    return Consumer(
+      builder: (context, ref, child) {
+        final formState = ref.watch(inventoryFormNotifierProvider);
+        final currentThickness =
+            formState.thermocol.thickness?.toString() ?? '';
+
+        return DropdownButtonFormField<String>(
+          isExpanded: true,
+          value: currentThickness.isNotEmpty ? currentThickness : null,
+          onChanged: (String? newValue) {
+            if (newValue != null) {
+              // Extract numeric value from the selected option
+              final numericValue =
+                  double.tryParse(newValue.replaceAll(' mm', ''));
+              ref
+                  .read(inventoryFormNotifierProvider.notifier)
+                  .updateThermocolData(thickness: numericValue);
+            }
+          },
+          decoration: InputDecoration(
+            labelText: 'Thickness',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide:
+                  BorderSide(color: Theme.of(context).colorScheme.outline),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide:
+                  BorderSide(color: Theme.of(context).colorScheme.outline),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.primary, width: 2),
+            ),
+            filled: true,
+            fillColor: Theme.of(context).colorScheme.surface,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          ),
+          items: const [
+            DropdownMenuItem(value: '10', child: Text('10 mm')),
+            DropdownMenuItem(value: '15', child: Text('15 mm')),
+            DropdownMenuItem(value: '20', child: Text('20 mm')),
+            DropdownMenuItem(value: '25', child: Text('25 mm')),
+            DropdownMenuItem(value: '35', child: Text('35 mm')),
+            DropdownMenuItem(value: '50', child: Text('50 mm')),
+          ],
+        );
+      },
     );
   }
 
@@ -490,10 +693,27 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
         return [
           _buildTextField(
               label: "Furniture Name",
+              isOptional: false,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Furniture name is required';
+                }
+                return null;
+              },
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
                     .updateFurnitureData(name: value);
+              }),
+          const SizedBox(height: 16),
+          _buildSizeField(
+              label: "Dimensions (e.g., 45x45x90)",
+              value:
+                  ref.watch(inventoryFormNotifierProvider).furniture.dimensions,
+              onChanged: (value) {
+                ref
+                    .read(inventoryFormNotifierProvider.notifier)
+                    .updateFurnitureData(dimensions: value);
               }),
           const SizedBox(height: 16),
           _buildTextField(
@@ -505,28 +725,12 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               }),
           const SizedBox(height: 16),
           _buildTextField(
-              label: "Dimensions (e.g., 45cm x 45cm x 90cm)",
+              label: "Total Stock",
+              keyboardType: TextInputType.number,
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
-                    .updateFurnitureData(dimensions: value);
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Unit (e.g., piece, set)",
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateFurnitureData(unit: value);
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Notes",
-              maxLines: 3,
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateFurnitureData(notes: value);
+                    .updateFurnitureData(quantity: int.tryParse(value));
               }),
           const SizedBox(height: 16),
           _buildTextField(
@@ -538,26 +742,35 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               }),
           const SizedBox(height: 16),
           _buildTextField(
-              label: "Quantity Available",
-              keyboardType: TextInputType.number,
+              label: "Notes",
+              maxLines: 3,
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
-                    .updateFurnitureData(quantity: int.tryParse(value));
+                    .updateFurnitureData(notes: value);
               }),
         ];
 
       case 'fabric':
       case 'fabrics':
         return [
+          // 1. Fabric Name
           _buildTextField(
               label: "Fabric Name",
+              isOptional: false,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Fabric name is required';
+                }
+                return null;
+              },
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
                     .updateFabricData(name: value);
               }),
           const SizedBox(height: 16),
+          // 2. Fabric Type
           _buildTextField(
               label: "Fabric Type",
               onChanged: (value) {
@@ -566,48 +779,35 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                     .updateFabricData(type: value);
               }),
           const SizedBox(height: 16),
-          _buildTextField(
-              label: "Pattern",
+          // 3. Size (combining width and length)
+          _buildSizeField(
+              label: "Size (e.g., 1x2)",
               onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateFabricData(pattern: value);
+                // Parse the size input to extract width and length
+                final sizeParts = value.split('x');
+                if (sizeParts.length == 2) {
+                  final width = double.tryParse(sizeParts[0].trim());
+                  final length =
+                      double.tryParse(sizeParts[1].trim().split(' ')[0]);
+                  if (width != null && length != null) {
+                    ref
+                        .read(inventoryFormNotifierProvider.notifier)
+                        .updateFabricData(width: width, length: length);
+                  }
+                }
               }),
           const SizedBox(height: 16),
+          // 4. Total Stock
           _buildTextField(
-              label: "Width",
+              label: "Total Stock",
               keyboardType: TextInputType.numberWithOptions(decimal: true),
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
-                    .updateFabricData(width: double.tryParse(value));
+                    .updateFabricData(stock: double.tryParse(value));
               }),
           const SizedBox(height: 16),
-          _buildTextField(
-              label: "Length",
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateFabricData(length: double.tryParse(value));
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Color",
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateFabricData(color: value);
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Unit (e.g., meter, yard)",
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateFabricData(unit: value);
-              }),
-          const SizedBox(height: 16),
+          // 5. Storage Location
           _buildTextField(
               label: "Storage Location",
               onChanged: (value) {
@@ -616,6 +816,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                     .updateFabricData(storageLocation: value);
               }),
           const SizedBox(height: 16),
+          // 6. Notes
           _buildTextField(
               label: "Notes",
               maxLines: 3,
@@ -624,53 +825,28 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                     .read(inventoryFormNotifierProvider.notifier)
                     .updateFabricData(notes: value);
               }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Quantity Available",
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateFabricData(stock: double.tryParse(value));
-              }),
         ];
 
       case 'frame structure':
       case 'frame structures':
         return [
+          // 1. Frame Structures Name
           _buildTextField(
-              label: "Frame Structure Name",
+              label: "Frame Structures Name",
+              isOptional: false,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Frame structures name is required';
+                }
+                return null;
+              },
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
                     .updateFrameData(name: value);
               }),
           const SizedBox(height: 16),
-          _buildTextField(
-              label: "Unit (e.g., piece, set)",
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateFrameData(unit: value);
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Storage Location",
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateFrameData(storageLocation: value);
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Notes",
-              maxLines: 3,
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateFrameData(notes: value);
-              }),
-          const SizedBox(height: 16),
+          // 2. Frame Type
           _buildTextField(
               label: "Frame Type",
               onChanged: (value) {
@@ -679,51 +855,85 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                     .updateFrameData(type: value);
               }),
           const SizedBox(height: 16),
-          _buildTextField(
-              label: "Material",
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateFrameData(material: value);
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Dimensions (e.g., 3.5m x 2.8m x 0.6m)",
+          // 3. Dimensions
+          _buildSizeField(
+              label: "Dimensions (e.g., 1x2)",
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
                     .updateFrameData(dimensions: value);
               }),
           const SizedBox(height: 16),
+          // 4. Quantity
           _buildTextField(
-              label: "Quantity Available",
+              label: "Total Stock",
               keyboardType: TextInputType.number,
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
                     .updateFrameData(quantity: int.tryParse(value));
               }),
+          const SizedBox(height: 16),
+          // 5. Storage Location
+          _buildTextField(
+              label: "Storage Location",
+              onChanged: (value) {
+                ref
+                    .read(inventoryFormNotifierProvider.notifier)
+                    .updateFrameData(storageLocation: value);
+              }),
+          const SizedBox(height: 16),
+          // 6. Notes
+          _buildTextField(
+              label: "Notes",
+              maxLines: 3,
+              onChanged: (value) {
+                ref
+                    .read(inventoryFormNotifierProvider.notifier)
+                    .updateFrameData(notes: value);
+              }),
         ];
 
       case 'carpet':
       case 'carpets':
         return [
+          // 1. Carpet Name
           _buildTextField(
               label: "Carpet Name",
+              isOptional: false,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Carpet name is required';
+                }
+                return null;
+              },
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
                     .updateCarpetData(name: value);
               }),
           const SizedBox(height: 16),
-          _buildTextField(
-              label: "Unit (e.g., piece, meter)",
+          // 2. Size
+          _buildSizeField(
+              label: "Size (e.g., 4x3)",
+              value: ref.watch(inventoryFormNotifierProvider).carpet.size,
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
-                    .updateCarpetData(unit: value);
+                    .updateCarpetData(size: value);
               }),
           const SizedBox(height: 16),
+          // 3. Quantity
+          _buildTextField(
+              label: "Total Stock",
+              keyboardType: TextInputType.number,
+              onChanged: (value) {
+                ref
+                    .read(inventoryFormNotifierProvider.notifier)
+                    .updateCarpetData(stock: int.tryParse(value));
+              }),
+          const SizedBox(height: 16),
+          // 4. Storage Location
           _buildTextField(
               label: "Storage Location",
               onChanged: (value) {
@@ -732,6 +942,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                     .updateCarpetData(storageLocation: value);
               }),
           const SizedBox(height: 16),
+          // 5. Notes
           _buildTextField(
               label: "Notes",
               maxLines: 3,
@@ -740,94 +951,51 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                     .read(inventoryFormNotifierProvider.notifier)
                     .updateCarpetData(notes: value);
               }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Carpet Type",
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateCarpetData(type: value);
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Material",
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateCarpetData(material: value);
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Size (e.g., 4m x 3m)",
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateCarpetData(size: value);
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Quantity Available",
-              keyboardType: TextInputType.number,
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateCarpetData(stock: int.tryParse(value));
-              }),
         ];
 
       case 'thermocol':
       case 'thermocol material':
       case 'thermocol materials':
         return [
+          // 1. Name
           _buildTextField(
               label: "Thermocol Material Name",
+              isOptional: false,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Thermocol material name is required';
+                }
+                return null;
+              },
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
                     .updateThermocolData(name: value);
               }),
           const SizedBox(height: 16),
-          _buildTextField(
-              label: "Unit (e.g., set, piece)",
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateThermocolData(unit: value);
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Storage Location",
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateThermocolData(storageLocation: value);
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Notes",
-              maxLines: 3,
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateThermocolData(notes: value);
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Thermocol Type",
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateThermocolData(thermocolType: value);
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Dimensions (e.g., 70cm x 50cm x 12cm)",
+          // 2. Dimensions
+          _buildSizeField(
+              label: "Dimensions (e.g., 70x50x12)",
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
                     .updateThermocolData(dimensions: value);
               }),
           const SizedBox(height: 16),
+          // 3. Quantity
+          _buildTextField(
+              label: "Total Stock",
+              keyboardType: TextInputType.number,
+              onChanged: (value) {
+                ref
+                    .read(inventoryFormNotifierProvider.notifier)
+                    .updateThermocolData(quantity: int.tryParse(value));
+              }),
+          const SizedBox(height: 16),
+          // 4. Thickness
+          _buildThicknessDropdown(),
+          const SizedBox(height: 16),
+          // 5. Density
           _buildTextField(
               label: "Density",
               keyboardType: TextInputType.numberWithOptions(decimal: true),
@@ -837,51 +1005,55 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                     .updateThermocolData(density: double.tryParse(value));
               }),
           const SizedBox(height: 16),
-          _buildTextField(
-              label: "Quantity Available",
-              keyboardType: TextInputType.number,
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateThermocolData(quantity: int.tryParse(value));
-              }),
-        ];
-
-      case 'stationery':
-        return [
-          _buildTextField(
-              label: "Stationery Name",
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateStationeryData(name: value);
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Unit (e.g., piece, set)",
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateStationeryData(unit: value);
-              }),
-          const SizedBox(height: 16),
+          // 6. Storage Location
           _buildTextField(
               label: "Storage Location",
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
-                    .updateStationeryData(storageLocation: value);
+                    .updateThermocolData(storageLocation: value);
               }),
           const SizedBox(height: 16),
+          // 7. Notes
           _buildTextField(
               label: "Notes",
               maxLines: 3,
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
-                    .updateStationeryData(notes: value);
+                    .updateThermocolData(notes: value);
+              }),
+        ];
+
+      case 'stationery':
+        return [
+          // 1. Stationery Name
+          _buildTextField(
+              label: "Stationery Name",
+              isOptional: false,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Stationery name is required';
+                }
+                return null;
+              },
+              onChanged: (value) {
+                ref
+                    .read(inventoryFormNotifierProvider.notifier)
+                    .updateStationeryData(name: value);
               }),
           const SizedBox(height: 16),
+          // 2. Quantity
+          _buildTextField(
+              label: "Total Stock",
+              keyboardType: TextInputType.number,
+              onChanged: (value) {
+                ref
+                    .read(inventoryFormNotifierProvider.notifier)
+                    .updateStationeryData(quantity: int.tryParse(value));
+              }),
+          const SizedBox(height: 16),
+          // 3. Specifications
           _buildTextField(
               label: "Specifications",
               maxLines: 3,
@@ -891,52 +1063,55 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                     .updateStationeryData(specifications: value);
               }),
           const SizedBox(height: 16),
-          _buildTextField(
-              label: "Quantity Available",
-              keyboardType: TextInputType.number,
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateStationeryData(quantity: int.tryParse(value));
-              }),
-        ];
-
-      case 'murti set':
-      case 'murti sets':
-        return [
-          _buildTextField(
-              label: "Murti Set Name",
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateMurtiData(name: value);
-              }),
-          const SizedBox(height: 16),
-          _buildTextField(
-              label: "Unit (e.g., set, piece)",
-              onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
-                    .updateMurtiData(unit: value);
-              }),
-          const SizedBox(height: 16),
+          // 4. Storage Location
           _buildTextField(
               label: "Storage Location",
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
-                    .updateMurtiData(storageLocation: value);
+                    .updateStationeryData(storageLocation: value);
               }),
           const SizedBox(height: 16),
+          // 5. Notes
           _buildTextField(
               label: "Notes",
               maxLines: 3,
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
-                    .updateMurtiData(notes: value);
+                    .updateStationeryData(notes: value);
+              }),
+        ];
+
+      case 'murti set':
+      case 'murti sets':
+        return [
+          // 1. Murti Set Name
+          _buildTextField(
+              label: "Murti Set Name",
+              isOptional: false,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Murti set name is required';
+                }
+                return null;
+              },
+              onChanged: (value) {
+                ref
+                    .read(inventoryFormNotifierProvider.notifier)
+                    .updateMurtiData(name: value);
               }),
           const SizedBox(height: 16),
+          // 2. Dimensions
+          _buildSizeField(
+              label: "Dimensions (e.g., 8x12)",
+              onChanged: (value) {
+                ref
+                    .read(inventoryFormNotifierProvider.notifier)
+                    .updateMurtiData(dimensions: value);
+              }),
+          const SizedBox(height: 16),
+          // 3. Set Number
           _buildTextField(
               label: "Set Number",
               onChanged: (value) {
@@ -945,6 +1120,17 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                     .updateMurtiData(setNumber: value);
               }),
           const SizedBox(height: 16),
+          // 4. Quantity
+          _buildTextField(
+              label: "Total Stock",
+              keyboardType: TextInputType.number,
+              onChanged: (value) {
+                ref
+                    .read(inventoryFormNotifierProvider.notifier)
+                    .updateMurtiData(quantity: int.tryParse(value));
+              }),
+          const SizedBox(height: 16),
+          // 5. Material
           _buildTextField(
               label: "Material",
               onChanged: (value) {
@@ -953,21 +1139,23 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                     .updateMurtiData(material: value);
               }),
           const SizedBox(height: 16),
+          // 6. Storage Location
           _buildTextField(
-              label: "Dimensions (e.g., 8inch x 12inch)",
+              label: "Storage Location",
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
-                    .updateMurtiData(dimensions: value);
+                    .updateMurtiData(storageLocation: value);
               }),
           const SizedBox(height: 16),
+          // 7. Notes
           _buildTextField(
-              label: "Quantity Available",
-              keyboardType: TextInputType.number,
+              label: "Notes",
+              maxLines: 3,
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
-                    .updateMurtiData(quantity: int.tryParse(value));
+                    .updateMurtiData(notes: value);
               }),
         ];
 
@@ -1067,7 +1255,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Loading text
             Text(
               'Creating Inventory Item...',
@@ -1079,7 +1267,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
-            
+
             // Subtitle
             Text(
               'Please wait while we process your request',
@@ -1175,7 +1363,8 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                 child: Text(
                   formState.imageName!,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                  style:
+                      TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 ),
               ),
             if (formState.imageBytes != null)
@@ -1184,7 +1373,8 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                 onPressed: () {
                   ref.read(inventoryFormNotifierProvider.notifier).clearImage();
                 },
-                icon: Icon(Icons.close, color: Theme.of(context).colorScheme.error),
+                icon: Icon(Icons.close,
+                    color: Theme.of(context).colorScheme.error),
               ),
           ],
         ),
@@ -1207,16 +1397,16 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
 
   void _submitForm() async {
     print('Form submission started');
-    
+
     // Prevent multiple simultaneous submissions
     if (_isSubmitting || _isLoading) {
       print('Submission blocked: already submitting');
       return;
     }
-    
+
     // Prevent rapid successive submissions (increased to 3 seconds for better UX)
     final now = DateTime.now();
-    if (_lastSubmissionTime != null && 
+    if (_lastSubmissionTime != null &&
         now.difference(_lastSubmissionTime!).inSeconds < 3) {
       print('Submission blocked: too soon after last submission');
       // Show a brief message to user
@@ -1231,10 +1421,10 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
       });
       return;
     }
-    
+
     _isSubmitting = true;
     _lastSubmissionTime = now;
-    
+
     try {
       if (_formKey.currentState!.validate()) {
         print('Form validation passed');
@@ -1242,12 +1432,12 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
 
         if (notifier.validateForm()) {
           print('Business validation passed');
-          
+
           // Set loading state
           setState(() {
             _isLoading = true;
           });
-          
+
           // Prepare data for API
           final formData = _prepareFormData();
           print('Form data prepared: $formData');
@@ -1256,9 +1446,11 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
           try {
             // Test API connection first
             print('🔍 Testing API connection before creating item...');
-            final isConnected = await ref.read(inventoryProvider.notifier).testApiConnection();
+            final isConnected =
+                await ref.read(inventoryProvider.notifier).testApiConnection();
             if (!isConnected) {
-              throw Exception('Cannot connect to server. Please check your internet connection and try again.');
+              throw Exception(
+                  'Cannot connect to server. Please check your internet connection and try again.');
             }
             print('✅ API connection test passed');
 
@@ -1278,7 +1470,6 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                     name: formData['name'],
                     material: formData['material'],
                     dimensions: formData['dimensions'],
-                    unit: formData['unit'],
                     notes: formData['notes'],
                     storageLocation: formData['storage_location'],
                     quantityAvailable: formData['quantity_available'],
@@ -1292,11 +1483,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               await ref.read(inventoryProvider.notifier).createFabricItem(
                     name: formData['name'],
                     fabricType: formData['fabric_type'],
-                    pattern: formData['pattern'],
-                    width: formData['width'],
-                    length: formData['length'],
-                    color: formData['color'],
-                    unit: formData['unit'],
+                    size: formData['size'],
                     storageLocation: formData['storage_location'],
                     notes: formData['notes'],
                     quantityAvailable: formData['quantity_available'],
@@ -1309,13 +1496,10 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               // Use carpet-specific API
               await ref.read(inventoryProvider.notifier).createCarpetItem(
                     name: formData['name'],
-                    unit: formData['unit'],
+                    size: formData['size'],
                     storageLocation: formData['storage_location'],
                     notes: formData['notes'],
                     quantityAvailable: formData['quantity_available'],
-                    carpetType: formData['carpet_type'],
-                    material: formData['material'],
-                    size: formData['size'],
                     itemImagePath: formData['imagePath'],
                     itemImageBytes: formData['imageBytes'],
                     itemImageName: formData['imageName'],
@@ -1323,15 +1507,15 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
             } else if (category?.name.toLowerCase() == 'frame structure' ||
                 category?.name.toLowerCase() == 'frame structures') {
               // Use frame structures-specific API
-              await ref.read(inventoryProvider.notifier).createFrameStructureItem(
+              await ref
+                  .read(inventoryProvider.notifier)
+                  .createFrameStructureItem(
                     name: formData['name'],
-                    unit: formData['unit'],
+                    frameType: formData['frame_type'],
+                    dimensions: formData['dimensions'],
                     storageLocation: formData['storage_location'],
                     notes: formData['notes'],
                     quantityAvailable: formData['quantity_available'],
-                    frameType: formData['frame_type'],
-                    material: formData['material'],
-                    dimensions: formData['dimensions'],
                     itemImagePath: formData['imagePath'],
                     itemImageBytes: formData['imageBytes'],
                     itemImageName: formData['imageName'],
@@ -1341,13 +1525,12 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               // Use murti sets-specific API
               await ref.read(inventoryProvider.notifier).createMurtiSetsItem(
                     name: formData['name'],
-                    unit: formData['unit'],
-                    storageLocation: formData['storage_location'],
-                    notes: formData['notes'],
-                    quantityAvailable: formData['quantity_available'],
                     setNumber: formData['set_number'],
                     material: formData['material'],
                     dimensions: formData['dimensions'],
+                    storageLocation: formData['storage_location'],
+                    notes: formData['notes'],
+                    quantityAvailable: formData['quantity_available'],
                     itemImagePath: formData['imagePath'],
                     itemImageBytes: formData['imageBytes'],
                     itemImageName: formData['imageName'],
@@ -1360,13 +1543,13 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                   .read(inventoryProvider.notifier)
                   .createThermocolMaterialsItem(
                     name: formData['name'],
-                    unit: formData['unit'],
+                    thermocolType: formData['thermocol_type'],
+                    dimensions: formData['dimensions'],
+                    thickness: formData['thickness'],
+                    density: formData['density'],
                     storageLocation: formData['storage_location'],
                     notes: formData['notes'],
                     quantityAvailable: formData['quantity_available'],
-                    thermocolType: formData['thermocol_type'],
-                    dimensions: formData['dimensions'],
-                    density: formData['density'],
                     itemImagePath: formData['imagePath'],
                     itemImageBytes: formData['imageBytes'],
                     itemImageName: formData['imageName'],
@@ -1375,11 +1558,10 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               // Use stationery-specific API
               await ref.read(inventoryProvider.notifier).createStationeryItem(
                     name: formData['name'],
-                    unit: formData['unit'],
+                    specifications: formData['specifications'],
                     storageLocation: formData['storage_location'],
                     notes: formData['notes'],
                     quantityAvailable: formData['quantity_available'],
-                    specifications: formData['specifications'],
                     itemImagePath: formData['imagePath'],
                     itemImageBytes: formData['imageBytes'],
                     itemImageName: formData['imageName'],
@@ -1409,15 +1591,8 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               _isSubmitting = false;
             });
 
-            // Show success message with a small delay to ensure UI is stable
-            Future.delayed(const Duration(milliseconds: 100), () {
-              if (mounted) {
-                SnackBarManager.showSuccess(
-                  context: context,
-                  message: 'Inventory item created successfully!',
-                );
-              }
-            });
+            // Success message will be shown by the inventory list screen
+            // after receiving the form result
 
             // Reset form
             ref.read(inventoryFormNotifierProvider.notifier).resetForm();
@@ -1452,7 +1627,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                 );
               }
             });
-            
+
             // Don't navigate back on error, let user fix the form
           }
         } else {
@@ -1462,7 +1637,8 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
             if (mounted) {
               SnackBarManager.showError(
                 context: context,
-                message: 'Please select a category and fill in at least one field',
+                message:
+                    'Please select a category and fill in at least one field',
               );
             }
           });
@@ -1520,16 +1696,23 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
           'material': formState.furniture.material ?? 'Unknown',
           'dimensions': formState.furniture.dimensions ?? 'Unknown',
         };
+        print('🔍 Debug Furniture Form Data:');
+        print('  - Name: ${formState.furniture.name}');
+        print('  - Material: ${formState.furniture.material}');
+        print('  - Dimensions: ${formState.furniture.dimensions}');
+        print('  - Unit: ${formState.furniture.unit}');
+        print('  - Notes: ${formState.furniture.notes}');
+        print('  - Storage Location: ${formState.furniture.storageLocation}');
+        print('  - Quantity: ${formState.furniture.quantity}');
         break;
       case 'fabric':
       case 'fabrics':
         data['name'] = formState.fabric.name ?? 'Unknown';
         data['fabric_type'] = formState.fabric.type ?? 'Unknown';
-        data['pattern'] = formState.fabric.pattern ?? 'Unknown';
-        data['width'] = formState.fabric.width ?? 0.0;
-        data['length'] = formState.fabric.length ?? 0.0;
-        data['color'] = formState.fabric.color ?? 'Unknown';
-        data['unit'] = formState.fabric.unit ?? 'meter';
+        // Combine width and length into size field as per API specification
+        final width = formState.fabric.width ?? 0.0;
+        final length = formState.fabric.length ?? 0.0;
+        data['size'] = '${width}x${length} meters';
         data['storage_location'] =
             formState.fabric.storageLocation ?? 'Unknown';
         data['notes'] = formState.fabric.notes ?? 'Fabric item';
@@ -1546,14 +1729,11 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
       case 'frame structure':
       case 'frame structures':
         data['name'] = formState.frame.name ?? 'Unknown';
-        data['unit'] = formState.frame.unit ?? 'piece';
+        data['frame_type'] = formState.frame.type ?? 'Unknown';
+        data['dimensions'] = formState.frame.dimensions ?? 'Unknown';
         data['storage_location'] = formState.frame.storageLocation ?? 'Unknown';
         data['notes'] = formState.frame.notes ?? 'Frame structure';
         data['quantity_available'] = (formState.frame.quantity ?? 1).toDouble();
-        // For frame structure API, we need these fields directly in the main data
-        data['frame_type'] = formState.frame.type ?? 'Unknown';
-        data['material'] = formState.frame.material ?? 'Unknown';
-        data['dimensions'] = formState.frame.dimensions ?? 'Unknown';
         // Also keep category_details for general API compatibility
         data['category_details'] = {
           'frame_type': formState.frame.type ?? 'Unknown',
@@ -1564,73 +1744,51 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
       case 'carpet':
       case 'carpets':
         data['name'] = formState.carpet.name ?? 'Unknown';
-        data['unit'] = formState.carpet.unit ?? 'piece';
+        data['size'] = formState.carpet.size ?? 'Unknown';
         data['storage_location'] =
             formState.carpet.storageLocation ?? 'Unknown';
         data['notes'] = formState.carpet.notes ?? 'Carpet item';
         data['quantity_available'] = (formState.carpet.stock ?? 1).toDouble();
-        // For carpet API, we need these fields directly in the main data
-        data['carpet_type'] = formState.carpet.type ?? 'Unknown';
-        data['material'] = formState.carpet.material ?? 'Unknown';
-        data['size'] = formState.carpet.size ?? 'Unknown';
-        // Also keep category_details for general API compatibility
-        data['category_details'] = {
-          'carpet_type': formState.carpet.type ?? 'Unknown',
-          'material': formState.carpet.material ?? 'Unknown',
-          'size': formState.carpet.size ?? 'Unknown',
-        };
+        print('🔍 Debug Carpet Form Data:');
+        print('  - Name: ${formState.carpet.name}');
+        print('  - Size: ${formState.carpet.size}');
+        print('  - Storage Location: ${formState.carpet.storageLocation}');
+        print('  - Notes: ${formState.carpet.notes}');
+        print('  - Stock: ${formState.carpet.stock}');
         break;
       case 'thermocol':
       case 'thermocol material':
       case 'thermocol materials':
         data['name'] = formState.thermocol.name ?? 'Unknown';
-        data['unit'] = formState.thermocol.unit ?? 'set';
+        data['thermocol_type'] = formState.thermocol.thermocolType ?? 'Unknown';
+        data['dimensions'] = formState.thermocol.dimensions ?? 'Unknown';
+        data['thickness'] = '${formState.thermocol.thickness ?? 1.0} inches';
+        data['density'] = formState.thermocol.density ?? 1.0;
         data['storage_location'] =
             formState.thermocol.storageLocation ?? 'Unknown';
         data['notes'] = formState.thermocol.notes ?? 'Thermocol material';
         data['quantity_available'] =
             (formState.thermocol.quantity ?? 1).toDouble();
-        data['thermocol_type'] = formState.thermocol.thermocolType ?? 'Unknown';
-        data['dimensions'] = formState.thermocol.dimensions ?? 'Unknown';
-        data['density'] = formState.thermocol.density ?? 1.0;
-        // Also keep category_details for general API compatibility
-        data['category_details'] = {
-          'thermocol_type': formState.thermocol.thermocolType ?? 'Unknown',
-          'dimensions': formState.thermocol.dimensions ?? 'Unknown',
-          'density': '${formState.thermocol.density ?? 1.0}',
-        };
         break;
       case 'stationery':
         data['name'] = formState.stationery.name ?? 'Unknown';
-        data['unit'] = formState.stationery.unit ?? 'piece';
+        data['specifications'] =
+            formState.stationery.specifications ?? 'Unknown';
         data['storage_location'] =
             formState.stationery.storageLocation ?? 'Unknown';
         data['notes'] = formState.stationery.notes ?? 'Stationery item';
         data['quantity_available'] =
             (formState.stationery.quantity ?? 1).toDouble();
-        data['specifications'] =
-            formState.stationery.specifications ?? 'Unknown';
-        // Also keep category_details for general API compatibility
-        data['category_details'] = {
-          'specifications': formState.stationery.specifications ?? 'Unknown',
-        };
         break;
       case 'murti set':
       case 'murti sets':
         data['name'] = formState.murti.name ?? 'Unknown';
-        data['unit'] = formState.murti.unit ?? 'set';
-        data['storage_location'] = formState.murti.storageLocation ?? 'Unknown';
-        data['notes'] = formState.murti.notes ?? 'Murti set';
-        data['quantity_available'] = (formState.murti.quantity ?? 1).toDouble();
         data['set_number'] = formState.murti.setNumber ?? '1';
         data['material'] = formState.murti.material ?? 'Unknown';
         data['dimensions'] = formState.murti.dimensions ?? 'Unknown';
-        // Also keep category_details for general API compatibility
-        data['category_details'] = {
-          'set_number': formState.murti.setNumber ?? '1',
-          'material': formState.murti.material ?? 'Unknown',
-          'dimensions': formState.murti.dimensions ?? 'Unknown',
-        };
+        data['storage_location'] = formState.murti.storageLocation ?? 'Unknown';
+        data['notes'] = formState.murti.notes ?? 'Murti set';
+        data['quantity_available'] = (formState.murti.quantity ?? 1).toDouble();
         break;
       default:
         data['name'] = formState.furniture.name ?? 'Unknown';

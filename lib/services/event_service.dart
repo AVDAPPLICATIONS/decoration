@@ -133,35 +133,72 @@ class EventService {
   Future<Map<String, dynamic>> getEventDetails({
     required int templateId,
     required int yearId,
+    int maxRetries = 2,
   }) async {
     print('Getting event details for templateId: $templateId, yearId: $yearId');
-    try {
-      final response = await api.post('/api/events/getDetails', body: {
-        'template_id': templateId,
-        'year_id': yearId,
-      });
-      print('Event details response: $response');
-      return response;
-    } catch (e) {
-      // Check if it's a 404 error (Event not found)
-      if (e.toString().contains('404') ||
-          e.toString().contains('Event not found')) {
-        print('Event not found, returning success: false response');
-        return {
-          'success': false,
-          'message': 'Event not found',
-          'details': [
-            {
-              'field': 'template_id, year_id',
+
+    for (int attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        final response = await api.post('/api/events/getDetails', body: {
+          'template_id': templateId,
+          'year_id': yearId,
+        });
+        print('Event details response: $response');
+        return response;
+      } catch (e) {
+        // If this is the last attempt, handle the error
+        if (attempt == maxRetries) {
+          // Check if it's a 404 error (Event not found)
+          if (e.toString().contains('404') ||
+              e.toString().contains('Event not found')) {
+            print('Event not found, returning success: false response');
+            return {
+              'success': false,
+              'message': 'Event not found',
+              'details': [
+                {
+                  'field': 'template_id, year_id',
+                  'message':
+                      'Event with template_id $templateId and year_id $yearId does not exist'
+                }
+              ]
+            };
+          }
+
+          // Check if it's a 500 server error (database issues)
+          if (e.toString().contains('500') ||
+              e.toString().contains('column') ||
+              e.toString().contains('does not exist')) {
+            print(
+                'Server database error after $maxRetries retries, returning error response');
+            return {
+              'success': false,
               'message':
-                  'Event with template_id $templateId and year_id $yearId does not exist'
-            }
-          ]
-        };
+                  'Server database error. Please contact the administrator.',
+              'details': [
+                {
+                  'field': 'server_error',
+                  'message':
+                      'The server encountered a database error while fetching event details. This is a server-side issue that needs to be fixed by the administrator.'
+                }
+              ]
+            };
+          }
+
+          // Re-throw other errors
+          rethrow;
+        } else {
+          // Wait before retrying (exponential backoff)
+          final delay = Duration(milliseconds: 500 * (attempt + 1));
+          print(
+              'Retrying in ${delay.inMilliseconds}ms (attempt ${attempt + 1}/${maxRetries + 1})');
+          await Future.delayed(delay);
+        }
       }
-      // Re-throw other errors
-      rethrow;
     }
+
+    // This should never be reached, but just in case
+    throw Exception('Unexpected error in getEventDetails');
   }
 
   Future<Map<String, dynamic>> createYear({

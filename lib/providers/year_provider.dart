@@ -52,16 +52,21 @@ class YearNotifier extends StateNotifier<List<YearModel>> {
 
   Future<void> deleteYear(int id) async {
     try {
+      print('YearProvider: Attempting to delete year with ID: $id');
       await service.deleteYear(id);
-      // State is already updated by removeYearFromState
+      print('YearProvider: Successfully deleted year with ID: $id');
+      // State will be updated by removeYearFromState in the UI
     } catch (e) {
-      print('Error deleting year: $e');
+      print('YearProvider: Error deleting year $id: $e');
       rethrow; // Re-throw to handle in UI
     }
   }
 
   void removeYearFromState(int id) {
-    state = state.where((y) => y.id != id).toList();
+    final newState = state.where((y) => y.id != id).toList();
+    state = newState;
+    print(
+        'YearProvider: Removed year $id from state. Remaining years: ${state.length}');
   }
 
   void addYearBackToState(YearModel year) {
