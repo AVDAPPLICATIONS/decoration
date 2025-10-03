@@ -9,6 +9,7 @@ import '../../utils/snackbar_manager.dart';
 // import 'issue_inventory_screen.dart'; // Hidden as Issue to Event option is removed
 import 'item_issue_history_screen.dart';
 import 'edit_inventory_screen.dart';
+import 'view_inventory_screen.dart';
 import 'fullscreen_image_viewer.dart';
 
 class InventoryListScreen extends ConsumerStatefulWidget {
@@ -846,7 +847,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                       // Show success message - the item is already in the list via silent refresh
                       final itemName =
                           result['data']?['name'] ?? result['name'] ?? 'Item';
-                      SnackBarManager.showSuccessForInventory(
+                      SnackBarManager.showSuccessCustom(
                         context: context,
                         message: '$itemName added to inventory successfully!',
                       );
@@ -1581,6 +1582,17 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
+                      // View Item option (available to all users)
+                      _buildOptionTile(
+                        icon: Icons.visibility_outlined,
+                        iconColor: Theme.of(context).colorScheme.primary,
+                        title: 'View ${item['name']}',
+                        onTap: () {
+                          Navigator.pop(context);
+                          _viewItem(item);
+                        },
+                      ),
+                      
                       // Admin-only actions
                       if (isAdmin) ...[
                         _buildOptionTile(
@@ -1705,6 +1717,15 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
     );
   }
 
+  void _viewItem(Map<String, dynamic> item) {
+    PersistentNavBarNavigator.pushNewScreen(
+      context,
+      screen: ViewInventoryPage(itemId: item['id']),
+      withNavBar: false,
+      pageTransitionAnimation: PageTransitionAnimation.cupertino,
+    );
+  }
+
   Future<void> _deleteItem(Map<String, dynamic> item) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -1744,14 +1765,14 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
 
       Navigator.of(context, rootNavigator: true).pop(); // close loader
 
-      SnackBarManager.showSuccessForInventory(
+      SnackBarManager.showSuccessCustom(
         context: context,
         message: '${item['name']} deleted successfully!',
       );
     } catch (e) {
       Navigator.of(context, rootNavigator: true).pop(); // close loader
 
-      SnackBarManager.showErrorForInventory(
+      SnackBarManager.showErrorCustom(
         context: context,
         message: 'Failed to delete ${item['name']}: ${e.toString()}',
       );

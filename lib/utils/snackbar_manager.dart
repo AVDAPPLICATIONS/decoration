@@ -5,6 +5,100 @@ class SnackBarManager {
   factory SnackBarManager() => _instance;
   SnackBarManager._internal();
 
+  /// Show a custom positioned snackbar using Stack overlay
+  static void showCustomSnackBar({
+    required BuildContext context,
+    required String message,
+    Color? backgroundColor,
+    Duration duration = const Duration(seconds: 3),
+    SnackBarAction? action,
+    IconData? icon,
+  }) {
+    // Clear any existing SnackBars first
+    ScaffoldMessenger.of(context).clearSnackBars();
+
+    // Add a delay to ensure the clear operation completes
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (context.mounted) {
+        // Use Overlay for precise positioning
+        final overlay = Overlay.of(context);
+        late OverlayEntry overlayEntry;
+
+        overlayEntry = OverlayEntry(
+          builder: (context) => Positioned(
+            left: 16,
+            right: 16,
+            bottom: 100, // Position just above bottom navigation bar
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: backgroundColor ?? Theme.of(context).colorScheme.primary,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    if (icon != null) ...[
+                      Icon(
+                        icon,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                    ],
+                    Expanded(
+                      child: Text(
+                        message,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    if (action != null) ...[
+                      const SizedBox(width: 8),
+                      TextButton(
+                        onPressed: () {
+                          action.onPressed();
+                          overlayEntry.remove();
+                        },
+                        child: Text(
+                          action.label,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+
+        overlay.insert(overlayEntry);
+
+        // Auto remove after duration
+        Future.delayed(duration, () {
+          if (overlayEntry.mounted) {
+            overlayEntry.remove();
+          }
+        });
+      }
+    });
+  }
+
   /// Calculate the bottom margin for snackbar positioning
   static double _getBottomMargin(BuildContext context) {
     // Get screen height
@@ -12,11 +106,11 @@ class SnackBarManager {
 
     // For mobile devices, account for bottom navigation bar
     if (screenHeight < 768) {
-      // Bottom nav height (80) + margin (16) + padding (44) + extra spacing (40) = 180
-      return 180;
+      // Bottom nav height (80) + very small margin (4) = 84
+      return 44;
     } else {
       // For tablet/desktop, use smaller margin
-      return 140;
+      return 40;
     }
   }
 
@@ -27,11 +121,11 @@ class SnackBarManager {
 
     // For mobile devices, account for bottom navigation bar + floating action button
     if (screenHeight < 768) {
-      // Bottom nav height (80) + margin (16) + padding (44) + FAB height (56) + extra spacing (40) = 236
-      return 236;
+      // Bottom nav height (80) + FAB height (56) + very small margin (4) = 140
+      return 140;
     } else {
       // For tablet/desktop, use smaller margin
-      return 180;
+      return 80;
     }
   }
 
@@ -78,7 +172,7 @@ class SnackBarManager {
             behavior: SnackBarBehavior.floating,
             margin: EdgeInsets.only(
               bottom: _getBottomMargin(context) +
-                  30, // Extra spacing for home screen
+                  4, // Extra spacing for home screen
               left: 16,
               right: 16,
             ),
@@ -131,7 +225,7 @@ class SnackBarManager {
             behavior: SnackBarBehavior.floating,
             margin: EdgeInsets.only(
               bottom: _getBottomMargin(context) +
-                  30, // Extra spacing for home screen
+                  4, // Extra spacing for home screen
               left: 16,
               right: 16,
             ),
@@ -183,7 +277,7 @@ class SnackBarManager {
             behavior: SnackBarBehavior.floating,
             margin: EdgeInsets.only(
               bottom: _getBottomMargin(context) +
-                  30, // Extra spacing for home screen
+                  4, // Extra spacing for home screen
               left: 16,
               right: 16,
             ),
@@ -235,7 +329,7 @@ class SnackBarManager {
             behavior: SnackBarBehavior.floating,
             margin: EdgeInsets.only(
               bottom: _getBottomMargin(context) +
-                  30, // Extra spacing for home screen
+                  4, // Extra spacing for home screen
               left: 16,
               right: 16,
             ),
@@ -623,5 +717,65 @@ class SnackBarManager {
   /// Clear all SnackBars
   static void clearAll(BuildContext context) {
     ScaffoldMessenger.of(context).clearSnackBars();
+  }
+
+  /// Show a success snackbar with custom positioning
+  static void showSuccessCustom({
+    required BuildContext context,
+    required String message,
+    Duration duration = const Duration(seconds: 3),
+  }) {
+    showCustomSnackBar(
+      context: context,
+      message: message,
+      backgroundColor: Theme.of(context).colorScheme.primary,
+      duration: duration,
+      icon: Icons.check_circle,
+    );
+  }
+
+  /// Show an error snackbar with custom positioning
+  static void showErrorCustom({
+    required BuildContext context,
+    required String message,
+    Duration duration = const Duration(seconds: 4),
+  }) {
+    showCustomSnackBar(
+      context: context,
+      message: message,
+      backgroundColor: Theme.of(context).colorScheme.error,
+      duration: duration,
+      icon: Icons.error,
+    );
+  }
+
+  /// Show a warning snackbar with custom positioning
+  static void showWarningCustom({
+    required BuildContext context,
+    required String message,
+    Duration duration = const Duration(seconds: 3),
+  }) {
+    showCustomSnackBar(
+      context: context,
+      message: message,
+      backgroundColor: Theme.of(context).colorScheme.tertiary,
+      duration: duration,
+      icon: Icons.warning,
+    );
+  }
+
+  /// Show an info snackbar with custom positioning
+  static void showInfoCustom({
+    required BuildContext context,
+    required String message,
+    Duration duration = const Duration(seconds: 3),
+  }) {
+    showCustomSnackBar(
+      context: context,
+      message: message,
+      backgroundColor: Theme.of(context).colorScheme.secondary,
+      duration: duration,
+      icon: Icons.info,
+    );
   }
 }
