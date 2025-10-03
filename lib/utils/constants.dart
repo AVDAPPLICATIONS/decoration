@@ -1,5 +1,6 @@
 const String appName = "Your App Name";
-const String apiBaseUrl = "http://10.107.251.136:5000";
+// const String apiBaseUrl = "http://10.229.27.136:8055";
+const String apiBaseUrl = "http://27.116.52.24:8055";
 
 const int defaultTimeout = 5000; // in milliseconds
 

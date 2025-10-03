@@ -767,6 +767,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         galleryData != null && galleryData is Map<String, dynamic>
             ? (galleryData['design'] as List<dynamic>? ?? [])
             : [];
+    print('Design Images ${designImages.toList()}');
 
     return RefreshIndicator(
       onRefresh: _refreshEventData,

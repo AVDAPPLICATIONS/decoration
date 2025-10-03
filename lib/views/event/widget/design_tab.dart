@@ -84,7 +84,8 @@ class _DesignTabState extends State<DesignTab> {
       print('🔄 Loading images from server for event: ${widget.event['id']}');
 
       // Fetch all event images in a single API call
-      await _galleryService!.getEventImages(widget.event['id'].toString());
+      final eventData =
+          await _galleryService!.getEventImages(widget.event['id'].toString());
 
       if (mounted) {
         setState(() {
@@ -92,146 +93,76 @@ class _DesignTabState extends State<DesignTab> {
           _hasLoadedImages = true;
         });
 
-        // Process all event images from single response
-        // Temporarily commented out due to type issues
-        /*
-        if (eventImagesResult['success'] == true && eventImagesResult['data'] != null) {
-          final eventData = eventImagesResult['data'];
-          List<Map<String, dynamic>> newDesignImages = [];
-          List<Map<String, dynamic>> newFinalDecorationImages = [];
-          
-          print('🔍 Processing event data: $eventData');
-          print('🔍 Event data type: ${eventData.runtimeType}');
-          
-          // The actual image data is in eventData['data']
-          final imageData = eventData['data'];
-          print('🔍 Image data: $imageData');
-          print('🔍 Image data type: ${imageData.runtimeType}');
-          
-          // Handle different response formats
-          if (imageData is List) {
-            print('🔍 Processing as List with ${imageData.length} items');
-            for (int i = 0; i < imageData.length; i++) {
-              var item = imageData[i];
-              print('🔍 Item $i: $item');
-              if (item is Map<String, dynamic>) {
-                // For now, let's add ALL images regardless of type to see what we get
-                // We can filter later once we see the actual data structure
-                newDesignImages.add({
-                  'image_path': item['image_url'] ?? item['image_path'] ?? item['url'] ?? item['file_path'] ?? item['filename'],
-                  'notes': item['notes'] ?? item['description'] ?? item['caption'] ?? '',
-                  'api_data': item,
-                });
-                print('🔍 Added design image: ${item['image_url'] ?? item['image_path'] ?? item['url']}');
-              }
-            }
-          } else if (imageData is Map<String, dynamic>) {
-            print('🔍 Processing as Map');
-            print('🔍 Map keys: ${imageData.keys.toList()}');
-            print('🔍 Full imageData: $imageData');
-            
+        // Process the event data based on the API response structure
+        List<Map<String, dynamic>> newDesignImages = [];
+        List<Map<String, dynamic>> newFinalDecorationImages = [];
 
-            // Check for design_images array in the response (the actual API structure)
-            print('🔍 Checking for design_images key...');
-            print('🔍 design_images exists: ${imageData.containsKey('design_images')}');
-            print('🔍 design_images value: ${imageData['design_images']}');
-            print('🔍 design_images type: ${imageData['design_images']?.runtimeType}');
-            
-            if (imageData['design_images'] is List) {
-              print('🔍 Found design_images array with ${imageData['design_images'].length} items');
-              for (int i = 0; i < imageData['design_images'].length; i++) {
-                var item = imageData['design_images'][i];
-                print('🔍 Design image $i: $item');
-                if (item is Map<String, dynamic>) {
-                  // Convert relative URL to full URL
-                  String imageUrl = item['image_url'] ?? '';
-                  if (imageUrl.startsWith('/')) {
-                    imageUrl = '${apiBaseUrl}$imageUrl';
-                  }
-                  
-                  newDesignImages.add({
-                    'image_path': imageUrl,
-                    'notes': item['notes'] ?? item['description'] ?? '',
-                    'api_data': item,
-                  });
-                  print('🔍 Added design image: $imageUrl');
-                }
+        print('🔍 Processing event data: $eventData');
+
+        // Process design images from gallery.design array
+        if (eventData['gallery'] != null &&
+            eventData['gallery']['design'] is List) {
+          final designImages = eventData['gallery']['design'];
+          print('🔍 Found ${designImages.length} design images');
+
+          for (int i = 0; i < designImages.length; i++) {
+            var item = designImages[i];
+            print('🔍 Design image $i: $item');
+
+            if (item is Map<String, dynamic>) {
+              // Convert relative URL to full URL
+              String imageUrl = item['image_url'] ?? '';
+              if (imageUrl.startsWith('/')) {
+                imageUrl = '${apiBaseUrl}$imageUrl';
               }
-            }
-            
-            // Process final_images array
-            if (imageData['final_images'] is List) {
-              print('🔍 Found final_images array with ${imageData['final_images'].length} items');
-              for (int i = 0; i < imageData['final_images'].length; i++) {
-                var item = imageData['final_images'][i];
-                print('🔍 Final decoration image $i: $item');
-                if (item is Map<String, dynamic>) {
-                  // Convert relative URL to full URL
-                  String imageUrl = item['image_url'] ?? '';
-                  if (imageUrl.startsWith('/')) {
-                    imageUrl = '${apiBaseUrl}$imageUrl';
-                  }
-                  
-                  newFinalDecorationImages.add({
-                    'image_path': imageUrl,
-                    'description': item['notes'] ?? '',
-                    'api_data': item,
-                  });
-                  print('🔍 Added final decoration image: $imageUrl');
-                }
-              }
-            }
-            
-            // Also check for the generic 'images' array (fallback)
-            else if (imageData['images'] is List) {
-              print('🔍 Found images array with ${imageData['images'].length} items');
-              for (int i = 0; i < imageData['images'].length; i++) {
-                var item = imageData['images'][i];
-                print('🔍 Image $i: $item');
-                if (item is Map<String, dynamic>) {
-                  String imageUrl = item['image_url'] ?? item['image_path'] ?? item['url'] ?? item['file_path'] ?? item['filename'] ?? '';
-                  if (imageUrl.startsWith('/')) {
-                    imageUrl = '${apiBaseUrl}$imageUrl';
-                  }
-                  
-                  newDesignImages.add({
-                    'image_path': imageUrl,
-                    'notes': item['notes'] ?? item['description'] ?? item['caption'] ?? '',
-                    'api_data': item,
-                  });
-                  print('🔍 Added design image: $imageUrl');
-                }
-              }
-            } else {
-              // Maybe the data is directly in the map
-              print('🔍 No images array found, checking direct map structure');
-              if (imageData['image_url'] != null || imageData['image_path'] != null || imageData['url'] != null) {
-                String imageUrl = imageData['image_url'] ?? imageData['image_path'] ?? imageData['url'] ?? imageData['file_path'] ?? imageData['filename'] ?? '';
-                if (imageUrl.startsWith('/')) {
-                  imageUrl = '${apiBaseUrl}$imageUrl';
-                }
-                
-                newDesignImages.add({
-                  'image_path': imageUrl,
-                  'notes': imageData['notes'] ?? imageData['description'] ?? imageData['caption'] ?? '',
-                  'api_data': imageData,
-                });
-                print('🔍 Added single design image: $imageUrl');
-              }
+
+              newDesignImages.add({
+                'image_path': imageUrl,
+                'notes': item['notes'] ?? '',
+                'api_data': item,
+                'id': item['id'], // Store ID directly for easier access
+              });
+              print('🔍 Added design image: $imageUrl');
             }
           }
-          
-          print('🔍 Total design images found: ${newDesignImages.length}');
-          print('🔍 Total final decoration images found: ${newFinalDecorationImages.length}');
-          
-          setState(() {
-            _designImages = newDesignImages;
-            _finalDecorationImages = newFinalDecorationImages;
-          });
-        } else {
-          print('❌ Event images result not successful or no data: ${eventImagesResult}');
         }
-        */
+
+        // Process final decoration images from gallery.final array
+        if (eventData['gallery'] != null &&
+            eventData['gallery']['final'] is List) {
+          final finalImages = eventData['gallery']['final'];
+          print('🔍 Found ${finalImages.length} final decoration images');
+
+          for (int i = 0; i < finalImages.length; i++) {
+            var item = finalImages[i];
+            print('🔍 Final decoration image $i: $item');
+
+            if (item is Map<String, dynamic>) {
+              // Convert relative URL to full URL
+              String imageUrl = item['image_url'] ?? '';
+              if (imageUrl.startsWith('/')) {
+                imageUrl = '${apiBaseUrl}$imageUrl';
+              }
+
+              newFinalDecorationImages.add({
+                'image_path': imageUrl,
+                'description': item['notes'] ?? '',
+                'api_data': item,
+                'id': item['id'], // Store ID directly for easier access
+              });
+              print('🔍 Added final decoration image: $imageUrl');
+            }
+          }
+        }
+
+        print('🔍 Total design images found: ${newDesignImages.length}');
+        print(
+            '🔍 Total final decoration images found: ${newFinalDecorationImages.length}');
+
+        setState(() {
+          _designImages = newDesignImages;
+          _finalDecorationImages = newFinalDecorationImages;
+        });
 
         print(
             '✅ Loaded ${_designImages.length} design images and ${_finalDecorationImages.length} final decoration images');
@@ -446,7 +377,7 @@ class _DesignTabState extends State<DesignTab> {
   Widget build(BuildContext context) {
     final designImages = _designImages;
     final finalDecorationImages = _finalDecorationImages;
-
+    print('grid images ${designImages.toList()}');
     return Container(
       height: MediaQuery.of(context).size.height -
           kToolbarHeight -
@@ -635,6 +566,7 @@ class _DesignTabState extends State<DesignTab> {
 
   Widget _buildImageGrid(BuildContext context, bool isAdmin, String label,
       bool isDesignTab, List<Map<String, dynamic>> images) {
+    print('grid images ${images.toList()}');
     return Container(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -954,11 +886,9 @@ class _DesignTabState extends State<DesignTab> {
                                               if (confirmed == true) {
                                                 // Check if image has API data (was uploaded to server)
                                                 final imageData = images[index];
-                                                if (imageData['api_data'] !=
-                                                        null &&
-                                                    imageData['api_data']
-                                                            ['id'] !=
-                                                        null) {
+                                                print(
+                                                    'Image data is ${imageData}');
+                                                if (imageData['id'] != null) {
                                                   // Show loading indicator
                                                   showDialog(
                                                     context: context,
@@ -992,17 +922,26 @@ class _DesignTabState extends State<DesignTab> {
                                                       return;
                                                     }
 
-                                                    final result =
-                                                        await _galleryService!
-                                                            .deleteDesignImage(
-                                                      eventId: widget
-                                                          .event['id']
-                                                          .toString(),
-                                                      imageId:
-                                                          imageData['api_data']
-                                                                  ['id']
-                                                              .toString(),
-                                                    );
+                                                    Map<String, dynamic> result;
+                                                    if (isDesignTab) {
+                                                      print(
+                                                          'Deleting design image with ID: ${imageData['id']}');
+                                                      result =
+                                                          await _galleryService!
+                                                              .deleteDesignImage(
+                                                        imageId: imageData['id']
+                                                            .toString(),
+                                                      );
+                                                    } else {
+                                                      print(
+                                                          'Deleting final decoration image with ID: ${imageData['id']}');
+                                                      result =
+                                                          await _galleryService!
+                                                              .deleteFinalDecorationImage(
+                                                        imageId: imageData['id']
+                                                            .toString(),
+                                                      );
+                                                    }
 
                                                     // Close loading dialog
                                                     Navigator.of(context).pop();

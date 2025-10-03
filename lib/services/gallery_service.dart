@@ -59,25 +59,29 @@ class GalleryService {
   }
 
   // Get event images
-  Future<List<Map<String, dynamic>>> getEventImages(String eventId) async {
+  Future<Map<String, dynamic>> getEventImages(String eventId) async {
     try {
+      print('🔄 Getting event images for event ID: $eventId');
       final response = await http.get(
-        Uri.parse('$baseUrl/api/events/$eventId/images'),
+        Uri.parse('$baseUrl/api/events/$eventId'),
         headers: {
           'Content-Type': 'application/json',
         },
       );
 
+      print('🔄 Response status: ${response.statusCode}');
+      print('🔄 Response body: ${response.body}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          return List<Map<String, dynamic>>.from(data['data'] ?? []);
+        if (data['success'] == true && data['data'] != null) {
+          return data['data'];
         }
       }
-      return [];
+      return {};
     } catch (e) {
-      print('Error getting event images: $e');
-      return [];
+      print('❌ Error getting event images: $e');
+      return {};
     }
   }
 
@@ -135,22 +139,59 @@ class GalleryService {
 
   // Delete design image
   Future<Map<String, dynamic>> deleteDesignImage({
-    required String eventId,
     required String imageId,
   }) async {
     try {
-      final response = await http.delete(
-        Uri.parse('$baseUrl/api/events/$eventId/design-images/$imageId'),
+      print('🗑️ Deleting design image with ID: $imageId');
+      print('🗑️ API URL: $baseUrl/api/gallery/design/delete');
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/gallery/design/delete'),
         headers: {
           'Content-Type': 'application/json',
         },
+        body: jsonEncode({
+          'id': int.parse(imageId),
+        }),
       );
+
+      print('🗑️ Response status: ${response.statusCode}');
+      print('🗑️ Response body: ${response.body}');
 
       final data = jsonDecode(response.body);
       return data;
     } catch (e) {
-      print('Error deleting design image: $e');
-      return {'success': false, 'message': 'Delete failed'};
+      print('❌ Error deleting design image: $e');
+      return {'success': false, 'message': 'Delete failed: $e'};
+    }
+  }
+
+  // Delete final decoration image
+  Future<Map<String, dynamic>> deleteFinalDecorationImage({
+    required String imageId,
+  }) async {
+    try {
+      print('🗑️ Deleting final decoration image with ID: $imageId');
+      print('🗑️ API URL: $baseUrl/api/gallery/final/delete');
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/gallery/final/delete'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'id': int.parse(imageId),
+        }),
+      );
+
+      print('🗑️ Response status: ${response.statusCode}');
+      print('🗑️ Response body: ${response.body}');
+
+      final data = jsonDecode(response.body);
+      return data;
+    } catch (e) {
+      print('❌ Error deleting final decoration image: $e');
+      return {'success': false, 'message': 'Delete failed: $e'};
     }
   }
 
