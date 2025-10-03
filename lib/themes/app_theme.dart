@@ -22,7 +22,6 @@ class AppTheme {
       foregroundColor: ColorSchemes.lightColorScheme.onPrimary,
     ),
 
-    // 🔥 Global ElevatedButton style
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: ColorSchemes.lightColorScheme.primary,
@@ -50,7 +49,6 @@ class AppTheme {
       foregroundColor: ColorSchemes.darkColorScheme.onPrimary,
     ),
 
-    // 🔥 Global ElevatedButton style
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: ColorSchemes.darkColorScheme.primary,

@@ -847,7 +847,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                       // Show success message - the item is already in the list via silent refresh
                       final itemName =
                           result['data']?['name'] ?? result['name'] ?? 'Item';
-                      SnackBarManager.showSuccessForInventory(
+                      SnackBarManager.showSuccessCustom(
                         context: context,
                         message: '$itemName added to inventory successfully!',
                       );
@@ -1765,14 +1765,14 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
 
       Navigator.of(context, rootNavigator: true).pop(); // close loader
 
-      SnackBarManager.showSuccessForInventory(
+      SnackBarManager.showSuccessCustom(
         context: context,
         message: '${item['name']} deleted successfully!',
       );
     } catch (e) {
       Navigator.of(context, rootNavigator: true).pop(); // close loader
 
-      SnackBarManager.showErrorForInventory(
+      SnackBarManager.showErrorCustom(
         context: context,
         message: 'Failed to delete ${item['name']}: ${e.toString()}',
       );

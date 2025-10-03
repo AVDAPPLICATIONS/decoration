@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/inventory_provider.dart';
-import '../../services/inventory_service.dart';
 import '../../utils/responsive_utils.dart';
+import '../../utils/snackbar_manager.dart';
 import 'fullscreen_image_viewer.dart';
 
 class ViewInventoryPage extends ConsumerStatefulWidget {
@@ -35,20 +35,9 @@ class _ViewInventoryPageState extends ConsumerState<ViewInventoryPage> {
       print('Error initializing item: $e');
       // Show error and navigate back
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error loading item: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(
-              bottom: 100, // Position above bottom navigation bar
-              left: 16,
-              right: 16,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
+        SnackBarManager.showErrorCustom(
+          context: context,
+          message: 'Error loading item: $e',
         );
         Navigator.of(context).pop();
       });
