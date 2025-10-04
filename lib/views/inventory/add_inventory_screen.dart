@@ -31,7 +31,6 @@ extension InventoryCategoryExtension on InventoryCategory {
         return 'Murti Set';
     }
   }
-
   String get icon {
     switch (this) {
       case InventoryCategory.furniture:

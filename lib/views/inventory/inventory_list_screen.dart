@@ -1254,6 +1254,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
 
     // Add general dimensions if available
     if (item.dimensions != null && item.dimensions!.isNotEmpty) {
+      print(dimensionParts.toList());
       dimensionParts.add(item.dimensions!);
     }
 

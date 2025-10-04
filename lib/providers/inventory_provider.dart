@@ -527,7 +527,7 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
         itemImageBytes: itemImageBytes,
         itemImageName: itemImageName,
       );
-
+      print('Murti set response is: ${response}');
       if (response['success'] == true) {
         // Reload inventory data to get the updated list
         await loadInventoryData();

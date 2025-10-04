@@ -518,28 +518,30 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
     bool isOptional = true,
   }) {
     // Parse the current value to extract size and unit
-    String sizeValue = '';
-    String selectedUnit = 'm'; // Default unit
+    String initialSizeValue = '';
+    String initialUnit = 'm'; // Default unit
 
     if (value != null && value.isNotEmpty) {
-      // Try to extract unit from the end of the string
       final units = ['mm', 'cm', 'm', 'in', 'ft', 'Roll'];
       for (String unit in units) {
         if (value.endsWith(' $unit') || value.endsWith(unit)) {
-          selectedUnit = unit;
-          sizeValue =
+          initialUnit = unit;
+          initialSizeValue =
               value.replaceAll(' $unit', '').replaceAll(unit, '').trim();
           break;
         }
       }
-      // If no unit found, treat the whole value as size
-      if (sizeValue.isEmpty) {
-        sizeValue = value;
+      if (initialSizeValue.isEmpty) {
+        initialSizeValue = value;
       }
     }
 
     return StatefulBuilder(
       builder: (context, setState) {
+        // ✅ Keep values in the state
+        String sizeValue = initialSizeValue;
+        String selectedUnit = initialUnit;
+
         return Row(
           children: [
             Expanded(
@@ -547,22 +549,26 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               child: TextFormField(
                 initialValue: sizeValue,
                 onChanged: (newValue) {
+                  setState(() {
+                    sizeValue = newValue;
+                  });
                   final combinedValue =
-                      newValue.isNotEmpty ? '$newValue $selectedUnit' : '';
+                  newValue.isNotEmpty ? '$newValue $selectedUnit' : '';
                   onChanged(combinedValue);
+                  print('TextField → $combinedValue');
                 },
                 validator: validator,
                 decoration: InputDecoration(
                   labelText: isOptional ? '$label (optional)' : label,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                        color: Theme.of(context).colorScheme.outline),
+                    borderSide:
+                    BorderSide(color: Theme.of(context).colorScheme.outline),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                        color: Theme.of(context).colorScheme.outline),
+                    borderSide:
+                    BorderSide(color: Theme.of(context).colorScheme.outline),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -572,7 +578,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.surface,
                   contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 ),
               ),
             ),
@@ -588,21 +594,22 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                       selectedUnit = newValue;
                     });
                     final combinedValue =
-                        sizeValue.isNotEmpty ? '$sizeValue $newValue' : '';
+                    sizeValue.isNotEmpty ? '$sizeValue $selectedUnit' : '';
                     onChanged(combinedValue);
+                    print('Dropdown → $combinedValue');
                   }
                 },
                 decoration: InputDecoration(
                   labelText: 'Unit',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                        color: Theme.of(context).colorScheme.outline),
+                    borderSide:
+                    BorderSide(color: Theme.of(context).colorScheme.outline),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                        color: Theme.of(context).colorScheme.outline),
+                    borderSide:
+                    BorderSide(color: Theme.of(context).colorScheme.outline),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -612,7 +619,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.surface,
                   contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+                  const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
                 ),
                 items: const [
                   DropdownMenuItem(value: 'mm', child: Text('Millimeter (mm)')),
@@ -629,6 +636,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
       },
     );
   }
+
 
   Widget _buildThicknessDropdown() {
     return Consumer(
@@ -1106,8 +1114,8 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
           _buildSizeField(
               label: "Dimensions (e.g., 8x12)",
               onChanged: (value) {
-                ref
-                    .read(inventoryFormNotifierProvider.notifier)
+                print('Murti dimensions changed: $value');
+                ref.read(inventoryFormNotifierProvider.notifier)
                     .updateMurtiData(dimensions: value);
               }),
           const SizedBox(height: 16),
@@ -1523,6 +1531,8 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
             } else if (category?.name.toLowerCase() == 'murti set' ||
                 category?.name.toLowerCase() == 'murti sets') {
               // Use murti sets-specific API
+              print('murti set dimension ${formData['dimensions']}');
+              print('murti data  ${formData}');
               await ref.read(inventoryProvider.notifier).createMurtiSetsItem(
                     name: formData['name'],
                     setNumber: formData['set_number'],
@@ -1675,6 +1685,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
       'notes': '',
       'quantity_available': 0.0,
       'category_details': {},
+      'dimensions': 'size',
       'imagePath': formState.imagePath,
       'imageBytes': formState.imageBytes,
       'imageName': formState.imageName,
