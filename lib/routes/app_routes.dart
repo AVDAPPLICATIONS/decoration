@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../views/auth/login_screen.dart';
 import '../views/dashboard/dashboard_screen.dart';
 import '../views/event/event_screen.dart';
+import '../views/event/years_screen.dart';
+import '../views/event/issue_item_screen.dart';
 import '../views/home/home_screen.dart';
 import '../views/inventory/inventory_screen.dart';
 import '../views/splash/splash_screen.dart';
@@ -36,6 +38,8 @@ class AppRoutes {
   static const String materialManagement = '/material-management';
   static const String toolManagement = '/tool-management';
   static const String userManagement = '/user-management';
+  static const String years = '/years';
+  static const String issueItem = '/issue-item';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -68,6 +72,31 @@ class AppRoutes {
         return MaterialPageRoute(
           builder: (_) => const InventoryFormPage(),
           fullscreenDialog: true,
+        );
+
+      case years:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final templateId = args?['templateId'] as int?;
+        final templateName = args?['templateName'] as String?;
+        return MaterialPageRoute(
+          builder: (_) => YearsScreen(
+            templateId: templateId,
+            templateName: templateName,
+          ),
+        );
+
+      case issueItem:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final eventId = args?['eventId'] as int?;
+        final onItemIssued = args?['onItemIssued'] as VoidCallback?;
+        if (eventId == null) {
+          return MaterialPageRoute(builder: (_) => const HomeScreen());
+        }
+        return MaterialPageRoute(
+          builder: (_) => IssueItemScreen(
+            eventId: eventId,
+            onItemIssued: onItemIssued ?? () {},
+          ),
         );
 
       // case eventTemplates:

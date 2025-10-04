@@ -2595,25 +2595,25 @@ class InventoryService {
   Future<Map<String, dynamic>> getInventoryItemsList() async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/api/inventory/items/getList'),
+        Uri.parse('$baseUrl/api/materials/inventory/getAll'),
         headers: {
           'Content-Type': 'application/json',
         },
+        body: jsonEncode({}),
       );
 
-      print(
-          '🔍 Debug Inventory Items List API: Response status: ${response.statusCode}');
-      print(
-          '🔍 Debug Inventory Items List API: Response body: ${response.body}');
+      print('🔍 Debug Inventory Items List API: Response status: ${response.statusCode}');
+      print('🔍 Debug Inventory Items List API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
-        if (responseData['success'] == true) {
-          return responseData;
-        } else {
-          throw Exception(
-              responseData['message'] ?? 'Failed to get inventory items list');
-        }
+        // The new API returns an array directly, so we need to wrap it
+        return {
+          'success': true,
+          'message': 'Inventory items retrieved successfully',
+          'data': responseData,
+          'count': responseData.length,
+        };
       } else {
         final errorData = jsonDecode(response.body);
         throw Exception(

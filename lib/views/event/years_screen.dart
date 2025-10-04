@@ -2,8 +2,10 @@ import 'package:avd_decoration_application/utils/responsive_utils.dart';
 import 'package:avd_decoration_application/views/custom_widget/custom_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:io';
 import '../../services/event_service.dart';
 import '../../services/api_service.dart';
+import '../../services/gallery_service.dart';
 import '../../models/year_model.dart';
 import '../../providers/year_provider.dart';
 import '../../utils/constants.dart';
@@ -378,11 +380,11 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
 
         return Dismissible(
           key: Key('year_${year.id}'),
-          direction: DismissDirection.endToStart,
+          direction: DismissDirection.horizontal,
           background: Container(
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: colorScheme.error,
+              color: colorScheme.primary,
               borderRadius: BorderRadius.circular(16),
             ),
             alignment: Alignment.centerLeft,
@@ -391,11 +393,33 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Icon(
-                  Icons.delete,
-                  color: colorScheme.onError,
+                  Icons.edit,
+                  color: colorScheme.onPrimary,
                   size: 24,
                 ),
                 const SizedBox(width: 8),
+                Text(
+                  'Edit',
+                  style: TextStyle(
+                    color: colorScheme.onPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          secondaryBackground: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: colorScheme.error,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
                 Text(
                   'Delete',
                   style: TextStyle(
@@ -404,32 +428,45 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
                     fontSize: 16,
                   ),
                 ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.delete,
+                  color: colorScheme.onError,
+                  size: 24,
+                ),
               ],
             ),
           ),
           confirmDismiss: (direction) async {
-            return await showDialog<bool>(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('Delete Year'),
-                content: Text(
-                    'Are you sure you want to delete year ${year.yearName}?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Cancel'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.error,
-                      foregroundColor: colorScheme.onError,
+            if (direction == DismissDirection.startToEnd) {
+              // Edit action - no confirmation needed
+              _showEditEventDialog(year);
+              return false; // Don't dismiss the card
+            } else {
+              // Delete action - show confirmation
+              return await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Delete Year'),
+                  content: Text(
+                      'Are you sure you want to delete year ${year.yearName}?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancel'),
                     ),
-                    child: const Text('Delete'),
-                  ),
-                ],
-              ),
-            );
+                    ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.error,
+                        foregroundColor: colorScheme.onError,
+                      ),
+                      child: const Text('Delete'),
+                    ),
+                  ],
+                ),
+              );
+            }
           },
           onDismissed: (direction) async {
             print(
@@ -877,5 +914,462 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
         ),
       ),
     );
+  }
+
+  void _showEditEventDialog(YearModel year) async {
+    if (widget.templateId == null) {
+      SnackBarManager.showWarning(
+        context: context,
+        message: 'Template information not available',
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoadingEventDetails = true;
+    });
+
+    try {
+      final apiService = ApiService(apiBaseUrl);
+      final eventService = EventService(apiService);
+
+      final eventDetails = await eventService.getEventDetails(
+        templateId: widget.templateId!,
+        yearId: year.id,
+      );
+
+      setState(() {
+        _isLoadingEventDetails = false;
+      });
+
+      if (mounted) {
+        // Check if event was found or not
+        if (eventDetails['success'] == true && eventDetails['data'] != null) {
+          // Event exists, show edit form
+          _showEditEventForm(eventDetails, year);
+        } else if (eventDetails['success'] == false &&
+            eventDetails['error_type'] == 'server_database_error') {
+          // Server database error, show error message
+          SnackBarManager.showError(
+            context: context,
+            message: 'Server database error. Please contact the administrator.',
+            duration: const Duration(seconds: 5),
+          );
+        } else {
+          // Event not found, show message and offer to create
+          SnackBarManager.showInfo(
+            context: context,
+            message: 'No event found for this year. Would you like to create one?',
+            duration: const Duration(seconds: 3),
+          );
+          
+          // Show create event form after a short delay
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted) {
+              _showAddEventDetailsForm(yearId: year.id);
+            }
+          });
+        }
+      }
+    } catch (e) {
+      setState(() {
+        _isLoadingEventDetails = false;
+      });
+
+      if (mounted) {
+        SnackBarManager.showError(
+          context: context,
+          message: 'Error loading event details: ${e.toString()}',
+        );
+      }
+    }
+  }
+
+  void _showEditEventForm(Map<String, dynamic> eventDetails, YearModel year) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      useSafeArea: true,
+      builder: (context) => _EditEventForm(
+        eventDetails: eventDetails,
+        year: year,
+        templateId: widget.templateId!,
+        onEventUpdated: () {
+          Navigator.pop(context);
+          _loadYears();
+        },
+      ),
+    );
+  }
+}
+
+class _EditEventForm extends StatefulWidget {
+  final Map<String, dynamic> eventDetails;
+  final YearModel year;
+  final int templateId;
+  final VoidCallback onEventUpdated;
+
+  const _EditEventForm({
+    required this.eventDetails,
+    required this.year,
+    required this.templateId,
+    required this.onEventUpdated,
+  });
+
+  @override
+  State<_EditEventForm> createState() => _EditEventFormState();
+}
+
+class _EditEventFormState extends State<_EditEventForm> {
+  late TextEditingController eventNameController;
+  late TextEditingController locationController;
+  late TextEditingController dateController;
+  File? selectedImage;
+  String? currentImageUrl;
+  bool isUpdating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final eventData = widget.eventDetails['data']['event'];
+    eventNameController = TextEditingController(text: eventData['description'] ?? '');
+    locationController = TextEditingController(text: eventData['location'] ?? '');
+    dateController = TextEditingController(text: eventData['date'] ?? '');
+    currentImageUrl = eventData['cover_image'];
+  }
+
+  @override
+  void dispose() {
+    eventNameController.dispose();
+    locationController.dispose();
+    dateController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Icon(
+                  Icons.edit,
+                  color: colorScheme.primary,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Edit Event - ${widget.year.yearName}',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(
+                    Icons.close,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            
+            // Event Name Field
+            TextField(
+              controller: eventNameController,
+              decoration: InputDecoration(
+                labelText: 'Event Name',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                prefixIcon: const Icon(Icons.event),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Location Field
+            TextField(
+              controller: locationController,
+              decoration: InputDecoration(
+                labelText: 'Location',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                prefixIcon: const Icon(Icons.location_on),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Date Field
+            TextField(
+              controller: dateController,
+              decoration: InputDecoration(
+                labelText: 'Date',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                prefixIcon: const Icon(Icons.calendar_today),
+              ),
+              readOnly: true,
+              onTap: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2030),
+                );
+                if (date != null) {
+                  dateController.text = date.toIso8601String().split('T')[0];
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+            
+            // Cover Image Section
+            Text(
+              'Cover Image',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: () async {
+                final image = await GalleryService.pickImageFromGallery();
+                if (image != null) {
+                  setState(() {
+                    selectedImage = image;
+                  });
+                }
+              },
+              child: Container(
+                width: double.infinity,
+                height: 120,
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: colorScheme.outline,
+                    width: 2,
+                    style: BorderStyle.solid,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: selectedImage != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: Image.file(
+                          selectedImage!,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                        ),
+                      )
+                    : currentImageUrl != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.network(
+                              apiBaseUrl + currentImageUrl!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              height: double.infinity,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: colorScheme.surfaceVariant,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.image,
+                                        size: 40,
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Tap to change image',
+                                        style: TextStyle(
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          )
+                        : Container(
+                            color: colorScheme.surfaceVariant,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.add_photo_alternate,
+                                  size: 40,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Tap to add cover image',
+                                  style: TextStyle(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Action Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: isUpdating ? null : () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(color: colorScheme.outline),
+                    ),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: isUpdating ? null : _updateEvent,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: isUpdating
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text('Updating...'),
+                            ],
+                          )
+                        : const Text('Update Event'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _updateEvent() async {
+    setState(() {
+      isUpdating = true;
+    });
+
+    try {
+      // Show initial loading message
+      SnackBarManager.showInfo(
+        context: context,
+        message: 'Updating event...',
+      );
+
+      final apiService = ApiService(apiBaseUrl);
+      final eventService = EventService(apiService);
+      
+      final eventData = widget.eventDetails['data']['event'];
+      
+      // Call the update API
+      final result = await eventService.updateEventDetails(
+        eventId: eventData['id'],
+        eventName: eventNameController.text,
+        location: locationController.text,
+        date: dateController.text,
+        templateId: widget.templateId,
+        yearId: widget.year.id,
+        coverImage: selectedImage,
+        existingImageUrl: currentImageUrl, // Pass existing image URL to preserve it
+      );
+      
+      // Check if the response contains the updated event data (success case)
+      if (result['id'] != null && result['id'] == eventData['id']) {
+        SnackBarManager.showSuccess(
+          context: context,
+          message: 'Event updated successfully!',
+        );
+        
+        // Close the form and refresh data
+        Navigator.pop(context);
+        widget.onEventUpdated();
+      } else if (result['success'] == false) {
+        SnackBarManager.showError(
+          context: context,
+          message: result['message'] ?? 'Failed to update event. Please try again.',
+        );
+      } else {
+        // If we get here, the response format is unexpected
+        SnackBarManager.showError(
+          context: context,
+          message: 'Unexpected response from server. Please try again.',
+        );
+      }
+    } catch (e) {
+      String errorMessage = 'Failed to update event';
+      
+      // Provide more specific error messages based on the error type
+      if (e.toString().contains('SocketException') || e.toString().contains('HandshakeException')) {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+      } else if (e.toString().contains('TimeoutException')) {
+        errorMessage = 'Request timed out. Please try again.';
+      } else if (e.toString().contains('FormatException')) {
+        errorMessage = 'Invalid data format. Please check your input and try again.';
+      } else if (e.toString().contains('404')) {
+        errorMessage = 'Event not found. Please refresh and try again.';
+      } else if (e.toString().contains('500')) {
+        errorMessage = 'Server error. Please try again later or contact support.';
+      } else {
+        errorMessage = 'Error updating event: ${e.toString()}';
+      }
+      
+      SnackBarManager.showError(
+        context: context,
+        message: errorMessage,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isUpdating = false;
+        });
+      }
+    }
   }
 }

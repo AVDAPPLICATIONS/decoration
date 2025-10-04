@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/auth_provider.dart';
+import 'routes/app_routes.dart';
 import 'themes/app_theme.dart';
 import 'views/auth/login_screen.dart';
 import 'views/home/home_screen.dart';
@@ -38,6 +39,12 @@ class MyApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       themeMode: ThemeMode.light,
+      // Use named routes so screens like '/issue-item' resolve
+      initialRoute: AppRoutes.splash,
+      onGenerateRoute: AppRoutes.generateRoute,
+      // Fallback home in case someone navigates directly without routes
+      // Note: AppRoutes.splash will show SplashScreen, which then navigates
+      // based on auth state. Keeping home as AppRoot for backward compatibility
       home: const AppRoot(),
     );
   }

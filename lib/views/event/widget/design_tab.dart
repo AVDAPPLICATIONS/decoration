@@ -931,6 +931,8 @@ class _DesignTabState extends State<DesignTab> {
                                                               .deleteDesignImage(
                                                         imageId: imageData['id']
                                                             .toString(),
+                                                        eventId: widget.event['id']
+                                                            .toString(),
                                                       );
                                                     } else {
                                                       print(
@@ -939,6 +941,8 @@ class _DesignTabState extends State<DesignTab> {
                                                           await _galleryService!
                                                               .deleteFinalDecorationImage(
                                                         imageId: imageData['id']
+                                                            .toString(),
+                                                        eventId: widget.event['id']
                                                             .toString(),
                                                       );
                                                     }

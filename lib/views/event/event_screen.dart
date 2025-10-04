@@ -750,7 +750,6 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                     templateId: templateId,
                     templateName: templateName,
                   ),
-                  settings: const RouteSettings(name: '/years'),
                 ),
               )
                   .then((_) {

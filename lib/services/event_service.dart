@@ -1,6 +1,8 @@
 import '../models/event_model.dart';
 import 'api_service.dart';
 import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class EventService {
   final ApiService api;
@@ -124,6 +126,71 @@ class EventService {
   Future<EventModel> updateEvent(int id, EventModel event) async {
     final response = await api.put('/api/events/$id', body: event.toJson());
     return EventModel.fromJson(response);
+  }
+
+  Future<Map<String, dynamic>> updateEventDetails({
+    required int eventId,
+    required String eventName,
+    required String location,
+    required String date,
+    required int templateId,
+    required int yearId,
+    File? coverImage,
+    String? existingImageUrl,
+  }) async {
+    try {
+      print('Updating event $eventId with name: $eventName, location: $location, date: $date, templateId: $templateId, yearId: $yearId');
+      
+      if (coverImage != null) {
+        // Use multipart request for file upload
+        final request = http.MultipartRequest(
+          'POST',
+          Uri.parse('${api.baseUrl}/api/events/update'),
+        );
+        
+        // Add the image file
+        request.files.add(await http.MultipartFile.fromPath(
+          'cover_image',
+          coverImage.path,
+        ));
+        
+        // Add form fields
+        request.fields['id'] = eventId.toString();
+        request.fields['description'] = eventName;
+        request.fields['location'] = location;
+        request.fields['date'] = date;
+        request.fields['template_id'] = templateId.toString();
+        request.fields['year_id'] = yearId.toString();
+        
+        print('Sending multipart request with image');
+        final response = await request.send();
+        final responseBody = await response.stream.bytesToString();
+        final data = jsonDecode(responseBody);
+        
+        print('Event update response: $data');
+        return data;
+      } else {
+        // No image, use regular POST request
+        final response = await api.post('/api/events/update', body: {
+          'id': eventId,
+          'description': eventName,
+          'location': location,
+          'date': date,
+          'template_id': templateId,
+          'year_id': yearId,
+          'cover_image': existingImageUrl, // Preserve existing image
+        });
+        
+        print('Event update response: $response');
+        return response;
+      }
+    } catch (e) {
+      print('Error updating event: $e');
+      return {
+        'success': false,
+        'message': 'Failed to update event: $e',
+      };
+    }
   }
 
   Future<void> deleteEvent(int id) async {

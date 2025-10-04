@@ -140,9 +140,10 @@ class GalleryService {
   // Delete design image
   Future<Map<String, dynamic>> deleteDesignImage({
     required String imageId,
+    required String eventId,
   }) async {
     try {
-      print('🗑️ Deleting design image with ID: $imageId');
+      print('🗑️ Deleting design image with ID: $imageId for event: $eventId');
       print('🗑️ API URL: $baseUrl/api/gallery/design/delete');
 
       final response = await http.post(
@@ -158,10 +159,25 @@ class GalleryService {
       print('🗑️ Response status: ${response.statusCode}');
       print('🗑️ Response body: ${response.body}');
 
-      final data = jsonDecode(response.body);
-      return data;
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data;
+      } else if (response.statusCode == 404) {
+        return {
+          'success': false, 
+          'message': 'Delete endpoint not available. Image deletion may not be supported yet.'
+        };
+      } else {
+        return {'success': false, 'message': 'Delete failed with status ${response.statusCode}'};
+      }
     } catch (e) {
       print('❌ Error deleting design image: $e');
+      if (e.toString().contains('SyntaxError') || e.toString().contains('<!DOCTYPE')) {
+        return {
+          'success': false, 
+          'message': 'Delete endpoint not available. Image deletion may not be supported yet.'
+        };
+      }
       return {'success': false, 'message': 'Delete failed: $e'};
     }
   }
@@ -169,9 +185,10 @@ class GalleryService {
   // Delete final decoration image
   Future<Map<String, dynamic>> deleteFinalDecorationImage({
     required String imageId,
+    required String eventId,
   }) async {
     try {
-      print('🗑️ Deleting final decoration image with ID: $imageId');
+      print('🗑️ Deleting final decoration image with ID: $imageId for event: $eventId');
       print('🗑️ API URL: $baseUrl/api/gallery/final/delete');
 
       final response = await http.post(
@@ -187,10 +204,25 @@ class GalleryService {
       print('🗑️ Response status: ${response.statusCode}');
       print('🗑️ Response body: ${response.body}');
 
-      final data = jsonDecode(response.body);
-      return data;
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data;
+      } else if (response.statusCode == 404) {
+        return {
+          'success': false, 
+          'message': 'Delete endpoint not available. Image deletion may not be supported yet.'
+        };
+      } else {
+        return {'success': false, 'message': 'Delete failed with status ${response.statusCode}'};
+      }
     } catch (e) {
       print('❌ Error deleting final decoration image: $e');
+      if (e.toString().contains('SyntaxError') || e.toString().contains('<!DOCTYPE')) {
+        return {
+          'success': false, 
+          'message': 'Delete endpoint not available. Image deletion may not be supported yet.'
+        };
+      }
       return {'success': false, 'message': 'Delete failed: $e'};
     }
   }
