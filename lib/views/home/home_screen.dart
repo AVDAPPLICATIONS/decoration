@@ -4,8 +4,9 @@ import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/bottom_nav_provider.dart';
 import '../../utils/responsive_utils.dart';
+import '../../widgets/offline_indicator.dart';
 import '../dashboard/dashboard_screen.dart';
-import '../event/event_screen.dart';
+import '../event/eventTemplate/event_screen.dart';
 import '../inventory/inventory_list_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -47,44 +48,51 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return PersistentTabView(
-      context,
-      key: const ValueKey('persistent_tab_view'),
-      controller: _controller,
-      screens: _buildScreens(isAdmin),
-      items: _buildNavBarItems(context),
-      handleAndroidBackButtonPress: true, // Enable back button handling
-      resizeToAvoidBottomInset: false,
-      stateManagement: true, // Changed to true to better manage state
-      hideNavigationBarWhenKeyboardAppears: true,
-      navBarStyle: NavBarStyle.style9,
-      backgroundColor: colorScheme.surface,
-      decoration: NavBarDecoration(
-        borderRadius: BorderRadius.circular(24),
-        colorBehindNavBar: colorScheme.background,
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withOpacity(0.1),
-            blurRadius: 32,
-            spreadRadius: 4,
-            offset: const Offset(0, -8),
+    return Column(
+      children: [
+        const OfflineIndicator(),
+        Expanded(
+          child: PersistentTabView(
+            context,
+            key: const ValueKey('persistent_tab_view'),
+            controller: _controller,
+            screens: _buildScreens(isAdmin),
+            items: _buildNavBarItems(context),
+            handleAndroidBackButtonPress: true, // Enable back button handling
+            resizeToAvoidBottomInset: false,
+            stateManagement: true, // Changed to true to better manage state
+            hideNavigationBarWhenKeyboardAppears: true,
+            navBarStyle: NavBarStyle.style9,
+            backgroundColor: colorScheme.surface,
+            decoration: NavBarDecoration(
+              borderRadius: BorderRadius.circular(24),
+              colorBehindNavBar: colorScheme.background,
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.shadow.withOpacity(0.1),
+                  blurRadius: 32,
+                  spreadRadius: 4,
+                  offset: const Offset(0, -8),
+                ),
+                BoxShadow(
+                  color: colorScheme.primary.withOpacity(0.06),
+                  blurRadius: 16,
+                  spreadRadius: 0,
+                  offset: const Offset(0, -4),
+                ),
+              ],
+            ),
+            navBarHeight: 80,
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            // Add these properties to help with navigation state
+            onItemSelected: (index) {
+              // Handle tab selection
+              ref.read(bottomNavIndexProvider.notifier).update((state) => index);
+            },
           ),
-          BoxShadow(
-            color: colorScheme.primary.withOpacity(0.06),
-            blurRadius: 16,
-            spreadRadius: 0,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      navBarHeight: 80,
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      // Add these properties to help with navigation state
-      onItemSelected: (index) {
-        // Handle tab selection
-        ref.read(bottomNavIndexProvider.notifier).update((state) => index);
-      },
+        ),
+      ],
     );
   }
 
@@ -94,90 +102,103 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
-      body: Row(
+      body: Column(
         children: [
-          // Side Navigation for Tablet
-          Container(
-            width: MediaQuery.of(context).size.width * 0.25,
-            constraints: const BoxConstraints(
-              minWidth: 200,
-              maxWidth: 300,
-            ),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              border: Border(
-                right: BorderSide(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-                  width: 1,
-                ),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.shadow.withOpacity(0.08),
-                  blurRadius: 8,
-                  offset: const Offset(2, 0),
-                ),
-              ],
-            ),
-            child: Column(
+          const OfflineIndicator(),
+          Expanded(
+            child: Row(
               children: [
-                const SizedBox(height: 20),
-                // App Header
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    'Event Manager',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
+                // Side Navigation for Tablet
+                Container(
+                  width: MediaQuery.of(context).size.width * 0.25,
+                  constraints: const BoxConstraints(
+                    minWidth: 200,
+                    maxWidth: 300,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    border: Border(
+                      right: BorderSide(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .outline
+                            .withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .shadow
+                            .withOpacity(0.08),
+                        blurRadius: 8,
+                        offset: const Offset(2, 0),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      // App Header
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          'Event Manager',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildNavItem(
+                        context,
+                        ref,
+                        0,
+                        currentIndex,
+                        Icons.dashboard_rounded,
+                        'Dashboard',
+                      ),
+                      _buildNavItem(
+                        context,
+                        ref,
+                        1,
+                        currentIndex,
+                        Icons.event_rounded,
+                        'Events',
+                      ),
+                      _buildNavItem(
+                        context,
+                        ref,
+                        2,
+                        currentIndex,
+                        Icons.inventory_2_rounded,
+                        'Inventory',
+                      ),
+                    ],
+                  ),
+                ),
+                // Main Content
+                Expanded(
+                  child: Container(
+                    constraints: const BoxConstraints(
+                      minWidth: 0,
+                    ),
+                    color: Theme.of(context).colorScheme.background,
+                    child: IndexedStack(
+                      index: currentIndex,
+                      children: screens,
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                _buildNavItem(
-                  context,
-                  ref,
-                  0,
-                  currentIndex,
-                  Icons.dashboard_rounded,
-                  'Dashboard',
-                ),
-                _buildNavItem(
-                  context,
-                  ref,
-                  1,
-                  currentIndex,
-                  Icons.event_rounded,
-                  'Events',
-                ),
-                _buildNavItem(
-                  context,
-                  ref,
-                  2,
-                  currentIndex,
-                  Icons.inventory_2_rounded,
-                  'Inventory',
-                ),
               ],
             ),
           ),
-          // Main Content
-          Expanded(
-            child: Container(
-              constraints: const BoxConstraints(
-                minWidth: 0,
-              ),
-              color: Theme.of(context).colorScheme.background,
-              child: IndexedStack(
-                index: currentIndex,
-                children: screens,
-              ),
-            ),
-          ),
         ],
-      ),
-    );
+      ), // closes Column
+    ); // closes Scaffold
   }
 
   Widget _buildDesktopLayout(BuildContext context, bool isAdmin) {
@@ -187,7 +208,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
-      body: Row(
+      body: Column(
+        children: [
+          const OfflineIndicator(),
+          Expanded(
+            child: Row(
         children: [
           // Side Navigation for Desktop
           Container(
@@ -359,7 +384,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
-    );
+          ),
+    ],
+  ),
+);
   }
 
   List<Widget> _buildScreens(bool isAdmin) {
@@ -471,7 +499,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           .onSurfaceVariant
                           .withOpacity(0.7),
                 ),
-                if (!isMobile) ...{
+                if (!isMobile) ...[
                   const SizedBox(width: 16),
                   Expanded(
                     child: Text(
@@ -490,7 +518,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                   ),
-                },
+                ],
               ],
             ),
           ),

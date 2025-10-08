@@ -66,6 +66,12 @@ class DashboardNotifier extends StateNotifier<DashboardState> {
 
       if (response['success'] == true) {
         final stats = DashboardStats.fromJson(response['data']);
+        print('🔍 Debug: Parsed dashboard stats:');
+        print('  - Totals: ${stats.totals}');
+        print('  - Cost by year: ${stats.costByYear.length} items');
+        print('  - Recent events: ${stats.recentEvents.length} items');
+        print('  - Top categories: ${stats.topCategories.length} items');
+        
         state = state.copyWith(
           stats: stats,
           isLoading: false,

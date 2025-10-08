@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/event_template_model.dart';
 import '../services/event_template_service.dart';
 import 'api_provider.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import '../data/repositories/template_repository.dart';
 
 final templateServiceProvider = Provider<EventTemplateService>((ref) {
   final api = ref.read(apiServiceProvider);
@@ -11,19 +13,25 @@ final templateServiceProvider = Provider<EventTemplateService>((ref) {
 final templateProvider =
     StateNotifierProvider<TemplateNotifier, List<EventTemplateModel>>((ref) {
   final service = ref.read(templateServiceProvider);
-  return TemplateNotifier(ref, service);
+  final repo = TemplateRepository(
+    service: service,
+    connectivity: Connectivity(),
+    offline: ref.read(offlineCacheProvider),
+  );
+  return TemplateNotifier(ref, service, repo);
 });
 
 class TemplateNotifier extends StateNotifier<List<EventTemplateModel>> {
   final Ref ref;
   final EventTemplateService service;
+  final TemplateRepository repo;
 
-  TemplateNotifier(this.ref, this.service) : super([]);
+  TemplateNotifier(this.ref, this.service, this.repo) : super([]);
 
   Future<void> fetchTemplates() async {
     try {
       print('TemplateProvider: Starting to fetch templates from API...');
-      final templates = await service.fetchTemplates();
+      final templates = await repo.fetchTemplates();
       print(
           'TemplateProvider: Successfully fetched ${templates.length} templates');
 

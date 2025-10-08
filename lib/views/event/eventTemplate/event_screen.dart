@@ -1,18 +1,20 @@
-import 'package:avd_decoration_application/themes/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'event_details_screen.dart';
-import 'years_screen.dart';
+import '../../../utils/top_snackbar_helper.dart';
+import 'add_template_dialog.dart';
+import 'deleteTemplate.dart';
+import 'delete_template_dialog.dart';
+import 'editTemplate.dart';
+import 'edit_template_dialog.dart';
+import '../event_details_screen.dart';
+import '../years_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/event_provider.dart';
-import '../../providers/template_provider.dart';
-import '../../models/event_model.dart';
-import '../../models/event_template_model.dart';
-import '../../utils/responsive_utils.dart';
-import '../custom_widget/custom_appbar.dart';
+import '../../../providers/event_provider.dart';
+import '../../../providers/template_provider.dart';
+import '../../../models/event_model.dart';
+import '../../../models/event_template_model.dart';
+import '../../../utils/responsive_utils.dart';
+import '../../custom_widget/custom_appbar.dart';
 
-/// ----------------------
-/// Event Screen
-/// ----------------------
 class EventScreen extends ConsumerStatefulWidget {
   final bool isAdmin;
   const EventScreen({Key? key, required this.isAdmin}) : super(key: key);
@@ -35,105 +37,6 @@ class _EventScreenState extends ConsumerState<EventScreen> {
     });
   }
 
-  void _editEvent(EventModel eventData) async {
-    final TextEditingController nameController =
-        TextEditingController(text: eventData.name ?? '');
-
-    final result = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Event'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'Event Name',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (nameController.text.trim().isNotEmpty) {
-                Navigator.pop(context, {
-                  'id': eventData.id,
-                  'name': nameController.text.trim(),
-                  'status': eventData.status,
-                });
-              }
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-
-    if (result != null && eventData.id != null) {
-      final updatedEvent = EventModel(
-        id: eventData.id,
-        name: result['name'],
-        status: result['status'],
-        location: eventData.location,
-        description: eventData.description,
-        date: eventData.date,
-        templateId: eventData.templateId,
-        yearId: eventData.yearId,
-        coverImage: eventData.coverImage,
-        createdAt: eventData.createdAt,
-      );
-
-      await ref
-          .read(eventProvider.notifier)
-          .updateEvent(eventData.id!, updatedEvent);
-    }
-  }
-
-  void _deleteEvent(EventModel eventData) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Event'),
-        content: Text('Are you sure you want to delete "${eventData.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (eventData.id != null) {
-                await ref
-                    .read(eventProvider.notifier)
-                    .deleteEvent(eventData.id!);
-
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('${eventData.name} deleted successfully'),
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    behavior: SnackBarBehavior.floating,
-                    margin:
-                        const EdgeInsets.only(bottom: 100, left: 16, right: 16),
-                  ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -188,20 +91,22 @@ class _EventScreenState extends ConsumerState<EventScreen> {
   Widget _buildEventScreen(BuildContext context, List<EventModel> allEventsData,
       List<dynamic> templates, ColorScheme colorScheme) {
     return Scaffold(
+      backgroundColor: colorScheme.primary,
+
       appBar: _buildResponsiveAppBar(colorScheme),
-      backgroundColor: colorScheme.background,
+      // backgroundColor: colorScheme.background,
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              colorScheme.primary,
-              colorScheme.background,
-            ],
-            stops: const [0.0, 0.25],
-          ),
-        ),
+        // decoration: BoxDecoration(
+        //   gradient: LinearGradient(
+        //     begin: Alignment.topCenter,
+        //     end: Alignment.bottomCenter,
+        //     colors: [
+        //       colorScheme.primary,
+        //       colorScheme.background,
+        //     ],
+        //     stops: const [0.0, 0.25],
+        //   ),
+        // ),
         child: Container(
           margin: EdgeInsets.only(
             top: context.responsive(
@@ -211,7 +116,10 @@ class _EventScreenState extends ConsumerState<EventScreen> {
             ),
           ),
           decoration: BoxDecoration(
-            color: colorScheme.surface,
+            // Krutarth
+            color: colorScheme.secondaryContainer.withOpacity(1),
+            // color: colorScheme.secondaryContainer.withOpacity(0.8),
+
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(
                 context.responsive(
@@ -230,8 +138,10 @@ class _EventScreenState extends ConsumerState<EventScreen> {
             ),
           ),
           child: Column(
+
             children: [
-              // Event Templates Section
+              // Event Templates Sectio
+
               Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: context.responsive(
@@ -257,7 +167,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                       color: colorScheme.primary,
                     ),
                     IconButton(
-                      onPressed: () => _showAddTemplateDialog(context),
+                      onPressed: () => showAddTemplateDialog(context,ref),
                       icon: Icon(
                         Icons.add,
                         color: colorScheme.primary,
@@ -350,26 +260,6 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                                 .withOpacity(0.1),
                           ],
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .shadow
-                                .withOpacity(0.08),
-                            blurRadius: 25,
-                            spreadRadius: 0,
-                            offset: const Offset(0, 10),
-                          ),
-                          BoxShadow(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .shadow
-                                .withOpacity(0.04),
-                            blurRadius: 10,
-                            spreadRadius: 0,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
                         border: Border.all(
                           color: Theme.of(context)
                               .colorScheme
@@ -506,9 +396,9 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                                   ),
                                   onSelected: (value) {
                                     if (value == 'edit') {
-                                      _editEvent(eventData);
+                                      showEditEventDialog(context, ref, eventData);
                                     } else if (value == 'delete') {
-                                      _deleteEvent(eventData);
+                                      showDeleteEventDialog(context, ref, eventData);
                                     } else if (value == 'view') {
                                       Navigator.of(context).push(
                                         MaterialPageRoute(
@@ -670,15 +560,10 @@ class _EventScreenState extends ConsumerState<EventScreen> {
         // Handle swipe actions based on direction
         print('🔄 Swipe detected: $direction for template: ${template.name}');
         if (direction == DismissDirection.startToEnd) {
-          // Swipe right - Open edit dialog (matches left side edit button)
-          print('📝 Opening edit dialog for template: ${template.name}');
-          _showEditTemplateDialog(template);
+          showEditTemplateDialog(context, ref, template);
         } else if (direction == DismissDirection.endToStart) {
-          // Swipe left - Open delete dialog (matches right side delete button)
-          print('🗑️ Opening delete dialog for template: ${template.name}');
-          _showDeleteTemplateConfirmation(template);
+          showDeleteTemplateDialog(context, ref, template);
         }
-        // Don't actually dismiss the item
         return false;
       },
       child: Container(
@@ -887,108 +772,6 @@ class _EventScreenState extends ConsumerState<EventScreen> {
     );
   }
 
-  void _showAddTemplateDialog(BuildContext context) {
-    final TextEditingController nameController = TextEditingController();
-    String? errorText; // holds the error message
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) => AlertDialog(
-            title: const Text('Add Event Template'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Template Name',
-                    hintText: 'Enter template name',
-                    border: const OutlineInputBorder(),
-                    errorText: errorText, // display error here
-                  ),
-                  autofocus: true,
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  final name = nameController.text.trim();
-                  if (name.isNotEmpty) {
-                    Navigator.pop(context);
-                    await _createTemplate(name);
-                  } else {
-                    // update the error message inside the dialog
-                    setState(() {
-                      errorText = 'Please enter a template name';
-                    });
-                  }
-                },
-                child: const Text('Add'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _createTemplate(String name) async {
-    try {
-      // Show loading message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Creating template...'),
-            backgroundColor: AppColors.primary,
-            duration: const Duration(seconds: 1),
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(bottom: 120, left: 16, right: 16),
-          ),
-        );
-      }
-
-      // Create template using the service
-      final templateService = ref.read(templateServiceProvider);
-      final response = await templateService.createTemplate(name);
-
-      // Show success message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Template "$name" created successfully'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(bottom: 120, left: 16, right: 16),
-          ),
-        );
-      }
-
-      // Refresh templates list
-      ref.read(templateProvider.notifier).fetchTemplates();
-
-      print('✅ Template created successfully: $response');
-    } catch (e) {
-      print('❌ Error creating template: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to create template: ${e.toString()}'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.only(bottom: 120, left: 16, right: 16),
-          ),
-        );
-      }
-    }
-  }
-
   Widget _buildEmptyTemplatesState() {
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -1124,7 +907,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: () => _showAddTemplateDialog(context),
+                    onTap: () => showAddTemplateDialog(context, ref),
                     borderRadius: BorderRadius.circular(
                       context.responsive(
                         mobile: 16.0,
@@ -1210,374 +993,6 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                 ),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showEditTemplateDialog(dynamic template) {
-    final TextEditingController nameController =
-        TextEditingController(text: template.name);
-    final colorScheme = Theme.of(context).colorScheme;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.transparent,
-        contentPadding: EdgeInsets.zero,
-        content: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                colorScheme.surface,
-                colorScheme.surfaceVariant,
-              ],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 20,
-                spreadRadius: 0,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.edit,
-                        color: colorScheme.primary,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Text(
-                        'Edit Template',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // Template Name Field
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Template Name',
-                    hintText: 'Enter template name',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: colorScheme.primary,
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Action Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: Text(
-                          'Cancel',
-                          style: TextStyle(
-                            color: colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          final newName = nameController.text.trim();
-                          if (newName.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content:
-                                    const Text('Please enter a template name'),
-                                backgroundColor: colorScheme.error,
-                                behavior: SnackBarBehavior.floating,
-                                margin: const EdgeInsets.only(
-                                  bottom: 100,
-                                  left: 16,
-                                  right: 16,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                            );
-                            return;
-                          }
-
-                          try {
-                            // Create updated template model
-                            final updatedTemplate = EventTemplateModel(
-                              id: template.id,
-                              name: newName,
-                              createdAt: template.createdAt,
-                            );
-                            await ref
-                                .read(templateProvider.notifier)
-                                .updateTemplate(template.id, updatedTemplate);
-                            Navigator.of(context).pop();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    'Template "$newName" updated successfully!'),
-                                backgroundColor: colorScheme.primary,
-                                behavior: SnackBarBehavior.floating,
-                                margin: const EdgeInsets.only(
-                                  bottom: 100,
-                                  left: 16,
-                                  right: 16,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                            );
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    'Error updating template: ${e.toString()}'),
-                                backgroundColor: colorScheme.error,
-                                behavior: SnackBarBehavior.floating,
-                                margin: const EdgeInsets.only(
-                                  bottom: 100,
-                                  left: 16,
-                                  right: 16,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary,
-                          foregroundColor: colorScheme.onPrimary,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Update',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showDeleteTemplateConfirmation(dynamic template) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.transparent,
-        contentPadding: EdgeInsets.zero,
-        content: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                colorScheme.surface,
-                colorScheme.surfaceVariant,
-              ],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 20,
-                spreadRadius: 0,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: colorScheme.error.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.delete_outline,
-                        color: colorScheme.error,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Text(
-                        'Delete Template',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // Warning Message
-                Text(
-                  'Are you sure you want to delete "${template.name}"? This action cannot be undone.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-
-                // Action Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: Text(
-                          'Cancel',
-                          style: TextStyle(
-                            color: colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          try {
-                            print(
-                                '🗑️ Deleting template with ID: ${template.id}, name: ${template.name}');
-                            await ref
-                                .read(templateProvider.notifier)
-                                .deleteTemplate(template.id);
-                            print('✅ Template deleted successfully');
-                            Navigator.of(context).pop();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    'Template "${template.name}" deleted successfully!'),
-                                backgroundColor: colorScheme.primary,
-                                behavior: SnackBarBehavior.floating,
-                                margin: const EdgeInsets.only(
-                                  bottom: 100,
-                                  left: 16,
-                                  right: 16,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                            );
-                          } catch (e) {
-                            print('❌ Error deleting template: $e');
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    'Error deleting template: ${e.toString()}'),
-                                backgroundColor: colorScheme.error,
-                                behavior: SnackBarBehavior.floating,
-                                margin: const EdgeInsets.only(
-                                  bottom: 100,
-                                  left: 16,
-                                  right: 16,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.error,
-                          foregroundColor: colorScheme.onError,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Delete',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
           ),
         ),
       ),

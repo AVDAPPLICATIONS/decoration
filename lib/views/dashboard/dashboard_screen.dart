@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:top_snackbar_flutter/top_snack_bar.dart' show showTopSnackBar;
 import '../../providers/dashboard_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/responsive_utils.dart';
@@ -27,7 +28,6 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
   Widget build(BuildContext context) {
     final dashboardState = ref.watch(dashboardProvider);
     final colorScheme = Theme.of(context).colorScheme;
-
     return ResponsiveBuilder(
       mobile: _buildMobileLayout(context, dashboardState, colorScheme),
       tablet: _buildTabletLayout(context, dashboardState, colorScheme),
@@ -215,7 +215,7 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
         child: Container(
           margin: const EdgeInsets.only(top: 15),
           decoration: BoxDecoration(
-            color: colorScheme.surface,
+            color: colorScheme.secondaryContainer,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             boxShadow: [
               BoxShadow(
@@ -238,7 +238,7 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
   Widget _buildTabletLayout(BuildContext context, DashboardState dashboardState,
       ColorScheme colorScheme) {
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.secondaryContainer,
       appBar: _buildResponsiveAppBar(colorScheme),
       body: Container(
         decoration: BoxDecoration(
@@ -319,6 +319,7 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     if (state.isLoading) {
+      print('🔍 Showing loading indicator');
       return Center(
         child: CircularProgressIndicator(
           color: colorScheme.primary,
@@ -327,6 +328,7 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
     }
 
     if (state.error != null) {
+      print('🔍 Showing error: ${state.error}');
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -348,6 +350,7 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
             const SizedBox(height: 8),
             Text(
               state.error!,
+
               style: TextStyle(
                 color: colorScheme.onSurfaceVariant,
                 fontSize: 14,
@@ -371,62 +374,71 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
     }
 
     if (state.stats == null) {
+      print('🔍 Showing "No data available" - stats is null');
       return Center(
         child: Text(
-          'No data available',
+          _getFriendlyErrorMessage(state.error),
           style: TextStyle(
             color: colorScheme.onSurfaceVariant,
-            fontSize: 16,
+            fontSize: 14,
           ),
+          textAlign: TextAlign.center,
         ),
+
       );
     }
+
+    print('🔍 Building dashboard content with stats');
 
     return RefreshIndicator(
       onRefresh: () async {
         try {
           await ref.read(dashboardProvider.notifier).refreshDashboard();
-          // Show success feedback
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Dashboard refreshed successfully!'),
-                backgroundColor: colorScheme.primary,
-                behavior: SnackBarBehavior.floating,
-                margin: const EdgeInsets.only(
-                  bottom: 100,
-                  left: 16,
-                  right: 16,
+
+          showTopSnackBar(
+            Overlay.of(context),
+            Material(
+              borderRadius: BorderRadius.circular(10),
+              color: Colors.green,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                child: Text(
+                  'Dashboard refreshed successfully!',
+                  style: TextStyle(
+                    color: colorScheme.onPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                duration: const Duration(seconds: 2),
               ),
-            );
-          }
+            ),
+            displayDuration: const Duration(seconds: 2),
+          );
         } catch (e) {
-          // Show error feedback
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Failed to refresh: ${e.toString()}'),
-                backgroundColor: colorScheme.error,
-                behavior: SnackBarBehavior.floating,
-                margin: const EdgeInsets.only(
-                  bottom: 100,
-                  left: 16,
-                  right: 16,
+          showTopSnackBar(
+            Overlay.of(context),
+            Material(
+              borderRadius: BorderRadius.circular(10),
+              color: colorScheme.error,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                child: Text(
+                  'Failed to refresh: ${e.toString()}',
+                  style: TextStyle(
+                    color: colorScheme.onError,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                duration: const Duration(seconds: 3),
               ),
-            );
-          }
+            ),
+            displayDuration: const Duration(seconds: 3),
+          );
         }
       },
+
       color: colorScheme.primary,
       backgroundColor: colorScheme.surface,
       strokeWidth: 2.5,
@@ -508,7 +520,6 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
                             desktop: 32.0,
                           ),
                         ),
-                        child: _buildCostByYearChart(state.stats!.costByYear),
                       ),
                     ),
                   ),
@@ -527,89 +538,32 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
             ),
           ),
 
-          // Recent Events with Enhanced Scroll Effect
-          SliverToBoxAdapter(
-            child: TweenAnimationBuilder<double>(
-              duration: const Duration(milliseconds: 1400),
-              tween: Tween(begin: 0.0, end: 1.0),
-              curve: Curves.easeOutQuart,
-              builder: (context, animationValue, child) {
-                return Transform.translate(
-                  offset: Offset(0, 50 * (1 - animationValue)),
-                  child: Opacity(
-                    opacity: animationValue.clamp(0.0, 1.0),
-                    child: Transform.scale(
-                      scale: 0.85 + (0.15 * animationValue),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: context.responsive(
-                            mobile: 16.0,
-                            tablet: 24.0,
-                            desktop: 32.0,
-                          ),
-                        ),
-                        child: _buildRecentEvents(state.stats!.recentEvents),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
 
-          SliverToBoxAdapter(
-            child: SizedBox(
-              height: context.responsive(
-                mobile: 24.0,
-                tablet: 28.0,
-                desktop: 32.0,
-              ),
-            ),
-          ),
-
-          // Top Categories with Enhanced Scroll Effect
-          SliverToBoxAdapter(
-            child: TweenAnimationBuilder<double>(
-              duration: const Duration(milliseconds: 1600),
-              tween: Tween(begin: 0.0, end: 1.0),
-              curve: Curves.easeOutExpo,
-              builder: (context, animationValue, child) {
-                return Transform.translate(
-                  offset: Offset(0, 60 * (1 - animationValue)),
-                  child: Opacity(
-                    opacity: animationValue.clamp(0.0, 1.0),
-                    child: Transform.scale(
-                      scale: 0.8 + (0.2 * animationValue),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: context.responsive(
-                            mobile: 16.0,
-                            tablet: 24.0,
-                            desktop: 32.0,
-                          ),
-                        ),
-                        child: _buildTopCategories(state.stats!.topCategories),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // Add extra padding at bottom
-          SliverToBoxAdapter(
-            child: SizedBox(
-              height: context.responsive(
-                mobile: context.screenHeight * 0.1,
-                tablet: context.screenHeight * 0.08,
-                desktop: context.screenHeight * 0.06,
-              ),
-            ),
-          ),
         ],
       ),
     );
+  }
+  String _getFriendlyErrorMessage(String? error) {
+    if (error == null) return '';
+
+    final lowerError = error.toLowerCase();
+
+    if (lowerError.contains('socketexception') ||
+        lowerError.contains('network is unreachable') ||
+        lowerError.contains('failed host lookup') ||
+        lowerError.contains('connection failed')) {
+      return 'No internet connection. Please check your network.';
+    }
+
+    if (lowerError.contains('timeout')) {
+      return 'Request timed out. Try again later.';
+    }
+
+    if (lowerError.contains('clientexception')) {
+      return 'Server connection error.';
+    }
+
+    return error; // fallback: show raw message
   }
 
   Widget _buildStatsGrid(Map<String, dynamic> totals) {
@@ -851,541 +805,4 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
     );
   }
 
-  Widget _buildCostByYearChart(List<Map<String, dynamic>> costByYear) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    final borderRadius = context.responsive(
-      mobile: 12.0,
-      tablet: 14.0,
-      desktop: 16.0,
-    );
-
-    if (costByYear.isEmpty) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ResponsiveText(
-            'Cost by Year',
-            mobileFontSize: 18.0,
-            tabletFontSize: 20.0,
-            desktopFontSize: 22.0,
-            fontWeight: FontWeight.bold,
-            color: colorScheme.primary,
-          ),
-          SizedBox(
-            height: context.responsive(
-              mobile: 12.0,
-              tablet: 16.0,
-              desktop: 20.0,
-            ),
-          ),
-          ResponsiveContainer(
-            mobileHeight: 200.0,
-            tabletHeight: 280.0,
-            desktopHeight: 350.0,
-            mobilePadding: const EdgeInsets.all(16.0),
-            tabletPadding: const EdgeInsets.all(20.0),
-            desktopPadding: const EdgeInsets.all(24.0),
-            decoration: BoxDecoration(
-              color: colorScheme.surface,
-              borderRadius: BorderRadius.circular(borderRadius),
-              border: Border.all(
-                color: colorScheme.outline.withOpacity(0.2),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: colorScheme.shadow.withOpacity(0.08),
-                  spreadRadius: 0,
-                  blurRadius: context.responsive(
-                    mobile: 8.0,
-                    tablet: 10.0,
-                    desktop: 12.0,
-                  ),
-                  offset: Offset(
-                      0,
-                      context.responsive(
-                        mobile: 2.0,
-                        tablet: 3.0,
-                        desktop: 4.0,
-                      )),
-                ),
-              ],
-            ),
-            child: Center(
-              child: ResponsiveText(
-                'No data available',
-                mobileFontSize: 14.0,
-                tabletFontSize: 15.0,
-                desktopFontSize: 16.0,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ResponsiveText(
-          'Cost by Year',
-          mobileFontSize: 18.0,
-          tabletFontSize: 20.0,
-          desktopFontSize: 22.0,
-          fontWeight: FontWeight.bold,
-          color: colorScheme.primary,
-        ),
-        SizedBox(
-          height: context.responsive(
-            mobile: 12.0,
-            tablet: 16.0,
-            desktop: 20.0,
-          ),
-        ),
-        ResponsiveContainer(
-          mobileHeight: 250.0,
-          tabletHeight: 320.0,
-          desktopHeight: 380.0,
-          mobilePadding: const EdgeInsets.all(16.0),
-          tabletPadding: const EdgeInsets.all(20.0),
-          desktopPadding: const EdgeInsets.all(24.0),
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(
-              color: colorScheme.outline.withOpacity(0.2),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: colorScheme.shadow.withOpacity(0.08),
-                spreadRadius: 0,
-                blurRadius: context.responsive(
-                  mobile: 8.0,
-                  tablet: 10.0,
-                  desktop: 12.0,
-                ),
-                offset: Offset(
-                    0,
-                    context.responsive(
-                      mobile: 2.0,
-                      tablet: 3.0,
-                      desktop: 4.0,
-                    )),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Expanded(
-                child: PieChart(
-                  PieChartData(
-                    pieTouchData: PieTouchData(
-                      touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                        // Handle touch interactions
-                      },
-                    ),
-                    sectionsSpace: 2,
-                    centerSpaceRadius: context.responsive(
-                      mobile: 35.0,
-                      tablet: 60.0,
-                      desktop: 70.0,
-                    ),
-                    sections: _buildPieChartSections(costByYear),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Legend
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 16,
-                runSpacing: 8,
-                children: _buildPieChartLegend(costByYear),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  List<PieChartSectionData> _buildPieChartSections(
-      List<Map<String, dynamic>> costByYear) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final colors = [
-      colorScheme.primary,
-      colorScheme.secondary,
-      colorScheme.tertiary,
-      colorScheme.error,
-      colorScheme.outline,
-    ];
-
-    // Filter out zero values and calculate total
-    final nonZeroData = costByYear.where((data) {
-      final cost =
-          double.tryParse(data['total_cost']?.toString() ?? '0') ?? 0.0;
-      return cost > 0;
-    }).toList();
-
-    // If no data or all zero, show a single section
-    if (nonZeroData.isEmpty) {
-      return [
-        PieChartSectionData(
-          color: colorScheme.outline.withOpacity(0.3),
-          value: 100,
-          title: 'No Data',
-          radius: context.responsive(
-            mobile: 50.0,
-            tablet: 60.0,
-            desktop: 70.0,
-          ),
-          titleStyle: TextStyle(
-            fontSize: context.responsive(
-              mobile: 12.0,
-              tablet: 14.0,
-              desktop: 16.0,
-            ),
-            fontWeight: FontWeight.bold,
-            color: colorScheme.onSurfaceVariant,
-          ),
-          titlePositionPercentageOffset: 0.5,
-        ),
-      ];
-    }
-
-    return nonZeroData.asMap().entries.map((entry) {
-      final index = entry.key;
-      final yearData = entry.value;
-      final cost =
-          double.tryParse(yearData['total_cost']?.toString() ?? '0') ?? 0.0;
-      final year = yearData['year']?.toString() ?? 'Unknown';
-      final color = colors[index % colors.length];
-
-      return PieChartSectionData(
-        color: color,
-        value: cost,
-        title: cost > 0 ? year : '',
-        radius: context.responsive(
-          mobile: 65.0,
-          tablet: 75.0,
-          desktop: 85.0,
-        ),
-        titleStyle: TextStyle(
-          fontSize: context.responsive(
-            mobile: 11.0,
-            tablet: 13.0,
-            desktop: 15.0,
-          ),
-          fontWeight: FontWeight.bold,
-          color: colorScheme.surface,
-        ),
-        titlePositionPercentageOffset: 0.55,
-        showTitle: cost > 0,
-      );
-    }).toList();
-  }
-
-  List<Widget> _buildPieChartLegend(List<Map<String, dynamic>> costByYear) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final colors = [
-      colorScheme.primary,
-      colorScheme.secondary,
-      colorScheme.tertiary,
-      colorScheme.error,
-      colorScheme.outline,
-    ];
-
-    return costByYear.asMap().entries.map((entry) {
-      final index = entry.key;
-      final yearData = entry.value;
-      final year = yearData['year']?.toString() ?? 'Unknown';
-      final cost =
-          double.tryParse(yearData['total_cost']?.toString() ?? '0') ?? 0.0;
-      final color = colors[index % colors.length];
-
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 12,
-            height: 12,
-            decoration: BoxDecoration(
-              color: cost > 0 ? color : color.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            cost > 0 ? '$year (₹${cost.toStringAsFixed(0)})' : '$year (₹0)',
-            style: TextStyle(
-              fontSize: context.responsive(
-                mobile: 10.0,
-                tablet: 11.0,
-                desktop: 12.0,
-              ),
-              color: cost > 0
-                  ? colorScheme.onSurface
-                  : colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      );
-    }).toList();
-  }
-
-  Widget _buildRecentEvents(List<Map<String, dynamic>> recentEvents) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    final borderRadius = context.responsive(
-      mobile: 12.0,
-      tablet: 14.0,
-      desktop: 16.0,
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ResponsiveText(
-          'Recent Events',
-          mobileFontSize: 18.0,
-          tabletFontSize: 20.0,
-          desktopFontSize: 22.0,
-          fontWeight: FontWeight.bold,
-          color: colorScheme.primary,
-        ),
-        SizedBox(
-          height: context.responsive(
-            mobile: 12.0,
-            tablet: 16.0,
-            desktop: 20.0,
-          ),
-        ),
-        ResponsiveContainer(
-          mobilePadding: const EdgeInsets.all(16.0),
-          tabletPadding: const EdgeInsets.all(20.0),
-          desktopPadding: const EdgeInsets.all(24.0),
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(
-              color: colorScheme.outline.withOpacity(0.2),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: colorScheme.shadow.withOpacity(0.08),
-                spreadRadius: 0,
-                blurRadius: context.responsive(
-                  mobile: 8.0,
-                  tablet: 10.0,
-                  desktop: 12.0,
-                ),
-                offset: Offset(
-                    0,
-                    context.responsive(
-                      mobile: 2.0,
-                      tablet: 3.0,
-                      desktop: 4.0,
-                    )),
-              ),
-            ],
-          ),
-          child: recentEvents.isEmpty
-              ? Center(
-                  child: Text(
-                    'No recent events',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                )
-              : Column(
-                  children: recentEvents.take(4).map((event) {
-                    final name = event['name'] ?? 'Unknown Event';
-                    final date = event['date'] ?? '';
-                    final location = event['location'] ?? 'Unknown Location';
-                    final templateName =
-                        event['template_name'] ?? 'Unknown Template';
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: colorScheme.primary,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  name,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: colorScheme.onSurface,
-                                  ),
-                                ),
-                                Text(
-                                  '$location • $templateName',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Text(
-                            _formatDate(date),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTopCategories(List<Map<String, dynamic>> topCategories) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    final borderRadius = context.responsive(
-      mobile: 12.0,
-      tablet: 14.0,
-      desktop: 16.0,
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ResponsiveText(
-          'Top Categories',
-          mobileFontSize: 18.0,
-          tabletFontSize: 20.0,
-          desktopFontSize: 22.0,
-          fontWeight: FontWeight.bold,
-          color: colorScheme.primary,
-        ),
-        SizedBox(
-          height: context.responsive(
-            mobile: 12.0,
-            tablet: 16.0,
-            desktop: 20.0,
-          ),
-        ),
-        ResponsiveContainer(
-          mobilePadding: const EdgeInsets.all(16.0),
-          tabletPadding: const EdgeInsets.all(20.0),
-          desktopPadding: const EdgeInsets.all(24.0),
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(
-              color: colorScheme.outline.withOpacity(0.2),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: colorScheme.shadow.withOpacity(0.08),
-                spreadRadius: 0,
-                blurRadius: context.responsive(
-                  mobile: 8.0,
-                  tablet: 10.0,
-                  desktop: 12.0,
-                ),
-                offset: Offset(
-                    0,
-                    context.responsive(
-                      mobile: 2.0,
-                      tablet: 3.0,
-                      desktop: 4.0,
-                    )),
-              ),
-            ],
-          ),
-          child: topCategories.isEmpty
-              ? Center(
-                  child: Text(
-                    'No categories available',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                )
-              : Column(
-                  children: topCategories.map((category) {
-                    final name = category['category_name'] ?? 'Unknown';
-                    final itemCount = category['item_count'] ?? '0';
-                    final totalStock = category['total_stock'] ?? '0';
-
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            name,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                '$itemCount items',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: colorScheme.onSurface,
-                                ),
-                              ),
-                              Text(
-                                'Stock: $totalStock',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-        ),
-      ],
-    );
-  }
-
-  String _formatDate(String dateString) {
-    try {
-      final date = DateTime.parse(dateString);
-      return '${date.day}/${date.month}/${date.year}';
-    } catch (e) {
-      return 'Invalid Date';
-    }
-  }
 }

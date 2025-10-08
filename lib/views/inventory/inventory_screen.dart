@@ -516,6 +516,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
     required Function(String) onChanged,
     String? Function(String?)? validator,
     bool isOptional = true,
+    // required TextInputType txttype
   }) {
     // Parse the current value to extract size and unit
     String initialSizeValue = '';
@@ -548,9 +549,12 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               flex: 2,
               child: TextFormField(
                 initialValue: sizeValue,
+                // keyboardType: TextInputType.number,
+
                 onChanged: (newValue) {
                   setState(() {
-                    sizeValue = newValue;
+                    initialSizeValue = newValue;
+                    sizeValue = newValue; // ✅ Also update the local variable
                   });
                   final combinedValue =
                   newValue.isNotEmpty ? '$newValue $selectedUnit' : '';
@@ -593,8 +597,12 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                     setState(() {
                       selectedUnit = newValue;
                     });
+
+                    // Use the current text field value (sizeValue) which is now properly updated
+                    final numericPart = sizeValue.trim().split(' ').first;
                     final combinedValue =
-                    sizeValue.isNotEmpty ? '$sizeValue $selectedUnit' : '';
+                    numericPart.isNotEmpty ? '$numericPart $newValue' : newValue;
+
                     onChanged(combinedValue);
                     print('Dropdown → $combinedValue');
                   }
@@ -603,18 +611,18 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                   labelText: 'Unit',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                    BorderSide(color: Theme.of(context).colorScheme.outline),
+                    borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                    BorderSide(color: Theme.of(context).colorScheme.outline),
+                    borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                        color: Theme.of(context).colorScheme.primary, width: 2),
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 2,
+                    ),
                   ),
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.surface,
@@ -790,19 +798,14 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
           // 3. Size (combining width and length)
           _buildSizeField(
               label: "Size (e.g., 1x2)",
+              value: ref.watch(inventoryFormNotifierProvider).fabric.dimensions,
               onChanged: (value) {
                 // Parse the size input to extract width and length
-                final sizeParts = value.split('x');
-                if (sizeParts.length == 2) {
-                  final width = double.tryParse(sizeParts[0].trim());
-                  final length =
-                      double.tryParse(sizeParts[1].trim().split(' ')[0]);
-                  if (width != null && length != null) {
-                    ref
-                        .read(inventoryFormNotifierProvider.notifier)
-                        .updateFabricData(width: width, length: length);
-                  }
-                }
+
+                final value1 = value;
+                    ref.read(inventoryFormNotifierProvider.notifier)
+                        .updateFabricData(dimensions:value1);
+
               }),
           const SizedBox(height: 16),
           // 4. Total Stock
@@ -866,6 +869,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
           // 3. Dimensions
           _buildSizeField(
               label: "Dimensions (e.g., 1x2)",
+              value: ref.watch(inventoryFormNotifierProvider).frame.dimensions,
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
@@ -924,6 +928,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
           // 2. Size
           _buildSizeField(
               label: "Size (e.g., 4x3)",
+
               value: ref.watch(inventoryFormNotifierProvider).carpet.size,
               onChanged: (value) {
                 ref
@@ -984,6 +989,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
           // 2. Dimensions
           _buildSizeField(
               label: "Dimensions (e.g., 70x50x12)",
+              value: ref.watch(inventoryFormNotifierProvider).thermocol.dimensions,
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
@@ -1113,6 +1119,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
           // 2. Dimensions
           _buildSizeField(
               label: "Dimensions (e.g., 8x12)",
+              value: ref.watch(inventoryFormNotifierProvider).murti.dimensions,
               onChanged: (value) {
                 print('Murti dimensions changed: $value');
                 ref.read(inventoryFormNotifierProvider.notifier)
@@ -1721,9 +1728,10 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
         data['name'] = formState.fabric.name ?? 'Unknown';
         data['fabric_type'] = formState.fabric.type ?? 'Unknown';
         // Combine width and length into size field as per API specification
-        final width = formState.fabric.width ?? 0.0;
-        final length = formState.fabric.length ?? 0.0;
-        data['size'] = '${width}x${length} meters';
+
+        // data['size'] = '${width}x${length}';
+        data['size'] = formState.fabric.dimensions ?? '0x0 m';
+
         data['storage_location'] =
             formState.fabric.storageLocation ?? 'Unknown';
         data['notes'] = formState.fabric.notes ?? 'Fabric item';
@@ -1732,8 +1740,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
         data['category_details'] = {
           'fabric_type': formState.fabric.type ?? 'Unknown',
           'pattern': formState.fabric.pattern ?? 'Unknown',
-          'width': formState.fabric.width ?? 0.0,
-          'length': formState.fabric.length ?? 0.0,
+          'dimensions':formState.fabric.dimensions ?? '0x0 m',
           'color': formState.fabric.color ?? 'Unknown',
         };
         break;

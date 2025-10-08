@@ -1,12 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:photo_view/photo_view.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:http/http.dart' as http;
 import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:photo_view/photo_view.dart';
+import '../../../providers/api_provider.dart';
 import '../../../services/sharing_service.dart';
 
-class FullScreenImageViewer extends StatelessWidget {
+class FullScreenImageViewer extends ConsumerWidget {
   final String imageUrl;
   final String? title;
 
@@ -17,7 +16,8 @@ class FullScreenImageViewer extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final imageCache = ref.read(imageCacheServiceProvider);
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -38,39 +38,54 @@ class FullScreenImageViewer extends StatelessWidget {
           ),
         ],
       ),
-      body: PhotoView(
-        imageProvider: NetworkImage(imageUrl),
-        minScale: PhotoViewComputedScale.contained,
-        maxScale: PhotoViewComputedScale.covered * 2,
-        heroAttributes: PhotoViewHeroAttributes(tag: imageUrl),
-        backgroundDecoration: const BoxDecoration(
-          color: Colors.black,
-        ),
-        loadingBuilder: (context, event) => const Center(
-          child: CircularProgressIndicator(
-            color: Colors.white,
-          ),
-        ),
-        errorBuilder: (context, error, stackTrace) => const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
+      body: FutureBuilder<String?>(
+        future: imageCache.getCachedPath(imageUrl),
+        builder: (context, snapshot) {
+          final cachedPath = snapshot.data;
+          final ImageProvider provider;
+          if (cachedPath != null && File(cachedPath).existsSync()) {
+            provider = FileImage(File(cachedPath));
+          } else {
+            // Kick off background caching for next time
+            imageCache.ensureCached(imageUrl);
+            provider = NetworkImage(imageUrl);
+          }
+
+          return PhotoView(
+            imageProvider: provider,
+            minScale: PhotoViewComputedScale.contained,
+            maxScale: PhotoViewComputedScale.covered * 2,
+            heroAttributes: PhotoViewHeroAttributes(tag: imageUrl),
+            backgroundDecoration: const BoxDecoration(
+              color: Colors.black,
+            ),
+            loadingBuilder: (context, event) => const Center(
+              child: CircularProgressIndicator(
                 color: Colors.white,
-                size: 64,
               ),
-              SizedBox(height: 16),
-              Text(
-                'Failed to load image',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
+            ),
+            errorBuilder: (context, error, stackTrace) => const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    color: Colors.white,
+                    size: 64,
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Failed to load image',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }

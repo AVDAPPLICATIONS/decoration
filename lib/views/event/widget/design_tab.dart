@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:avd_decoration_application/widgets/cached_network_or_file_image.dart' as cnf;
 import 'dart:io';
 
 import '../../../themes/app_theme.dart';
@@ -192,36 +193,28 @@ class _DesignTabState extends State<DesignTab> {
   Widget _buildImageWidget(String imagePath) {
     // Check if it's a network URL
     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-      return Image.network(
-        imagePath,
+      return cnf.CachedNetworkOrFileImage(
+        imageUrl: imagePath,
         fit: BoxFit.fill,
-        width: double.infinity,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.grey.shade200,
-                  Colors.grey.shade100,
-                ],
-              ),
+        placeholder: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.grey.shade200,
+                Colors.grey.shade100,
+              ],
             ),
-            child: Center(
-              child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                        loadingProgress.expectedTotalBytes!
-                    : null,
-                color: AppColors.primary,
-                strokeWidth: 2,
-              ),
+          ),
+          child: Center(
+            child: CircularProgressIndicator(
+              color: AppColors.primary,
+              strokeWidth: 2,
             ),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) => Container(
+          ),
+        ),
+        errorWidget: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,

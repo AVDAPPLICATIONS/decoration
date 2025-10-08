@@ -95,8 +95,7 @@ class InventoryFormNotifier extends StateNotifier<InventoryFormState> {
     String? name,
     String? type,
     String? pattern,
-    double? width,
-    double? length,
+    String? dimensions,
     String? color,
     String? unit,
     String? storageLocation,
@@ -107,8 +106,7 @@ class InventoryFormNotifier extends StateNotifier<InventoryFormState> {
       name: name,
       type: type,
       pattern: pattern,
-      width: width,
-      length: length,
+      dimensions:dimensions,
       color: color,
       unit: unit,
       storageLocation: storageLocation,
@@ -116,6 +114,8 @@ class InventoryFormNotifier extends StateNotifier<InventoryFormState> {
       stock: stock,
     );
     state = state.copyWith(fabric: fabric);
+    print('  - furniture.dimensions: ${state.fabric.dimensions}');
+
   }
 
   void updateFrameData({
@@ -439,20 +439,19 @@ class FabricData {
   final String? name;
   final String? type;
   final String? pattern;
-  final double? width;
-  final double? length;
+  final String? dimensions;
   final String? color;
   final String? unit;
   final String? storageLocation;
   final String? notes;
   final double? stock;
 
+
   const FabricData({
     this.name,
     this.type,
     this.pattern,
-    this.width,
-    this.length,
+    this.dimensions,
     this.color,
     this.unit,
     this.storageLocation,
@@ -470,14 +469,12 @@ class FabricData {
     String? unit,
     String? storageLocation,
     String? notes,
-    double? stock,
+    double? stock, String? dimensions,
   }) {
     return FabricData(
       name: name ?? this.name,
       type: type ?? this.type,
-      pattern: pattern ?? this.pattern,
-      width: width ?? this.width,
-      length: length ?? this.length,
+      dimensions: dimensions ?? this.dimensions ,
       color: color ?? this.color,
       unit: unit ?? this.unit,
       storageLocation: storageLocation ?? this.storageLocation,

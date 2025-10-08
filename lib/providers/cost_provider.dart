@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:convert';
 import 'dart:io';
 import '../models/cost_model.dart';
 import '../services/cost_service.dart';
 import '../utils/constants.dart';
+import 'api_provider.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import '../data/repositories/cost_repository.dart';
 
 final costServiceProvider = Provider<CostService>(
   (ref) => CostService(apiBaseUrl),
@@ -16,21 +18,21 @@ final costProvider =
 
 class CostNotifier extends StateNotifier<List<CostModel>> {
   final Ref ref;
+  late final CostRepository _repo;
 
-  CostNotifier(this.ref) : super([]);
+  CostNotifier(this.ref) : super([]) {
+    final service = ref.read(costServiceProvider);
+    _repo = CostRepository(
+      service: service,
+      connectivity: Connectivity(),
+      offline: ref.read(offlineCacheProvider),
+    );
+  }
 
   Future<void> fetchCosts({required int eventId}) async {
     try {
-      final costService = ref.read(costServiceProvider);
-      final response = await costService.getEventCosts(eventId);
-
-      if (response['success'] == true && response['data'] != null) {
-        final List<dynamic> costData = jsonDecode(response['data']);
-        final costs = costData.map((json) => CostModel.fromJson(json)).toList();
-        state = costs;
-      } else {
-        state = [];
-      }
+      final costs = await _repo.getEventCosts(eventId);
+      state = costs;
     } catch (e) {
       state = [];
       // Handle error

@@ -775,7 +775,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
           child: Container(
             margin: const EdgeInsets.only(top: 15),
             decoration: BoxDecoration(
-              color: colorScheme.surface,
+              color: colorScheme.secondaryContainer,
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(28)),
               boxShadow: [
@@ -871,77 +871,77 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
     );
   }
 
-  Widget _buildSearchBar() {
-    final colorScheme = Theme.of(context).colorScheme;
+    Widget _buildSearchBar() {
+      final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: colorScheme.outline.withOpacity(0.3),
-          width: 1,
+      return Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: colorScheme.outline.withOpacity(0.3),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.shadow.withOpacity(0.04),
+              spreadRadius: 0,
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withOpacity(0.04),
-            spreadRadius: 0,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.search,
-            color: colorScheme.onSurfaceVariant,
-            size: 20,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
-              decoration: InputDecoration(
-                hintText: 'Search items, categories, materials, dimensions...',
-                hintStyle: TextStyle(
-                  color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+        child: Row(
+          children: [
+            Icon(
+              Icons.search,
+              color: colorScheme.onSurfaceVariant,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value;
+                  });
+                },
+                decoration: InputDecoration(
+                  hintText: 'Search items, categories, materials, dimensions...',
+                  hintStyle: TextStyle(
+                    color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+                    fontSize: 14,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                style: TextStyle(
+                  color: colorScheme.onSurface,
                   fontSize: 14,
                 ),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
-              ),
-              style: TextStyle(
-                color: colorScheme.onSurface,
-                fontSize: 14,
               ),
             ),
-          ),
-          if (_searchQuery.isNotEmpty)
-            GestureDetector(
-              onTap: () {
-                _searchController.clear();
-                setState(() {
-                  _searchQuery = '';
-                });
-              },
-              child: Icon(
-                Icons.clear,
-                color: colorScheme.onSurfaceVariant,
-                size: 20,
+            if (_searchQuery.isNotEmpty)
+              GestureDetector(
+                onTap: () {
+                  _searchController.clear();
+                  setState(() {
+                    _searchQuery = '';
+                  });
+                },
+                child: Icon(
+                  Icons.clear,
+                  color: colorScheme.onSurfaceVariant,
+                  size: 20,
+                ),
               ),
-            ),
-        ],
-      ),
-    );
-  }
+          ],
+        ),
+      );
+    }
 
   Widget _buildBody(List<InventoryItem> inventoryItems,
       InventoryNotifier inventoryNotifier, bool isAdmin) {
@@ -1003,10 +1003,10 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
             color: colorScheme.surface,
             boxShadow: [
               BoxShadow(
-                color: colorScheme.shadow.withOpacity(0.04),
+                color: colorScheme.shadow.withOpacity(0.1),
                 spreadRadius: 0,
-                blurRadius: 20,
-                offset: const Offset(0, 4),
+                blurRadius: 7,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
@@ -1283,9 +1283,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
         if (item.fabricType != null && item.fabricType!.isNotEmpty) {
           dimensionParts.add('Type: ${item.fabricType}');
         }
-        if (item.pattern != null && item.pattern!.isNotEmpty) {
-          dimensionParts.add('Pattern: ${item.pattern}');
-        }
+
         break;
       case 'Carpet':
         if (item.carpetType != null && item.carpetType!.isNotEmpty) {

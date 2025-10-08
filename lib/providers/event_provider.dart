@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/event_model.dart';
 import '../services/event_service.dart';
 import 'api_provider.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import '../data/repositories/event_repository.dart';
 
 final eventServiceProvider = Provider<EventService>((ref) {
   final api = ref.read(apiServiceProvider);
@@ -10,14 +12,20 @@ final eventServiceProvider = Provider<EventService>((ref) {
 
 final eventProvider = StateNotifierProvider<EventNotifier, List<EventModel>>((ref) {
   final service = ref.read(eventServiceProvider);
-  return EventNotifier(ref, service);
+  final repo = EventRepository(
+    service: service,
+    connectivity: Connectivity(),
+    offline: ref.read(offlineCacheProvider),
+  );
+  return EventNotifier(ref, service, repo);
 });
 
 class EventNotifier extends StateNotifier<List<EventModel>> {
   final Ref ref;
   final EventService service;
+  final EventRepository repo;
 
-  EventNotifier(this.ref, this.service) : super([]);
+  EventNotifier(this.ref, this.service, this.repo) : super([]);
 
   Future<void> fetchEvents() async {
     try {
@@ -30,7 +38,7 @@ class EventNotifier extends StateNotifier<List<EventModel>> {
 
   Future<List<EventModel>> getAllEvents() async {
     try {
-      final events = await service.getAllEvents();
+      final events = await repo.getAllEvents();
       return events;
     } catch (e) {
       print('Error fetching all events: $e');
@@ -40,7 +48,7 @@ class EventNotifier extends StateNotifier<List<EventModel>> {
 
   Future<List<EventModel>> fetchEventsByYear(int yearId) async {
     try {
-      final events = await service.fetchEventsByYear(yearId);
+      final events = await repo.fetchEventsByYear(yearId);
       return events;
     } catch (e) {
       print('Error fetching events by year: $e');

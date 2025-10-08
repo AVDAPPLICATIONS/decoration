@@ -6,7 +6,6 @@ import 'themes/app_theme.dart';
 import 'views/auth/login_screen.dart';
 import 'views/home/home_screen.dart';
 import 'views/splash/splash_screen.dart';
-import 'package:device_preview/device_preview.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized(); // ✅ Ensures all bindings are ready
@@ -15,19 +14,6 @@ void main() {
     const ProviderScope(child: MyApp()),
   );
 }
-// +qyqq
-// void main() {
-//   WidgetsFlutterBinding.ensureInitialized();
-//
-//   runApp(
-//     ProviderScope(
-//       child: DevicePreview(
-//         enabled: true, // Set to false to disable device preview
-//         builder: (context) => const MyApp(),
-//       ),
-//     ),
-//   );
-// }
 
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
@@ -39,12 +25,8 @@ class MyApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       themeMode: ThemeMode.light,
-      // Use named routes so screens like '/issue-item' resolve
       initialRoute: AppRoutes.splash,
       onGenerateRoute: AppRoutes.generateRoute,
-      // Fallback home in case someone navigates directly without routes
-      // Note: AppRoutes.splash will show SplashScreen, which then navigates
-      // based on auth state. Keeping home as AppRoot for backward compatibility
       home: const AppRoot(),
     );
   }
@@ -75,32 +57,27 @@ class _AppRootState extends ConsumerState<AppRoot> {
 
   @override
   Widget build(BuildContext context) {
-    // Show splash screen for initial 3 seconds
     if (_showSplash) {
       print('🔄 AppRoot: Showing initial splash screen');
       return const SplashScreen();
     }
 
-    // After splash, check authentication state
     final isAuthReady = ref.watch(authReadyProvider);
     final user = ref.watch(authProvider);
 
     print(
         '🔄 AppRoot: isAuthReady=$isAuthReady, user=${user?.username ?? 'null'}');
 
-    // If auth is not ready yet, show splash screen
     if (!isAuthReady) {
       print('🔄 AppRoot: Auth not ready, showing splash screen');
       return const SplashScreen();
     }
 
-    // If user is authenticated, show home screen with persistent navigation
     if (user != null) {
       print('🔄 AppRoot: User authenticated, showing home screen');
       return const HomeScreen();
     }
 
-    // If user is not authenticated, show login screen without persistent navigation
     print('🔄 AppRoot: User not authenticated, showing login screen');
     return const LoginScreen();
   }

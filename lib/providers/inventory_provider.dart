@@ -2,7 +2,11 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:typed_data';
 import '../services/inventory_service.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import '../data/repositories/inventory_repository.dart';
 import '../utils/constants.dart';
+import 'api_provider.dart';
+import '../data/repositories/offline_cache_repository.dart';
 
 class InventoryItem {
   final String id;
@@ -254,6 +258,7 @@ class InventoryItem {
 
 class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
   final InventoryService _inventoryService;
+  final InventoryRepository _repo;
   final List<Map<String, dynamic>> _issuedItems = [];
   List<Map<String, dynamic>> _categories = [];
   bool _isLoading = false;
@@ -264,7 +269,13 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  InventoryNotifier(this._inventoryService) : super([]) {
+  InventoryNotifier(Ref ref, this._inventoryService)
+      : _repo = InventoryRepository(
+          service: _inventoryService,
+          connectivity: Connectivity(),
+          offline: ref.read(offlineCacheProvider),
+        ),
+        super([]) {
     loadInventoryData();
   }
 
@@ -275,20 +286,12 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
 
     try {
       // Load both items and categories
-      final itemsResponse = await _inventoryService.getAllItems();
-      final categoriesResponse = await _inventoryService.getAllCategories();
+      final itemsResponse = await _repo.getAllItems();
+      final categoriesResponse = await _repo.getAllCategories();
 
-      if (itemsResponse['success'] == true) {
-        final itemsData = itemsResponse['data'] as List;
-        final items =
-            itemsData.map((item) => InventoryItem.fromMap(item)).toList();
-        state = items;
-      }
-
-      if (categoriesResponse['success'] == true) {
-        _categories =
-            List<Map<String, dynamic>>.from(categoriesResponse['data']);
-      }
+      final items = itemsResponse.map((m) => InventoryItem.fromMap(m)).toList();
+      state = items;
+      _categories = categoriesResponse;
 
       print('✅ Inventory data loaded successfully');
     } catch (e) {
@@ -318,20 +321,12 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
 
     try {
       // Load both items and categories
-      final itemsResponse = await _inventoryService.getAllItems();
-      final categoriesResponse = await _inventoryService.getAllCategories();
+      final itemsResponse = await _repo.getAllItems();
+      final categoriesResponse = await _repo.getAllCategories();
 
-      if (itemsResponse['success'] == true) {
-        final itemsData = itemsResponse['data'] as List;
-        final items =
-            itemsData.map((item) => InventoryItem.fromMap(item)).toList();
-        state = items;
-      }
-
-      if (categoriesResponse['success'] == true) {
-        _categories =
-            List<Map<String, dynamic>>.from(categoriesResponse['data']);
-      }
+      final items = itemsResponse.map((m) => InventoryItem.fromMap(m)).toList();
+      state = items;
+      _categories = categoriesResponse;
 
       print('✅ Inventory data silently refreshed successfully');
     } catch (e) {
@@ -1485,5 +1480,5 @@ final inventoryServiceProvider = Provider<InventoryService>((ref) {
 final inventoryProvider =
     StateNotifierProvider<InventoryNotifier, List<InventoryItem>>((ref) {
   final inventoryService = ref.read(inventoryServiceProvider);
-  return InventoryNotifier(inventoryService);
+  return InventoryNotifier(ref, inventoryService);
 });

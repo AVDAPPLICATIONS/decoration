@@ -217,7 +217,7 @@ class CustomAppBarWithLoading extends StatelessWidget implements PreferredSizeWi
     this.automaticallyImplyLeading = true,
     this.onBackPressed,
     this.backTooltip = 'Back',
-    this.showBackButton = true,
+    this.showBackButton = false,
     this.mobileFontSize = 20.0,
     this.tabletFontSize = 22.0,
     this.desktopFontSize = 24.0,

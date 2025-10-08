@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../views/auth/login_screen.dart';
 import '../views/dashboard/dashboard_screen.dart';
-import '../views/event/event_screen.dart';
+import '../views/event/eventTemplate/event_screen.dart';
 import '../views/event/years_screen.dart';
 import '../views/event/issue_item_screen.dart';
 import '../views/home/home_screen.dart';

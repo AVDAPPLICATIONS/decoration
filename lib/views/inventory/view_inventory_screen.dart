@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:avd_decoration_application/widgets/cached_network_or_file_image.dart' as cnf;
 import '../../providers/inventory_provider.dart';
 import '../../utils/responsive_utils.dart';
 import '../../utils/snackbar_manager.dart';
@@ -182,19 +183,21 @@ class _ViewInventoryPageState extends ConsumerState<ViewInventoryPage> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  ref.read(inventoryServiceProvider).getImageUrl(item.itemImage),
+                child: cnf.CachedNetworkOrFileImage(
+                  imageUrl: ref.read(inventoryServiceProvider).getImageUrl(item.itemImage),
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Theme.of(context).colorScheme.surface,
-                      child: Icon(
-                        Icons.image_not_supported_outlined,
-                        size: 48,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                      ),
-                    );
-                  },
+                  placeholder: Container(
+                    color: Theme.of(context).colorScheme.surface,
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
+                  errorWidget: Container(
+                    color: Theme.of(context).colorScheme.surface,
+                    child: Icon(
+                      Icons.image_not_supported_outlined,
+                      size: 48,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -287,7 +290,7 @@ class _ViewInventoryPageState extends ConsumerState<ViewInventoryPage> {
             ),
           ),
           decoration: BoxDecoration(
-            color: colorScheme.surface,
+            color: colorScheme.secondaryContainer,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             boxShadow: [
               BoxShadow(

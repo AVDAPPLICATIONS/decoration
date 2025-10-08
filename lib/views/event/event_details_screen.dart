@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:avd_decoration_application/widgets/cached_network_or_file_image.dart' as cnf;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
@@ -11,10 +12,8 @@ import 'package:intl/intl.dart';
 import '../../utils/constants.dart';
 import '../../utils/snackbar_manager.dart';
 import '../../services/gallery_service.dart';
-import '../../services/event_service.dart';
-import '../../services/api_service.dart';
-import '../../services/inventory_service.dart';
 import '../../providers/inventory_provider.dart';
+import '../../providers/event_repository_provider.dart';
 import 'widget/fullscreen_image_viewer.dart';
 import 'widget/add_cost_dialog.dart';
 import 'widget/pdf_viewer.dart';
@@ -109,8 +108,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
     });
 
     try {
-      final apiService = ApiService(apiBaseUrl);
-      final eventService = EventService(apiService);
+      final eventRepository = ref.read(eventRepositoryProvider);
 
       // Ensure template_id and year_id are integers
       final templateId = _currentEventData['template_id'] is int
@@ -124,12 +122,12 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
           'Refreshing event data - templateId: $templateId (${templateId.runtimeType}), yearId: $yearId (${yearId.runtimeType})');
 
       if (templateId != null && yearId != null) {
-        final eventDetails = await eventService.getEventDetails(
+        final eventDetails = await eventRepository.getEventDetails(
           templateId: templateId,
           yearId: yearId,
         );
 
-        if (eventDetails['success'] == true && eventDetails['data'] != null) {
+        if (eventDetails != null && eventDetails['success'] == true && eventDetails['data'] != null) {
           setState(() {
             _currentEventData = {
               'id': eventDetails['data']['event']['id'],
@@ -179,7 +177,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
       }
     }
 
-    final screenTitle = '$eventName ($eventYear)';
+    final screenTitle = '$eventName  $eventYear';
 
     return WillPopScope(
       onWillPop: () async {
@@ -200,68 +198,40 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
           ),
         ),
         backgroundColor: colorScheme.background,
+        // extendBodyBehindAppBar: true,
+
+        appBar: AppBar(
+          automaticallyImplyLeading: false, // ✅ removes back or close icon
+          backgroundColor: colorScheme.primary,
+          foregroundColor: colorScheme.onPrimary,
+          centerTitle: true,
+          title: Text(
+            screenTitle,
+            style: TextStyle(
+              color: colorScheme.onPrimary,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+
+
+
         body: Column(
           children: [
             // Status bar area
-            Container(
-              height: MediaQuery.of(context).padding.top,
-              color: colorScheme.primary,
-            ),
+            // Container(
+            //   height: MediaQuery.of(context).padding.top,
+            //   color: colorScheme.primary,
+            // ),
 
             // Header section
             Container(
               color: colorScheme.primary,
               child: Column(
-                children: [
-                  // Header with back button and title
-                  Container(
-                    height: 56,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: Icon(
-                            Icons.arrow_back,
-                            color: colorScheme.onPrimary,
-                            size: 24,
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            screenTitle,
-                            style: TextStyle(
-                              color: colorScheme.onPrimary,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        // Refresh button
-                        IconButton(
-                          onPressed: _refreshEventData,
-                          icon: _isRefreshing
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white),
-                                  ),
-                                )
-                              : Icon(
-                                  Icons.refresh,
-                                  color: colorScheme.onPrimary,
-                                  size: 24,
-                                ),
-                        ),
-                      ],
-                    ),
-                  ),
 
-                  // Main navigation tabs
+                children: [
+
                   Container(
                     color: colorScheme.primary,
                     child: TabBar(
@@ -409,19 +379,8 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         final data = snapshot.data!['data'];
         final issuancesByItem =
             data['issuances_by_item'] as List<dynamic>? ?? [];
-
-        // Debug: Print the entire data structure
-        print('🔍 Debug: Full data structure: $data');
-        print('🔍 Debug: issuances_by_item length: ${issuancesByItem.length}');
-        print('🔍 Debug: issuances_by_item: $issuancesByItem');
-
-        // Filter to show items that have been issued (have OUT transactions)
-        final issuedItems = issuancesByItem.where((itemGroup) {
+          final issuedItems = issuancesByItem.where((itemGroup) {
           final transactions = itemGroup['transactions'] as List<dynamic>;
-
-          // Debug: Print transaction details
-          print(
-              '🔍 Debug: Checking item group with ${transactions.length} transactions');
           for (var transaction in transactions) {
             print(
                 '  Transaction: type=${transaction['transaction_type']}, quantity_issued=${transaction['quantity_issued']}, quantity=${transaction['quantity']}');
@@ -530,6 +489,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
             // Inventory sub-tabs
             Container(
               color: colorScheme.surface,
+              // color: colorScheme.secondaryContainer,
               child: TabBar(
                 controller: _inventoryTabController,
                 indicatorColor: colorScheme.primary,
@@ -658,7 +618,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         });
 
         return Container(
-          color: Colors.white,
+          color: colorScheme.surfaceContainer,
           child: Column(
             children: [
               const SizedBox(width: 26),
@@ -1252,37 +1212,27 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
             Container(
               width: double.infinity,
               height: double.infinity,
-              child: Image.network(
-                fileUrl,
+              child: cnf.CachedNetworkOrFileImage(
+                imageUrl: fileUrl,
                 fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    color: Colors.grey[300],
-                    child: const Icon(
-                      Icons.image,
-                      size: 50,
-                      color: Colors.grey,
-                    ),
-                  );
-                },
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    color: Colors.grey[200],
-                    child: const Center(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
-                      ),
-                    ),
-                  );
-                },
+                placeholder: Container(
+                  width: double.infinity,
+                  height: double.infinity,
+                  color: Colors.grey[200],
+                  child: const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+                errorWidget: Container(
+                  width: double.infinity,
+                  height: double.infinity,
+                  color: Colors.grey[300],
+                  child: const Icon(
+                    Icons.image,
+                    size: 50,
+                    color: Colors.grey,
+                  ),
+                ),
               ),
             ),
             // File type indicator in top-right corner
@@ -1538,16 +1488,14 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
                     child: itemInfo['item_image'] != null
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: Image.network(
-                              '${apiBaseUrl}${itemInfo['item_image']}',
+                            child: cnf.CachedNetworkOrFileImage(
+                              imageUrl: '${apiBaseUrl}${itemInfo['item_image']}',
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Icon(
-                                  Icons.inventory_2,
-                                  color: Colors.grey[400],
-                                  size: 24,
-                                );
-                              },
+                              errorWidget: Icon(
+                                Icons.inventory_2,
+                                color: Colors.grey[400],
+                                size: 24,
+                              ),
                             ),
                           )
                         : Icon(
@@ -1778,15 +1726,14 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        '${apiBaseUrl}${itemInfo['item_image']}',
+                      child: cnf.CachedNetworkOrFileImage(
+                        imageUrl: '${apiBaseUrl}${itemInfo['item_image']}',
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Icon(
-                            Icons.inventory_2,
-                            color: Colors.grey[400],
-                          );
-                        },
+                        errorWidget: Icon(
+                          Icons.inventory_2,
+                          color: Colors.grey[400],
+                          size: 24,
+                        ),
                       ),
                     ),
                   )
@@ -2420,7 +2367,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         if (direction == DismissDirection.startToEnd) {
           // Swiped from left → right (Edit)
           _editCost(costMap);
-          return false; // Don’t actually dismiss, just trigger edit
+          return false; // Don't actually dismiss, just trigger edit
         } else if (direction == DismissDirection.endToStart) {
           // Swiped from right → left (Delete)
           final confirm = await _showDeleteCostDialog(costMap['id']);
