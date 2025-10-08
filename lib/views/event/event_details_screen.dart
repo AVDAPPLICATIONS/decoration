@@ -207,6 +207,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
           centerTitle: true,
           title: Text(
             screenTitle,
+            softWrap: true,
             style: TextStyle(
               color: colorScheme.onPrimary,
               fontSize: 20,
@@ -2153,6 +2154,10 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
           setState(() {
             _inventoryRefreshKey++;
           });
+        },
+        'onNavigateToMaterialTab': () {
+          // Switch to material tab (index 0)
+          _mainTabController.animateTo(0);
         },
       },
     );

@@ -64,6 +64,7 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
 
   PreferredSizeWidget _buildResponsiveAppBar(ColorScheme colorScheme) {
     return CustomAppBarWithLoading(
+      automaticallyImplyLeading: false,
       title: widget.templateName != null
           ? '${widget.templateName}'
           : 'Years Management',

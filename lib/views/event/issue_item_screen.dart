@@ -8,11 +8,13 @@ import '../../utils/constants.dart';
 class IssueItemScreen extends ConsumerStatefulWidget {
   final int eventId;
   final VoidCallback onItemIssued;
+  final VoidCallback? onNavigateToMaterialTab;
 
   const IssueItemScreen({
     super.key,
     required this.eventId,
     required this.onItemIssued,
+    this.onNavigateToMaterialTab,
   });
 
   @override
@@ -24,9 +26,10 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
   String _selectedCategory = 'All';
-  String _selectedMaterial = 'All';
+  String _selectedItemName = 'All';
   bool _isSubmitting = false;
-  bool _groupByMaterial = false;
+  bool _isSearchVisible = false;
+  String _searchQuery = '';
   List<Map<String, dynamic>> _availableItems = [];
   List<Map<String, dynamic>> _filteredItems = [];
   bool _isLoading = true;
@@ -96,22 +99,6 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
   List<Map<String, dynamic>> _getFilteredItems() {
     var filtered = List<Map<String, dynamic>>.from(_availableItems);
 
-    // Filter by search term (includes name, category, material, and size)
-    if (_searchController.text.isNotEmpty) {
-      filtered = filtered.where((item) {
-        final name = item['name']?.toString().toLowerCase() ?? '';
-        final category = _itemCategory(item)?.toLowerCase() ?? '';
-        final material = _itemMaterial(item)?.toLowerCase() ?? '';
-        final size = _dimensions(item).toLowerCase();
-        final searchTerm = _searchController.text.toLowerCase();
-        
-        return name.contains(searchTerm) ||
-               category.contains(searchTerm) ||
-               material.contains(searchTerm) ||
-               size.contains(searchTerm);
-      }).toList();
-    }
-
     // Filter by category
     if (_selectedCategory != 'All') {
       filtered = filtered.where((item) {
@@ -120,11 +107,28 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
       }).toList();
     }
 
-    // Filter by material
-    if (_selectedMaterial != 'All') {
+    // Filter by item name (only if category is selected and item name is not 'All')
+    if (_selectedCategory != 'All' && _selectedItemName != 'All') {
       filtered = filtered.where((item) {
-        final mat = _itemMaterial(item);
-        return mat == _selectedMaterial;
+        final name = item['name']?.toString().trim().toLowerCase() ?? '';
+        return name == _selectedItemName.trim().toLowerCase();
+      }).toList();
+    }
+
+    // Filter by search query
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((item) {
+        final name = item['name']?.toString().toLowerCase() ?? '';
+        final category = _itemCategory(item)?.toLowerCase() ?? '';
+        final material = _itemMaterial(item)?.toLowerCase() ?? '';
+        final size = _dimensions(item).toLowerCase();
+        final location = _location(item).toLowerCase();
+        
+        return name.contains(_searchQuery.toLowerCase()) ||
+               category.contains(_searchQuery.toLowerCase()) ||
+               material.contains(_searchQuery.toLowerCase()) ||
+               size.contains(_searchQuery.toLowerCase()) ||
+               location.contains(_searchQuery.toLowerCase());
       }).toList();
     }
 
@@ -545,38 +549,48 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
     return ['All', ...categories];
   }
 
-  List<String> _getMaterials() {
-    final materials = _availableItems
-        .map((item) => _itemMaterial(item))
-        .where((name) => name != null && name.trim().isNotEmpty)
-        .map((name) => name!)
-        .toSet()
-        .toList();
-    materials.sort();
-    return ['All', ...materials];
+  // Get item names within a specific category (only items with same names that appear more than once)
+  List<String> _getItemNamesInCategory(String category) {
+    if (category == 'All') {
+      // For 'All' category, get all item names that appear more than once across all categories
+      final nameCounts = <String, int>{};
+      for (final item in _availableItems) {
+        final name = item['name']?.toString() ?? '';
+        if (name.isNotEmpty) {
+          nameCounts[name] = (nameCounts[name] ?? 0) + 1;
+        }
+      }
+      final duplicateNames = nameCounts.entries
+          .where((entry) => entry.value > 1)
+          .map((entry) => entry.key)
+          .toList();
+      duplicateNames.sort();
+      return ['All', ...duplicateNames];
+    } else {
+      // For specific category, get item names that appear more than once in that category
+      final categoryItems = _availableItems
+          .where((item) => _itemCategory(item) == category)
+          .toList();
+
+      final nameCounts = <String, int>{};
+      for (final item in categoryItems) {
+        final name = item['name']?.toString().trim() ?? '';
+        if (name.isNotEmpty) {
+          final normalizedName = name.toLowerCase();
+          nameCounts[normalizedName] = (nameCounts[normalizedName] ?? 0) + 1;
+        }
+      }
+
+      final duplicateNames = nameCounts.entries
+          .where((entry) => entry.value > 1)
+          .map((entry) => entry.key)
+          .toList();
+      duplicateNames.sort();
+
+      return ['All', ...duplicateNames];
+    }
   }
 
-  // Group items by material
-  Map<String, List<Map<String, dynamic>>> _groupItemsByMaterial(List<Map<String, dynamic>> items) {
-    final Map<String, List<Map<String, dynamic>>> grouped = {};
-    
-    for (final item in items) {
-      final material = _itemMaterial(item) ?? 'Unknown Material';
-      if (!grouped.containsKey(material)) {
-        grouped[material] = [];
-      }
-      grouped[material]!.add(item);
-    }
-    
-    // Sort materials alphabetically
-    final sortedKeys = grouped.keys.toList()..sort();
-    final sortedGrouped = <String, List<Map<String, dynamic>>>{};
-    for (final key in sortedKeys) {
-      sortedGrouped[key] = grouped[key]!;
-    }
-    
-    return sortedGrouped;
-  }
 
 
   Future<void> _issueItem(Map<String, dynamic> item) async {
@@ -586,7 +600,7 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
       return;
     }
 
-    if (quantity > (item['available_quantity'] ?? 0)) {
+    if (quantity > _availableQuantity(item)) {
       SnackBarManager.showError(context: context, message: 'Insufficient quantity available');
       return;
     }
@@ -606,7 +620,14 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
 
       SnackBarManager.showSuccess(context: context, message: 'Item issued successfully');
       widget.onItemIssued();
+      
+      // Navigate back and switch to material tab
       Navigator.pop(context);
+      
+      // Call the callback to switch to material tab if provided
+      if (widget.onNavigateToMaterialTab != null) {
+        widget.onNavigateToMaterialTab!();
+      }
     } catch (e) {
       SnackBarManager.showError(context: context, message: 'Failed to issue item: $e');
     } finally {
@@ -622,13 +643,11 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false, // ✅ hides the back button
-
+        automaticallyImplyLeading: false,
         backgroundColor: colorScheme.primary,
         elevation: 0,
         shadowColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
-
         title: Text(
           'Issue Item',
           style: TextStyle(
@@ -638,245 +657,44 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
           ),
         ),
         centerTitle: true,
-
-      ),
-      body: Column(
-        children: [
-          // Search and Filter Container
-          Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: colorScheme.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: colorScheme.outline.withOpacity(0.2),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: colorScheme.shadow.withOpacity(0.05),
-                  spreadRadius: 0,
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                Row(
-                  children: [
-                    Icon(
-                      Icons.filter_list,
-                      color: colorScheme.primary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Search & Filter',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    const Spacer(),
-                    // Clear Filters Button
-                    TextButton.icon(
+        actions: [
+          IconButton(
                       onPressed: () {
                         setState(() {
-                          _selectedCategory = 'All';
-                          _selectedMaterial = 'All';
+                _isSearchVisible = !_isSearchVisible;
+                if (!_isSearchVisible) {
                           _searchController.clear();
+                  _searchQuery = '';
                           _filteredItems = _getFilteredItems();
+                }
                         });
                       },
-                      icon: const Icon(Icons.clear_all, size: 16),
-                      label: const Text('Clear'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: colorScheme.primary,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                
-                // Group by Material Toggle
-                Row(
-                  children: [
-                    Icon(
-                      Icons.group_work,
-                      color: colorScheme.primary,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Group by Material',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    const Spacer(),
-                    Switch(
-                      value: _groupByMaterial,
-                      onChanged: (value) {
-                        setState(() {
-                          _groupByMaterial = value;
-                        });
-                      },
-                      activeColor: colorScheme.primary,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                
-                // Search Bar
-                TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Search by name, category, material, or size...',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: colorScheme.outline.withOpacity(0.3),
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: colorScheme.outline.withOpacity(0.3),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: colorScheme.primary,
-                        width: 2,
-                      ),
-                    ),
-                    filled: true,
-                    fillColor: colorScheme.surface,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      _filteredItems = _getFilteredItems();
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
-                
-                // Filter Row
-                Row(
-                  children: [
-                    // Category Filter
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedCategory,
-                        decoration: InputDecoration(
-                          labelText: 'Category',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: colorScheme.outline.withOpacity(0.3),
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: colorScheme.outline.withOpacity(0.3),
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: colorScheme.primary,
-                              width: 2,
-                            ),
-                          ),
-                          filled: true,
-                          fillColor: colorScheme.surface,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                        isExpanded: true, // ✅ makes dropdown stretch inside available width
-                        items: _getCategories().map((category) {
-                          return DropdownMenuItem(
-                            value: category,
-                            child: Text(
-                              category,
-                              overflow: TextOverflow.ellipsis,
-                              softWrap: false,
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedCategory = value!;
-                            _filteredItems = _getFilteredItems();
-                          });
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    
-                    // Material Filter
-                    Flexible(
-                      flex: 1,
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedMaterial,
-                        decoration: InputDecoration(
-                          labelText: 'Material',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: colorScheme.outline.withOpacity(0.3),
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: colorScheme.outline.withOpacity(0.3),
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: colorScheme.primary,
-                              width: 2,
-                            ),
-                          ),
-                          filled: true,
-                          fillColor: colorScheme.surface,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                        items: _getMaterials().map((material) {
-                          return DropdownMenuItem(
-                            value: material,
-                            child: Text(
-                              material,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedMaterial = value!;
-                            _filteredItems = _getFilteredItems();
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+            icon: Icon(
+              _isSearchVisible ? Icons.search_off : Icons.search,
+              color: colorScheme.onPrimary,
             ),
+            tooltip: _isSearchVisible ? 'Hide Search' : 'Search',
           ),
+          IconButton(
+            onPressed: () {
+              _showFilterBottomSheet(context);
+            },
+            icon: Icon(
+              Icons.filter_list,
+              color: colorScheme.onPrimary,
+            ),
+            tooltip: 'Filter',
+                    ),
+                  ],
+                ),
+      body: Column(
+        children: [
+          // Search Bar
+          if (_isSearchVisible) _buildSearchBar(colorScheme),
+          
+          // Filter Status
+          if (_selectedCategory != 'All' || _selectedItemName != 'All' || _searchQuery.isNotEmpty)
+            _buildFilterStatus(colorScheme),
 
           // Items List
           Expanded(
@@ -886,16 +704,16 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
+                  children: [
+                    Icon(
                               Icons.inventory_2_outlined,
                               size: 64,
                               color: Colors.grey[400],
                             ),
                             const SizedBox(height: 16),
-                            Text(
+                    Text(
                               'No items found',
-                              style: TextStyle(
+                      style: TextStyle(
                                 fontSize: 18,
                                 color: Colors.grey[600],
                               ),
@@ -910,94 +728,379 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
                           ],
                         ),
                       )
-                    : _groupByMaterial
-                        ? _buildGroupedListView(colorScheme)
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: _filteredItems.length,
-                            itemBuilder: (context, index) {
-                              final item = _filteredItems[index];
-                              return _buildItemCard(item, colorScheme);
-                            },
-                          ),
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _filteredItems.length,
+                        itemBuilder: (context, index) {
+                          final item = _filteredItems[index];
+                          return _buildItemCard(item, colorScheme);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+    );
+  }
+
+
+  Widget _buildSearchBar(ColorScheme colorScheme) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: colorScheme.outline.withOpacity(0.3),
+        ),
+      ),
+      child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search by name, category, material, or size...',
+                    prefixIcon: const Icon(Icons.search),
+          border: InputBorder.none,
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  onPressed: () {
+                    _searchController.clear();
+                  },
+                  icon: const Icon(Icons.clear),
+                )
+              : null,
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+            _searchQuery = value;
+                      _filteredItems = _getFilteredItems();
+                    });
+                  },
+                ),
+    );
+  }
+
+  Widget _buildFilterStatus(ColorScheme colorScheme) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: colorScheme.primary.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.filter_list,
+            color: colorScheme.primary,
+            size: 16,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              () {
+                final filteredItems = _getFilteredItems();
+                String status = 'Showing ${filteredItems.length} of ${_availableItems.length} items';
+                if (_selectedCategory != 'All') {
+                  status += ' in $_selectedCategory';
+                }
+                if (_selectedItemName != 'All') {
+                  status += ' (filtered by "$_selectedItemName")';
+                }
+                if (_searchQuery.isNotEmpty) {
+                  status += ' (search: "$_searchQuery")';
+                }
+                return status;
+              }(),
+              style: TextStyle(
+                fontSize: 12,
+                              color: colorScheme.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+                          setState(() {
+                _selectedCategory = 'All';
+                _selectedItemName = 'All';
+                _searchQuery = '';
+                _searchController.clear();
+                            _filteredItems = _getFilteredItems();
+                          });
+                        },
+            child: Icon(
+              Icons.clear,
+              color: colorScheme.primary,
+              size: 16,
+            ),
           ),
         ],
       ),
     );
   }
 
+  void _showFilterBottomSheet(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
 
-  Widget _buildGroupedListView(ColorScheme colorScheme) {
-    final groupedItems = _groupItemsByMaterial(_filteredItems);
-    
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: groupedItems.length,
-      itemBuilder: (context, groupIndex) {
-        final materialName = groupedItems.keys.elementAt(groupIndex);
-        final items = groupedItems[materialName]!;
-        
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Material Header
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              margin: const EdgeInsets.only(bottom: 8),
+    showDialog(
+      context: context,
+      useRootNavigator: true,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Material(
+          color: Colors.transparent,
+          child: GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: Container(
+              height: MediaQuery.of(context).size.height,
+              width: MediaQuery.of(context).size.width,
               decoration: BoxDecoration(
-                color: colorScheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: colorScheme.primary.withOpacity(0.3),
-                  width: 1,
+                color: colorScheme.surface,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
                 ),
               ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.category,
-                    color: colorScheme.primary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    materialName,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.primary,
-                    ),
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${items.length}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onPrimary,
+              child: GestureDetector(
+                onTap: () {},
+                child: Column(
+                  children: [
+                    // Handle bar
+                    Container(
+                      margin: const EdgeInsets.only(top: 12),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: colorScheme.onSurfaceVariant.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
+
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Filter Options',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: Icon(
+                              Icons.close,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                ),
+              ],
+            ),
+          ),
+
+                    // Filter content
+          Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Category Filter Section
+                            Text(
+                              'Filter by Category',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: _getCategories().map((category) {
+                                final isSelected = _selectedCategory == category;
+                                return FilterChip(
+                                  label: Text(
+                                    category,
+                              style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: isSelected
+                                          ? colorScheme.onPrimary
+                                          : colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  selected: isSelected,
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      _selectedCategory = category;
+                                      _selectedItemName = 'All';
+                                    });
+                                    setModalState(() {});
+                                  },
+                                  backgroundColor: colorScheme.surfaceVariant,
+                                  selectedColor: colorScheme.primary,
+                                  checkmarkColor: colorScheme.onPrimary,
+                                  side: BorderSide(
+                                    color: isSelected
+                                        ? colorScheme.primary
+                                        : colorScheme.outline,
+                                    width: 1,
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+
+                            const SizedBox(height: 24),
+
+                            // Item Name Filter Section (only show if category is selected)
+                            if (_selectedCategory != 'All') ...[
+                              Text(
+                                'Filter by Item Name (${_selectedCategory})',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Builder(
+                                builder: (context) {
+                                  final itemNames = _getItemNamesInCategory(_selectedCategory);
+
+                                  if (itemNames.isEmpty) {
+                                    return Container(
+                                      padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                                          SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                    color: colorScheme.primary,
                   ),
-                ],
+                                          ),
+                                          const SizedBox(width: 12),
+                  Text(
+                                            'Loading item names...',
+                    style: TextStyle(
+                                              fontSize: 14,
+                                              color: colorScheme.onSurfaceVariant,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+
+                                  if (itemNames.length <= 1) {
+                                    return Container(
+                                      padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                                        color: colorScheme.surfaceVariant.withOpacity(0.3),
+                                        borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                                        'No duplicate item names found in $_selectedCategory',
+                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    );
+                                  }
+
+                                  return Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: itemNames.map((itemName) {
+                                      final isSelected = _selectedItemName == itemName;
+                                      return FilterChip(
+                                        label: Text(
+                                          itemName,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                            color: isSelected
+                                                ? colorScheme.onPrimary
+                                                : colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                        selected: isSelected,
+                                        onSelected: (selected) {
+                                          setState(() {
+                                            _selectedItemName = itemName;
+                                          });
+                                          setModalState(() {});
+                                        },
+                                        backgroundColor: colorScheme.surfaceVariant,
+                                        selectedColor: colorScheme.primary,
+                                        checkmarkColor: colorScheme.onPrimary,
+                                        side: BorderSide(
+                                          color: isSelected
+                                              ? colorScheme.primary
+                                              : colorScheme.outline,
+                                          width: 1,
+                                        ),
+                                      );
+                                    }).toList(),
+                                  );
+                                },
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Action buttons
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                setState(() {
+                                  _selectedCategory = 'All';
+                                  _selectedItemName = 'All';
+                                });
+                                setModalState(() {});
+                              },
+                              child: const Text('Clear All'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  _filteredItems = _getFilteredItems();
+                                });
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text('Apply Filters'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            
-            // Items in this material group
-            ...items.map((item) => _buildItemCard(item, colorScheme)).toList(),
-            
-            // Spacing between groups
-            if (groupIndex < groupedItems.length - 1)
-              const SizedBox(height: 16),
-          ],
-        );
-      },
+          ),
+        ),
+      ),
     );
   }
 
@@ -1039,7 +1142,12 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: _isSubmitting ? null : () => _issueItem(item),
+            onPressed: _isSubmitting ? null : () {
+              // print(item);
+              _issueItem(item);
+              // Navigator.pop(context);
+              _loadAvailableItems();
+            },
             child: _isSubmitting
                 ? const SizedBox(
                     width: 16,

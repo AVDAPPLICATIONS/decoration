@@ -89,6 +89,7 @@ class AppRoutes {
         final args = settings.arguments as Map<String, dynamic>?;
         final eventId = args?['eventId'] as int?;
         final onItemIssued = args?['onItemIssued'] as VoidCallback?;
+        final onNavigateToMaterialTab = args?['onNavigateToMaterialTab'] as VoidCallback?;
         if (eventId == null) {
           return MaterialPageRoute(builder: (_) => const HomeScreen());
         }
@@ -96,6 +97,7 @@ class AppRoutes {
           builder: (_) => IssueItemScreen(
             eventId: eventId,
             onItemIssued: onItemIssued ?? () {},
+            onNavigateToMaterialTab: onNavigateToMaterialTab,
           ),
         );
 
