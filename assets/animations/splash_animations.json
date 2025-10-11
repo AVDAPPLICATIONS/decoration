@@ -1,0 +1,129 @@
+{
+  "splash_animations": {
+    "version": "1.0.0",
+    "duration": 3.0,
+    "sequences": [
+      {
+        "name": "logo_entrance",
+        "start_time": 0.0,
+        "duration": 1.5,
+        "type": "scale_rotation",
+        "properties": {
+          "scale": {
+            "from": 0.3,
+            "to": 1.0,
+            "easing": "ease_out_cubic"
+          },
+          "rotation": {
+            "from": 0,
+            "to": 360,
+            "easing": "ease_in_out_cubic"
+          },
+          "opacity": {
+            "from": 0.0,
+            "to": 1.0,
+            "easing": "ease_out"
+          }
+        }
+      },
+      {
+        "name": "logo_pulse",
+        "start_time": 1.5,
+        "duration": 1.5,
+        "type": "pulse",
+        "properties": {
+          "scale": {
+            "from": 1.0,
+            "to": 1.1,
+            "easing": "ease_in_out_sine",
+            "repeat": "infinite",
+            "reverse": true
+          }
+        }
+      },
+      {
+        "name": "text_slide",
+        "start_time": 1.0,
+        "duration": 1.0,
+        "type": "slide_fade",
+        "properties": {
+          "translate_y": {
+            "from": 50,
+            "to": 0,
+            "easing": "ease_out_back"
+          },
+          "opacity": {
+            "from": 0.0,
+            "to": 1.0,
+            "easing": "ease_out"
+          }
+        }
+      },
+      {
+        "name": "background_gradient",
+        "start_time": 0.0,
+        "duration": 3.0,
+        "type": "gradient_shift",
+        "properties": {
+          "colors": [
+            "#FF6B35",
+            "#F7931E",
+            "#FF6B35"
+          ],
+          "stops": [0.0, 0.5, 1.0],
+          "easing": "ease_in_out_sine"
+        }
+      },
+      {
+        "name": "loading_indicator",
+        "start_time": 2.0,
+        "duration": 1.0,
+        "type": "fade_in",
+        "properties": {
+          "opacity": {
+            "from": 0.0,
+            "to": 1.0,
+            "easing": "ease_out"
+          }
+        }
+      }
+    ],
+    "effects": {
+      "glow": {
+        "enabled": true,
+        "color": "#FFFFFF",
+        "blur_radius": 20,
+        "spread_radius": 5,
+        "opacity": 0.3
+      },
+      "shadow": {
+        "enabled": true,
+        "color": "#000000",
+        "blur_radius": 10,
+        "spread_radius": 2,
+        "opacity": 0.2,
+        "offset": {
+          "x": 0,
+          "y": 4
+        }
+      },
+      "particles": {
+        "enabled": true,
+        "count": 20,
+        "color": "#FFFFFF",
+        "opacity": 0.6,
+        "size": 2.0,
+        "speed": 1.0,
+        "direction": "upward"
+      }
+    },
+    "timing": {
+      "logo_scale_delay": 0.0,
+      "logo_rotation_delay": 0.0,
+      "text_slide_delay": 1.0,
+      "pulse_start_delay": 1.5,
+      "loading_delay": 2.0,
+      "total_duration": 3.0
+    }
+  }
+}

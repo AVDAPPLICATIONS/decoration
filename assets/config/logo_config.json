@@ -1,0 +1,115 @@
+{
+  "logo": {
+    "name": "HARIPRABODHAM SEVA BHAKTI",
+    "version": "1.0.0",
+    "description": "Spiritual organization logo with temple architecture and devotees",
+    "colors": {
+      "primary": "#FF6B35",
+      "secondary": "#F7931E", 
+      "accent": "#CC0000",
+      "background": "#FFFFFF",
+      "text_primary": "#CC0000",
+      "text_secondary": "#F7931E"
+    },
+    "dimensions": {
+      "width": 400,
+      "height": 400,
+      "aspect_ratio": "1:1"
+    },
+    "elements": {
+      "central_figures": {
+        "larger_figure": {
+          "color": "#F7931E",
+          "position": "center_back",
+          "description": "Main spiritual leader silhouette"
+        },
+        "smaller_figure": {
+          "color": "#FF6B35", 
+          "position": "center_front",
+          "description": "Devotee silhouette"
+        }
+      },
+      "temple_architecture": {
+        "spires": {
+          "count": 5,
+          "color": "#FF6B35",
+          "arrangement": "symmetrical_tiered",
+          "flags": {
+            "color": "#FF6B35",
+            "animation": "waving"
+          }
+        }
+      },
+      "base_elements": {
+        "upper_wave": {
+          "color": "#FF6B35",
+          "shape": "curved_upward"
+        },
+        "lower_wave": {
+          "color": "#F7931E",
+          "shape": "curved_extended"
+        }
+      },
+      "text_elements": {
+        "primary_text": {
+          "content": "HARIPRABODHAM",
+          "color": "#CC0000",
+          "font_weight": "bold",
+          "font_style": "serif"
+        },
+        "secondary_text": {
+          "content": "SEVA BHAKTI", 
+          "color": "#F7931E",
+          "font_weight": "normal",
+          "font_style": "sans_serif"
+        }
+      }
+    },
+    "animations": {
+      "entrance": {
+        "duration": 2.0,
+        "type": "fade_in_scale",
+        "easing": "ease_out_cubic"
+      },
+      "logo_rotation": {
+        "duration": 1.5,
+        "type": "rotation_360",
+        "easing": "ease_in_out_cubic"
+      },
+      "text_slide": {
+        "duration": 1.0,
+        "type": "slide_up_fade",
+        "delay": 1.0,
+        "easing": "ease_out_back"
+      },
+      "pulse_effect": {
+        "duration": 2.0,
+        "type": "scale_pulse",
+        "repeat": "infinite",
+        "easing": "ease_in_out_sine"
+      }
+    },
+    "splash_screen": {
+      "background_gradient": {
+        "start_color": "#FF6B35",
+        "end_color": "#F7931E",
+        "direction": "radial"
+      },
+      "logo_scale": {
+        "initial": 0.3,
+        "final": 1.0,
+        "duration": 1.5
+      },
+      "text_animation": {
+        "delay": 1.0,
+        "duration": 1.0,
+        "type": "typewriter"
+      },
+      "loading_indicator": {
+        "color": "#FFFFFF",
+        "size": "medium",
+        "type": "circular_progress"
+      }
+    }
+  }
+}

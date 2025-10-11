@@ -61,9 +61,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         'year_id: ${_currentEventData['year_id']} (${_currentEventData['year_id'].runtimeType})');
 
     // Hide all system UI to create true full-screen experience
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.immersiveSticky,
-    );
 
     _mainTabController.addListener(() {
       setState(() {
@@ -75,11 +72,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
   @override
   void dispose() {
     // Restore system UI when leaving the screen
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.manual,
-      overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
-    );
-
     _mainTabController.dispose();
     _subTabController.dispose();
     _inventoryTabController.dispose();
@@ -179,135 +171,118 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
 
     final screenTitle = '$eventName  $eventYear';
 
-    return WillPopScope(
-      onWillPop: () async {
-        // Restore system UI before popping
-        SystemChrome.setEnabledSystemUIMode(
-          SystemUiMode.manual,
-          overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
-        );
-        return true;
-      },
-      child: Scaffold(
-        floatingActionButton: FloatingActionButton(
-          onPressed: _handleFabAction,
-          backgroundColor: colorScheme.primary,
-          child: Icon(
-            Icons.add,
-            color: colorScheme.onPrimary,
-          ),
+    return Scaffold(
+      
+      floatingActionButton: FloatingActionButton(
+        onPressed: _handleFabAction,
+        backgroundColor: colorScheme.primary,
+        child: Icon(
+          Icons.add,
+          color: colorScheme.onPrimary,
         ),
-        backgroundColor: colorScheme.background,
-        // extendBodyBehindAppBar: true,
-
-        appBar: AppBar(
-          automaticallyImplyLeading: false, // ✅ removes back or close icon
-          backgroundColor: colorScheme.primary,
-          foregroundColor: colorScheme.onPrimary,
-          centerTitle: true,
-          title: Text(
-            screenTitle,
-            softWrap: true,
-            style: TextStyle(
-              color: colorScheme.onPrimary,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+      ),
+      backgroundColor: colorScheme.background,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        toolbarHeight: kToolbarHeight + MediaQuery.of(context).padding.top,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            color: colorScheme.primary,
+          ),
+          child: SafeArea(
+            child: Center(
+              child: Text(
+                screenTitle,
+                softWrap: true,
+                style: TextStyle(
+                  color: colorScheme.onPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
         ),
+      ),
 
 
 
-        body: Column(
-          children: [
-            // Status bar area
-            // Container(
-            //   height: MediaQuery.of(context).padding.top,
-            //   color: colorScheme.primary,
-            // ),
+      body: Column(
+        children: [
+          // Header section with tabs
+          Container(
+            color: colorScheme.primary,
+            child: TabBar(
+              controller: _mainTabController,
+              indicatorColor: colorScheme.onPrimary,
+              indicatorWeight: 3,
+              indicatorSize: TabBarIndicatorSize.label,
+              labelColor: colorScheme.onPrimary,
+              unselectedLabelColor:
+                  colorScheme.onPrimary.withOpacity(0.6),
+              labelStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+              ),
+              tabs: const [
+                Tab(text: 'Inventory'),
+                Tab(text: 'Design'),
+                Tab(text: 'Cost'),
+              ],
+            ),
+          ),
 
-            // Header section
-            Container(
-              color: colorScheme.primary,
-              child: Column(
-
-                children: [
-
+          // Content area
+          Expanded(
+            child: Column(
+              children: [
+                // Sub-navigation tabs (only show for Design tab)
+                if (_selectedMainTab == 1)
                   Container(
-                    color: colorScheme.primary,
+                    color: colorScheme.surface,
                     child: TabBar(
-                      controller: _mainTabController,
-                      indicatorColor: colorScheme.onPrimary,
-                      indicatorWeight: 3,
+                      controller: _subTabController,
+                      indicatorColor: colorScheme.primary,
+                      indicatorWeight: 2,
                       indicatorSize: TabBarIndicatorSize.label,
-                      labelColor: colorScheme.onPrimary,
-                      unselectedLabelColor:
-                          colorScheme.onPrimary.withOpacity(0.6),
+                      labelColor: colorScheme.onSurface,
+                      unselectedLabelColor: colorScheme.onSurfaceVariant,
                       labelStyle: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
                       unselectedLabelStyle: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w400,
                       ),
                       tabs: const [
-                        Tab(text: 'Inventory'),
-                        Tab(text: 'Design'),
-                        Tab(text: 'Cost'),
+                        Tab(text: 'Design Images'),
+                        Tab(text: 'Final Decoration'),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
 
-            // Content area
-            Expanded(
-              child: Column(
-                children: [
-                  // Sub-navigation tabs (only show for Design tab)
-                  if (_selectedMainTab == 1)
-                    Container(
-                      color: colorScheme.surface,
-                      child: TabBar(
-                        controller: _subTabController,
-                        indicatorColor: colorScheme.primary,
-                        indicatorWeight: 2,
-                        indicatorSize: TabBarIndicatorSize.label,
-                        labelColor: colorScheme.onSurface,
-                        unselectedLabelColor: colorScheme.onSurfaceVariant,
-                        labelStyle: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        unselectedLabelStyle: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        tabs: const [
-                          Tab(text: 'Design Images'),
-                          Tab(text: 'Final Decoration'),
-                        ],
-                      ),
-                    ),
-
-                  // Main content
-                  Expanded(
-                    child: TabBarView(
-                      controller: _mainTabController,
-                      children: [
-                        _buildInventoryTab(),
-                        _buildDesignTab(),
-                        _buildCostTab(),
-                      ],
-                    ),
+                // Main content
+                Expanded(
+                  child: TabBarView(
+                    controller: _mainTabController,
+                    children: [
+                      _buildInventoryTab(),
+                      _buildDesignTab(),
+                      _buildCostTab(),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
