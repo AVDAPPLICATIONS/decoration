@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../../models/year_model.dart';
 import '../../../services/api_service.dart';
 import '../../../services/event_service.dart';
@@ -36,9 +37,10 @@ class _EditEventFormState extends State<EditEventForm> {
   void initState() {
     super.initState();
     final eventData = widget.eventDetails['data']['event'];
+    String date = DateFormat('dd-MM-yyyy').format(DateTime.parse(eventData['date']));
     eventNameController = TextEditingController(text: eventData['description'] ?? '');
     locationController = TextEditingController(text: eventData['location'] ?? '');
-    dateController = TextEditingController(text: eventData['date'] ?? '');
+    dateController = TextEditingController(text: date ?? '');
     currentImageUrl = eventData['cover_image'];
   }
 
@@ -134,6 +136,7 @@ class _EditEventFormState extends State<EditEventForm> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     prefixIcon: const Icon(Icons.calendar_today),
+                    suffixIcon: const Icon(Icons.calendar_today_outlined),
                   ),
                   readOnly: true,
                   onTap: () async {

@@ -1,4 +1,5 @@
 import 'package:avd_decoration_application/utils/constants.dart';
+import 'package:avd_decoration_application/utils/top_snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
@@ -983,12 +984,7 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
           final stockUpdate = response['data']?['stock_update'];
           final newQuantity = stockUpdate?['new_quantity'] ?? 'Unknown';
 
-          SnackBarManager.showSuccess(
-            context: context,
-            message:
-                'Item returned to inventory successfully!\nItem: ${item['name']} (Qty: ${item['quantity']})\nStock updated: $newQuantity available',
-            duration: const Duration(seconds: 4),
-          );
+          showSuccessTopSnackBar(context, 'Item returned to inventory successfully!');
         }
       } else {
         // API call failed, but we can still remove item locally
@@ -1000,12 +996,7 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
 
         // Show warning message
         if (mounted) {
-          SnackBarManager.showWarning(
-            context: context,
-            message:
-                'Item returned locally (API Error)\nItem: ${item['name']} (Qty: ${item['quantity']})\nError: ${response['message'] ?? 'API connection failed'}',
-            duration: const Duration(seconds: 4),
-          );
+          showErrorTopSnackBar(context, 'Item returned locally (API Error)');
         }
       }
     } catch (e) {
@@ -1031,12 +1022,7 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
 
       // Show error message
       if (mounted) {
-        SnackBarManager.showWarning(
-          context: context,
-          message:
-              'Item returned locally (Network Error)\nItem: ${item['name']} (Qty: ${item['quantity']})\nError: ${e.toString()}',
-          duration: const Duration(seconds: 4),
-        );
+        showErrorTopSnackBar(context, 'Item returned locally (Network Error)');
       }
     }
   }
@@ -1056,10 +1042,7 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
       print('Cleared all issued items for event $eventId');
 
       if (mounted) {
-        SnackBarManager.showInfo(
-          context: context,
-          message: 'All issued items cleared',
-        );
+        showSuccessTopSnackBar(context, 'All issued items cleared');
       }
     } catch (e) {
       print('Error clearing issued items: $e');
@@ -1322,10 +1305,7 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
                 onPressed: () async {
                   // Validate inputs
                   if (selectedItem == null || quantityController.text.isEmpty) {
-                    SnackBarManager.showError(
-                      context: context,
-                      message: 'Please select an item and enter quantity',
-                    );
+                    showErrorTopSnackBar(context, 'Please select an item and enter quantity');
                     return;
                   }
 
@@ -1385,12 +1365,7 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
                       final newQuantity =
                           stockUpdate?['new_quantity'] ?? 'Unknown';
 
-                      SnackBarManager.showSuccess(
-                        context: context,
-                        message:
-                            'Inventory item issued successfully!\nItem: ${selectedItem!['name']}\nQuantity: ${transactionData['quantity']}\nStock: $newQuantity remaining',
-                        duration: const Duration(seconds: 4),
-                      );
+                      showSuccessTopSnackBar(context, 'Inventory item issued successfully!');
                     } else {
                       // API call failed, but we can still add item locally for demo purposes
                       final issuedItem = {
@@ -1414,12 +1389,7 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
                       Navigator.pop(context);
 
                       // Show warning message
-                      SnackBarManager.showWarning(
-                        context: context,
-                        message:
-                            'API Error - Item added locally\nItem: ${selectedItem!['name']}\nQuantity: ${transactionData['quantity']}\nError: ${response['message'] ?? 'API connection failed'}',
-                        duration: const Duration(seconds: 5),
-                      );
+                      showErrorTopSnackBar(context, 'API Error - Item added locally');
                     }
                   } catch (e) {
                     // Close loading dialog
@@ -1450,7 +1420,7 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
                     SnackBarManager.showWarning(
                       context: context,
                       message:
-                          'Item added locally (Network Error)\nItem: ${selectedItem!['name']}\nError: ${e.toString()}',
+                          'Item added locally (Network Error)',
                       duration: const Duration(seconds: 4),
                     );
                   }

@@ -109,13 +109,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     // Fade animation
     _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 3000),
       vsync: this,
     );
 
     _fadeAnimation = Tween<double>(
       begin: 0.0,
-      end: 1.0,
+      end: 0.5,
     ).animate(CurvedAnimation(
       parent: _fadeController,
       curve: Curves.easeOut,
@@ -152,158 +152,138 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final colors = logoConfig?['colors'] ?? {};
     
     return Scaffold(
-      body: GestureDetector(
-        onLongPress: () async {
-          // Clear user data for testing (long press on splash screen)
-          final localStorage = ref.read(localStorageServiceProvider);
-          await localStorage.clearAllData();
-          ref.read(authProvider.notifier).state = null;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('User data cleared for testing'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment.center,
-              radius: 1.0,
-              colors: [
-                Color(int.parse(colors['primary']?.replaceAll('#', '0xFF') ?? '0xFFFF6B35')),
-                Color(int.parse(colors['secondary']?.replaceAll('#', '0xFF') ?? '0xFFF7931E')),
-              ],
-            ),
-          ),
-          child: SafeArea(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Logo section with animations
-                Expanded(
-                  flex: 3,
-                  child: Center(
-                    child: AnimatedBuilder(
-                      animation: Listenable.merge([
-                        _logoScaleAnimation,
-                        _logoRotationAnimation,
-                        _pulseAnimation,
-                      ]),
-                      builder: (context, child) {
-                        return Transform.scale(
-                          scale: _logoScaleAnimation.value * _pulseAnimation.value,
-                          child: Transform.rotate(
-                            angle: _logoRotationAnimation.value * 2 * 3.14159,
-                            child: Container(
-                              width: 200,
-                              height: 200,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.white.withOpacity(0.3),
-                                    blurRadius: 20,
-                                    spreadRadius: 5,
-                                  ),
-                                ],
-                              ),
-                              child: ClipOval(
-                                child: Image.asset(
-                                  'assets/images/logo.png',
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                
-                // Text section with animations
-                Expanded(
-                  flex: 2,
+      body: Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.secondaryContainer,
+          // gradient: RadialGradient(
+          //   center: Alignment.center,
+          //   radius: 1.0,
+          //   colors: [
+          //     Color(int.parse(colors['primary']?.replaceAll('#', '0xFF') ?? '0xFFFF6B35')),
+          //     Color(int.parse(colors['secondary']?.replaceAll('#', '0xFF') ?? '0xFFF7931E')),
+          //   ],
+          // ),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Logo section with animations
+              Expanded(
+                flex: 3,
+                child: Center(
                   child: AnimatedBuilder(
                     animation: Listenable.merge([
-                      _textSlideAnimation,
-                      _textOpacityAnimation,
+                      _logoScaleAnimation,
+                      _logoRotationAnimation,
+                      _pulseAnimation,
                     ]),
                     builder: (context, child) {
-                      return Transform.translate(
-                        offset: Offset(0, _textSlideAnimation.value),
-                        child: Opacity(
-                          opacity: _textOpacityAnimation.value,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Primary text
-                              Text(
-                                'HARIPRABODHAM',
-                                style: TextStyle(
-                                  fontSize: 32git git,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(int.parse(colors['text_primary']?.replaceAll('#', '0xFF') ?? '0xFFCC0000')),
-                                  letterSpacing: 2.0,
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.white.withOpacity(0.5),
-                                      blurRadius: 10,
-                                    ),
-                                  ],
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 8),
-                              
-                              // Secondary text
-                              Text(
-                                'SEVA BHAKTI',
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color.fromARGB(220, 245, 185, 11),
-                                  letterSpacing: 1.5,
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.white.withOpacity(0.3),
-                                      blurRadius: 5,
-                                    ),
-                                  ],
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 20),
-                              
-                              // Loading indicator
-                              AnimatedBuilder(
-                                animation: _fadeAnimation,
-                                builder: (context, child) {
-                                  return Opacity(
-                                    opacity: _fadeAnimation.value,
-                                    child: SizedBox(
-                                      width: 30,
-                                      height: 30,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 3,
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                          Colors.white.withOpacity(0.8),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
+                      return Container(
+                        width: 300,
+                        height: 300,
+                        decoration: BoxDecoration(
+                          // color: Colors.white,
+                          // shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.white.withOpacity(0.3),
+                              blurRadius: 20,
+                              spreadRadius: 5,
+                            ),
+                          ],
+                        ),
+                        child: Image.asset(
+                          'assets/images/Untitled-1.png',
+                          fit: BoxFit.fill,
                         ),
                       );
                     },
                   ),
                 ),
-              ],
-            ),
+              ),
+
+              // Text section with animations
+              // Expanded(
+              //   flex: 2,
+              //   child: AnimatedBuilder(
+              //     animation: Listenable.merge([
+              //       _textSlideAnimation,
+              //       _textOpacityAnimation,
+              //     ]),
+              //     builder: (context, child) {
+              //       return Transform.translate(
+              //         offset: Offset(0, _textSlideAnimation.value),
+              //         child: Opacity(
+              //           opacity: _textOpacityAnimation.value,
+              //           child: Column(
+              //             mainAxisAlignment: MainAxisAlignment.center,
+              //             children: [
+              //               // Primary text
+              //               Text(
+              //                 'HARIPRABODHAM',
+              //                 style: TextStyle(
+              //                   fontSize: 32,
+              //                   fontWeight: FontWeight.bold,
+              //                   color: Color(int.parse(colors['text_primary']?.replaceAll('#', '0xFF') ?? '0xFFCC0000')),
+              //                   letterSpacing: 2.0,
+              //                   shadows: [
+              //                     Shadow(
+              //                       color: Colors.white.withOpacity(0.5),
+              //                       blurRadius: 10,
+              //                     ),
+              //                   ],
+              //                 ),
+              //                 textAlign: TextAlign.center,
+              //               ),
+              //               const SizedBox(height: 8),
+              //
+              //               // Secondary text
+              //               Text(
+              //                 'SEVA BHAKTI',
+              //                 style: TextStyle(
+              //                   fontSize: 24,
+              //                   fontWeight: FontWeight.w500,
+              //                   color: Color.fromARGB(220, 245, 185, 11),
+              //                   letterSpacing: 1.5,
+              //                   shadows: [
+              //                     Shadow(
+              //                       color: Colors.white.withOpacity(0.3),
+              //                       blurRadius: 5,
+              //                     ),
+              //                   ],
+              //                 ),
+              //                 textAlign: TextAlign.center,
+              //               ),
+              //               const SizedBox(height: 20),
+              //
+              //               // Loading indicator
+              //               AnimatedBuilder(
+              //                 animation: _fadeAnimation,
+              //                 builder: (context, child) {
+              //                   return Opacity(
+              //                     opacity: _fadeAnimation.value,
+              //                     child: SizedBox(
+              //                       width: 30,
+              //                       height: 30,
+              //                       child: CircularProgressIndicator(
+              //                         strokeWidth: 3,
+              //                         valueColor: AlwaysStoppedAnimation<Color>(
+              //                           Colors.white.withOpacity(0.8),
+              //                         ),
+              //                       ),
+              //                     ),
+              //                   );
+              //                 },
+              //               ),
+              //             ],
+              //           ),
+              //         ),
+              //       );
+              //     },
+              //   ),
+              // ),
+            ],
           ),
         ),
       ),

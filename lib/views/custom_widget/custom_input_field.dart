@@ -40,7 +40,7 @@ class CustomTextField extends StatelessWidget {
     final fieldLabel = theme.colorScheme.primary; // Use theme primary color
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      // margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
@@ -62,6 +62,8 @@ class CustomTextField extends StatelessWidget {
           fontSize: 16,
           fontWeight: FontWeight.w500,
         ),
+        stylusHandwritingEnabled: true,
+
         decoration: InputDecoration(
           prefixIcon: Icon(
             icon,
@@ -74,57 +76,49 @@ class CustomTextField extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
           hintStyle: TextStyle(
-            color: fieldText.withOpacity(0.7),
+            fontSize: 16,
+            color: fieldBackground,
             fontWeight: FontWeight.w400,
           ),
           filled: true,
           fillColor: fieldBackground,
+
+          // Borders
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(
-              color: fieldBorder,
-              width: 1.5,
-            ),
+            borderSide: BorderSide(color: fieldBorder, width: 1.5),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(
-              color: fieldBorder,
-              width: 1.5,
-            ),
+            borderSide: BorderSide(color: fieldBorder, width: 1.5),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(
-              color: fieldLabel,
-              width: 2.5,
-            ),
+            borderSide: BorderSide(color: fieldLabel, width: 2.5),
           ),
           errorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(
-              color: theme.colorScheme.error,
-              width: 1.5,
-            ),
+            borderSide: BorderSide(color: theme.colorScheme.error, width: 1.5),
           ),
           focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(
-              color: theme.colorScheme.error,
-              width: 2.5,
-            ),
+            borderSide: BorderSide(color: theme.colorScheme.error, width: 2.5),
           ),
-          contentPadding:
-              const EdgeInsets.symmetric(vertical: 20, horizontal: 18),
+
+          // ✅ Key Fixes:
+          isDense: true, // makes layout more balanced
+          floatingLabelAlignment: FloatingLabelAlignment.start,
+          contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16), // slightly more vertical space
+
           suffixIcon: isPassword
               ? IconButton(
-                  icon: Icon(
-                    obscureText ? Icons.visibility_off : Icons.visibility,
-                    color: fieldLabel,
-                    size: 22,
-                  ),
-                  onPressed: toggleVisibility,
-                )
+            icon: Icon(
+              obscureText ? Icons.visibility_off : Icons.visibility,
+              color: fieldLabel,
+              size: 22,
+            ),
+            onPressed: toggleVisibility,
+          )
               : null,
         ),
       ),

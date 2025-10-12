@@ -238,8 +238,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
               ),
               // Events List Section
               Container(
-                height: MediaQuery.of(context).size.height *
-                    0.0, // Fixed height for events list
+                height: MediaQuery.of(context).size.height * 0.0, // Fixed height for events list
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   itemCount: allEventsData.length,

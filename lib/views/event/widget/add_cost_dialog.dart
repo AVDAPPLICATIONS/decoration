@@ -1,3 +1,4 @@
+import 'package:avd_decoration_application/utils/top_snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
@@ -135,12 +136,7 @@ class _AddCostDialogState extends State<AddCostDialog> {
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error selecting file: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showErrorTopSnackBar(context, 'Error selecting file: $e');
     }
   }
 
@@ -153,12 +149,7 @@ class _AddCostDialogState extends State<AddCostDialog> {
 
     if (documentType == 'pdf') {
       // For PDF, you might want to open in a web view or external app
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Opening PDF: $fullUrl'),
-          backgroundColor: Colors.blue,
-        ),
-      );
+      showInfoTopSnackBar(context, 'Opening PDF: $fullUrl');
       // TODO: Implement PDF viewer
     } else {
       // For images, show in full screen
@@ -213,37 +204,22 @@ class _AddCostDialogState extends State<AddCostDialog> {
       }
 
       if (result['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ??
-                (widget.existingCost != null
-                    ? 'Cost updated successfully'
-                    : 'Cost added successfully')),
-            backgroundColor: Colors.green,
-          ),
-        );
+        showSuccessTopSnackBar(context, result['message'] ??
+            (widget.existingCost != null
+                ? 'Cost updated successfully'
+                : 'Cost added successfully'));
 
         Navigator.pop(context);
         widget.onCostAdded();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ??
-                (widget.existingCost != null
-                    ? 'Failed to update cost'
-                    : 'Failed to add cost')),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showErrorTopSnackBar(context, result['message'] ??
+            (widget.existingCost != null
+                ? 'Failed to update cost'
+                : 'Failed to add cost'));
       }
     } catch (e) {
       print('Exception: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showErrorTopSnackBar(context, 'Error: $e');
     } finally {
       setState(() {
         _isSubmitting = false;

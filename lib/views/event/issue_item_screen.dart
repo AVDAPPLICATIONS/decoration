@@ -1,3 +1,4 @@
+import 'package:avd_decoration_application/utils/top_snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/inventory_service.dart';
@@ -71,13 +72,14 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
       setState(() {
         _isLoading = false;
       });
-      SnackBarManager.showError(context: context, message: 'Failed to load items: $e');
+      showErrorTopSnackBar(context, 'Failed to load items: $e');
     }
   }
 
   // Helpers to derive normalized fields from varying API shapes
   String? _itemCategory(Map<String, dynamic> item) {
-    if (item['category_name'] != null && item['category_name'].toString().isNotEmpty) {
+    if (item['category_name'] != null &&
+        item['category_name'].toString().isNotEmpty) {
       return item['category_name'].toString();
     }
     final cat = item['category'];
@@ -87,7 +89,8 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
   }
 
   String? _itemMaterial(Map<String, dynamic> item) {
-    if (item['material_name'] != null && item['material_name'].toString().isNotEmpty) {
+    if (item['material_name'] != null &&
+        item['material_name'].toString().isNotEmpty) {
       return item['material_name'].toString();
     }
     final mat = item['material'];
@@ -123,12 +126,12 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
         final material = _itemMaterial(item)?.toLowerCase() ?? '';
         final size = _dimensions(item).toLowerCase();
         final location = _location(item).toLowerCase();
-        
+
         return name.contains(_searchQuery.toLowerCase()) ||
-               category.contains(_searchQuery.toLowerCase()) ||
-               material.contains(_searchQuery.toLowerCase()) ||
-               size.contains(_searchQuery.toLowerCase()) ||
-               location.contains(_searchQuery.toLowerCase());
+            category.contains(_searchQuery.toLowerCase()) ||
+            material.contains(_searchQuery.toLowerCase()) ||
+            size.contains(_searchQuery.toLowerCase()) ||
+            location.contains(_searchQuery.toLowerCase());
       }).toList();
     }
 
@@ -141,7 +144,8 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
     if (value is num) return value.toDouble();
     if (value is String) {
       final cleaned = value.trim();
-      final parsed = double.tryParse(cleaned) ?? double.tryParse(cleaned.replaceAll(',', ''));
+      final parsed = double.tryParse(cleaned) ??
+          double.tryParse(cleaned.replaceAll(',', ''));
       return parsed ?? 0;
     }
     return 0;
@@ -158,13 +162,16 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
   }
 
   double _totalQuantity(Map<String, dynamic> item) {
-    return _toDouble(item['total_quantity'] ?? item['total_stock'] ?? item['quantity_total']);
+    return _toDouble(item['total_quantity'] ??
+        item['total_stock'] ??
+        item['quantity_total']);
   }
 
   // Dimensions helper (best-effort from various fields)
   String _dimensions(Map<String, dynamic> item) {
     final direct = item['dimensions'] ?? item['size'] ?? item['dimension'];
-    if (direct != null && direct.toString().trim().isNotEmpty) return direct.toString();
+    if (direct != null && direct.toString().trim().isNotEmpty)
+      return direct.toString();
     final details = item['furniture_details'] ??
         item['fabric_details'] ??
         item['carpet_details'] ??
@@ -173,8 +180,10 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
         item['stationery_details'] ??
         item['thermocol_details'];
     if (details is Map) {
-      final dim = details['dimensions'] ?? details['size'] ?? details['dimension'];
-      if (dim != null && dim.toString().trim().isNotEmpty) return dim.toString();
+      final dim =
+          details['dimensions'] ?? details['size'] ?? details['dimension'];
+      if (dim != null && dim.toString().trim().isNotEmpty)
+        return dim.toString();
       final l = details['length'];
       final w = details['width'];
       final h = details['height'];
@@ -196,20 +205,28 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
   }
 
   String _location(Map<String, dynamic> item) {
-    return (item['storage_location'] ?? item['location'] ?? 'Unknown').toString();
+    return (item['storage_location'] ?? item['location'] ?? 'Unknown')
+        .toString();
   }
 
   // Image helper
   Widget _buildItemImage(Map<String, dynamic> item) {
-    final rawUrl = item['image_url'] ?? item['item_image'] ?? item['image'] ?? item['photo'] ?? item['cover_image'];
+    final rawUrl = item['image_url'] ??
+        item['item_image'] ??
+        item['image'] ??
+        item['photo'] ??
+        item['cover_image'];
     print('🔍 Debug Image URL for item ${item['name']}:');
     print('  - Raw URL: $rawUrl');
-    
-    if (rawUrl != null && rawUrl.toString().isNotEmpty && rawUrl.toString() != 'null') {
+
+    if (rawUrl != null &&
+        rawUrl.toString().isNotEmpty &&
+        rawUrl.toString() != 'null') {
       // Use the proper inventory service to get the image URL
-      final imageUrl = ref.read(inventoryServiceProvider).getImageUrl(rawUrl.toString());
+      final imageUrl =
+          ref.read(inventoryServiceProvider).getImageUrl(rawUrl.toString());
       print('  - Processed URL: $imageUrl');
-      
+
       if (imageUrl.isNotEmpty) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(12),
@@ -251,12 +268,11 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
     return _buildCategoryIcon(item);
   }
 
-
   // Category-based icon helper
   Widget _buildCategoryIcon(Map<String, dynamic> item) {
     final categoryName = _itemCategory(item);
     final iconData = _getCategoryIcon(categoryName);
-    
+
     return Container(
       width: 80,
       height: 80,
@@ -280,7 +296,7 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
     if (category == null || category.isEmpty) {
       return Icons.inventory;
     }
-    
+
     switch (category.toLowerCase()) {
       case 'furniture':
         return Icons.chair;
@@ -332,208 +348,201 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
       ),
       child: Container(
         padding: const EdgeInsets.all(16),
-       child: Card(
-         elevation: 3,
-         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-         shape: RoundedRectangleBorder(
-           borderRadius: BorderRadius.circular(12),
-         ),
-         child: Padding(
-           padding: const EdgeInsets.all(12),
-           child: Row(
-             crossAxisAlignment: CrossAxisAlignment.start,
-             children: [
-               // Fixed width image
-               SizedBox(
-                 width: 80,
-                 child: _buildItemImage(item),
-               ),
-               const SizedBox(width: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Fixed width image
+            SizedBox(
+              width: 80,
+              child: _buildItemImage(item),
+            ),
+            const SizedBox(width: 12),
 
-               // --- Item Details ---
-               Expanded(
-                 flex: 3,
-                 child: Column(
-                   crossAxisAlignment: CrossAxisAlignment.start,
-                   children: [
-                     // Item Name
-                     Text(
-                       (item['name'] ?? 'Unknown Item').toString(),
-                       style: const TextStyle(
-                         fontSize: 16,
-                         fontWeight: FontWeight.bold,
-                         color: Colors.black87,
-                       ),
-                       maxLines: 2,
-                       overflow: TextOverflow.ellipsis,
-                     ),
-                     const SizedBox(height: 4),
+            // --- Item Details ---
+            Expanded(
+              flex: 3,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Item Name
+                  Text(
+                    (item['name'] ?? 'Unknown Item').toString(),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
 
-                     // Category + Dimensions Row
-                     Row(
-                       children: [
-                         if (categoryName != null) ...[
-                           Expanded(
-                             flex: 2,
-                             child: Text(
-                               categoryName,
-                               style: TextStyle(
-                                 fontSize: 10,
-                                 fontWeight: FontWeight.w500,
-                                 color: Colors.grey[600],
-                               ),
-                               overflow: TextOverflow.ellipsis,
-                               maxLines: 1,
-                             ),
-                           ),
-                           const SizedBox(width: 4),
-                           Container(
-                             width: 2,
-                             height: 2,
-                             decoration: BoxDecoration(
-                               color: Colors.grey[400],
-                               shape: BoxShape.circle,
-                             ),
-                           ),
-                           const SizedBox(width: 4),
-                         ],
-                         Expanded(
-                           flex: 3,
-                           child: Row(
-                             children: [
-                               Icon(
-                                 Icons.straighten,
-                                 size: 10,
-                                 color: Colors.amber[700],
-                               ),
-                               const SizedBox(width: 2),
-                               Expanded(
-                                 child: Text(
-                                   dims,
-                                   style: TextStyle(
-                                     fontSize: 10,
-                                     fontWeight: FontWeight.w600,
-                                     color: Colors.amber[700],
-                                   ),
-                                   overflow: TextOverflow.ellipsis,
-                                   maxLines: 1,
-                                 ),
-                               ),
-                             ],
-                           ),
-                         ),
-                       ],
-                     ),
-                     const SizedBox(height: 4),
+                  // Category + Dimensions Row
+                  Row(
+                    children: [
+                      if (categoryName != null) ...[
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            categoryName,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey[600],
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Container(
+                          width: 2,
+                          height: 2,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[400],
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                      ],
+                      Expanded(
+                        flex: 3,
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.straighten,
+                              size: 10,
+                              color: Colors.amber[700],
+                            ),
+                            const SizedBox(width: 2),
+                            Expanded(
+                              child: Text(
+                                dims,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.amber[700],
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
 
-                     // Location Row
-                     Row(
-                       children: [
-                         Icon(
-                           Icons.location_on,
-                           size: 12,
-                           color: Colors.grey[600],
-                         ),
-                         const SizedBox(width: 2),
-                         Expanded(
-                           child: Text(
-                             loc,
-                             style: TextStyle(
-                               fontSize: 11,
-                               fontWeight: FontWeight.w500,
-                               color: Colors.grey[700],
-                             ),
-                             overflow: TextOverflow.ellipsis,
-                             maxLines: 1,
-                           ),
-                         ),
-                       ],
-                     ),
-                   ],
-                 ),
-               ),
+                  // Location Row
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        size: 12,
+                        color: Colors.grey[600],
+                      ),
+                      const SizedBox(width: 2),
+                      Expanded(
+                        child: Text(
+                          loc,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey[700],
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
 
-               const SizedBox(width: 8),
+            const SizedBox(width: 8),
 
-               // --- Right Side Buttons & Status ---
-               Expanded(
-                 flex: 2,
-                 child: Column(
-                   crossAxisAlignment: CrossAxisAlignment.end,
-                   children: [
-                     if (isLowStock && !isOutOfStock)
-                       Container(
-                         padding: const EdgeInsets.symmetric(
-                           horizontal: 6,
-                           vertical: 2,
-                         ),
-                         decoration: BoxDecoration(
-                           color: Colors.amber[100],
-                           borderRadius: BorderRadius.circular(8),
-                           border: Border.all(color: Colors.amber[300]!),
-                         ),
-                         child: Text(
-                           'Low Stock',
-                           style: TextStyle(
-                             fontSize: 10,
-                             fontWeight: FontWeight.w600,
-                             color: Colors.amber[800],
-                           ),
-                         ),
-                       ),
+            // --- Right Side Buttons & Status ---
+            Expanded(
+              flex: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (isLowStock && !isOutOfStock)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.amber[100],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.amber[300]!),
+                      ),
+                      child: Text(
+                        'Low Stock',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.amber[800],
+                        ),
+                      ),
+                    ),
 
-                     if (isLowStock && !isOutOfStock)
-                       const SizedBox(height: 4),
+                  if (isLowStock && !isOutOfStock)
+                    const SizedBox(height: 4),
 
-                     // Quantity Display
-                     Text(
-                       total > 0
-                           ? 'Avail: ${_formatQty(available)}\nTotal: ${_formatQty(total)}'
-                           : 'Qty: ${_formatQty(available)}',
-                       style: TextStyle(
-                         fontSize: 10,
-                         fontWeight: FontWeight.w700,
-                         color: isOutOfStock ? Colors.red[600] : Colors.grey[900],
-                       ),
-                       textAlign: TextAlign.right,
-                       overflow: TextOverflow.ellipsis,
-                       maxLines: 2,
-                     ),
-                     const SizedBox(height: 6),
+                  // Quantity Display
+                  Text(
+                    total > 0
+                        ? 'Avail: ${_formatQty(available)}\nTotal: ${_formatQty(total)}'
+                        : 'Qty: ${_formatQty(available)}',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color:
+                          isOutOfStock ? Colors.red[600] : Colors.grey[900],
+                    ),
+                    textAlign: TextAlign.right,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 6),
 
-                     // Issue / Out of Stock Button
-                     SizedBox(
-                       width: double.infinity,
-                       child: ElevatedButton(
-                         onPressed: isOutOfStock ? null : () => _showIssueDialog(item),
-                         style: ElevatedButton.styleFrom(
-                           backgroundColor:
-                           isOutOfStock ? Colors.grey[400] : colorScheme.primary,
-                           foregroundColor:
-                           isOutOfStock ? Colors.grey[700] : colorScheme.onPrimary,
-                           padding: const EdgeInsets.symmetric(
-                             horizontal: 8,
-                             vertical: 6,
-                           ),
-                           shape: RoundedRectangleBorder(
-                             borderRadius: BorderRadius.circular(6),
-                           ),
-                         ),
-                         child: Text(
-                           isOutOfStock ? 'Out of Stock' : 'Issue',
-                           style: const TextStyle(fontSize: 11),
-                         ),
-                       ),
-                     ),
-                   ],
-                 ),
-               ),
-             ],
-           ),
-         ),
-       )
-        ,
-
+                  // Issue / Out of Stock Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: isOutOfStock
+                          ? null
+                          : () => _showIssueDialog(item),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isOutOfStock
+                            ? Colors.grey[400]
+                            : colorScheme.primary,
+                        foregroundColor: isOutOfStock
+                            ? Colors.grey[700]
+                            : colorScheme.onPrimary,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 6,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      child: Text(
+                        isOutOfStock ? 'Out of Stock' : 'Issue',
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -591,17 +600,15 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
     }
   }
 
-
-
   Future<void> _issueItem(Map<String, dynamic> item) async {
     final quantity = int.tryParse(_quantityController.text);
     if (quantity == null || quantity <= 0) {
-      SnackBarManager.showError(context: context, message: 'Please enter a valid quantity');
+      showErrorTopSnackBar(context, 'Please enter a valid quantity');
       return;
     }
 
     if (quantity > _availableQuantity(item)) {
-      SnackBarManager.showError(context: context, message: 'Insufficient quantity available');
+      showErrorTopSnackBar(context, 'Insufficient quantity available');
       return;
     }
 
@@ -618,18 +625,19 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
         notes: _notesController.text.trim(),
       );
 
-      SnackBarManager.showSuccess(context: context, message: 'Item issued successfully');
+      showSuccessTopSnackBar(context, 'Item issued successfully');
       widget.onItemIssued();
-      
+
       // Navigate back and switch to material tab
       Navigator.pop(context);
-      
+
       // Call the callback to switch to material tab if provided
       if (widget.onNavigateToMaterialTab != null) {
         widget.onNavigateToMaterialTab!();
       }
     } catch (e) {
-      SnackBarManager.showError(context: context, message: 'Failed to issue item: $e');
+      SnackBarManager.showError(
+          context: context, message: 'Failed to issue item: $e');
     } finally {
       setState(() {
         _isSubmitting = false;
@@ -640,14 +648,14 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
+        // automaticallyImplyLeading: false,
         backgroundColor: colorScheme.primary,
         elevation: 0,
-        shadowColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
+        // shadowColor: Colors.transparent,
+        // surfaceTintColor: Colors.transparent,
         title: Text(
           'Issue Item',
           style: TextStyle(
@@ -659,16 +667,16 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
         centerTitle: true,
         actions: [
           IconButton(
-                      onPressed: () {
-                        setState(() {
+            onPressed: () {
+              setState(() {
                 _isSearchVisible = !_isSearchVisible;
                 if (!_isSearchVisible) {
-                          _searchController.clear();
+                  _searchController.clear();
                   _searchQuery = '';
-                          _filteredItems = _getFilteredItems();
+                  _filteredItems = _getFilteredItems();
                 }
-                        });
-                      },
+              });
+            },
             icon: Icon(
               _isSearchVisible ? Icons.search_off : Icons.search,
               color: colorScheme.onPrimary,
@@ -684,16 +692,18 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
               color: colorScheme.onPrimary,
             ),
             tooltip: 'Filter',
-                    ),
-                  ],
-                ),
+          ),
+        ],
+      ),
       body: Column(
         children: [
           // Search Bar
           if (_isSearchVisible) _buildSearchBar(colorScheme),
-          
+
           // Filter Status
-          if (_selectedCategory != 'All' || _selectedItemName != 'All' || _searchQuery.isNotEmpty)
+          if (_selectedCategory != 'All' ||
+              _selectedItemName != 'All' ||
+              _searchQuery.isNotEmpty)
             _buildFilterStatus(colorScheme),
 
           // Items List
@@ -704,16 +714,16 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
+                          children: [
+                            Icon(
                               Icons.inventory_2_outlined,
                               size: 64,
                               color: Colors.grey[400],
                             ),
                             const SizedBox(height: 16),
-                    Text(
+                            Text(
                               'No items found',
-                      style: TextStyle(
+                              style: TextStyle(
                                 fontSize: 18,
                                 color: Colors.grey[600],
                               ),
@@ -736,12 +746,11 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
                           return _buildItemCard(item, colorScheme);
                         },
                       ),
-                    ),
-                  ],
-                ),
+          ),
+        ],
+      ),
     );
   }
-
 
   Widget _buildSearchBar(ColorScheme colorScheme) {
     return Container(
@@ -755,10 +764,10 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
         ),
       ),
       child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Search by name, category, material, or size...',
-                    prefixIcon: const Icon(Icons.search),
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Search by name, category, material, or size...',
+          prefixIcon: const Icon(Icons.search),
           border: InputBorder.none,
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
@@ -768,14 +777,14 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
                   icon: const Icon(Icons.clear),
                 )
               : null,
-                  ),
-                  onChanged: (value) {
-                    setState(() {
+        ),
+        onChanged: (value) {
+          setState(() {
             _searchQuery = value;
-                      _filteredItems = _getFilteredItems();
-                    });
-                  },
-                ),
+            _filteredItems = _getFilteredItems();
+          });
+        },
+      ),
     );
   }
 
@@ -803,7 +812,8 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
             child: Text(
               () {
                 final filteredItems = _getFilteredItems();
-                String status = 'Showing ${filteredItems.length} of ${_availableItems.length} items';
+                String status =
+                    'Showing ${filteredItems.length} of ${_availableItems.length} items';
                 if (_selectedCategory != 'All') {
                   status += ' in $_selectedCategory';
                 }
@@ -817,21 +827,21 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
               }(),
               style: TextStyle(
                 fontSize: 12,
-                              color: colorScheme.primary,
+                color: colorScheme.primary,
                 fontWeight: FontWeight.w500,
               ),
             ),
           ),
           GestureDetector(
             onTap: () {
-                          setState(() {
+              setState(() {
                 _selectedCategory = 'All';
                 _selectedItemName = 'All';
                 _searchQuery = '';
                 _searchController.clear();
-                            _filteredItems = _getFilteredItems();
-                          });
-                        },
+                _filteredItems = _getFilteredItems();
+              });
+            },
             child: Icon(
               Icons.clear,
               color: colorScheme.primary,
@@ -899,13 +909,13 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
                               Icons.close,
                               color: colorScheme.onSurfaceVariant,
                             ),
-                ),
-              ],
-            ),
-          ),
+                          ),
+                        ],
+                      ),
+                    ),
 
                     // Filter content
-          Expanded(
+                    Expanded(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Column(
@@ -925,11 +935,12 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
                               spacing: 8,
                               runSpacing: 8,
                               children: _getCategories().map((category) {
-                                final isSelected = _selectedCategory == category;
+                                final isSelected =
+                                    _selectedCategory == category;
                                 return FilterChip(
                                   label: Text(
                                     category,
-                              style: TextStyle(
+                                    style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
                                       color: isSelected
@@ -973,27 +984,29 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
                               const SizedBox(height: 12),
                               Builder(
                                 builder: (context) {
-                                  final itemNames = _getItemNamesInCategory(_selectedCategory);
+                                  final itemNames = _getItemNamesInCategory(
+                                      _selectedCategory);
 
                                   if (itemNames.isEmpty) {
                                     return Container(
                                       padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
+                                      child: Row(
+                                        children: [
                                           SizedBox(
                                             width: 16,
                                             height: 16,
                                             child: CircularProgressIndicator(
                                               strokeWidth: 2,
-                    color: colorScheme.primary,
-                  ),
+                                              color: colorScheme.primary,
+                                            ),
                                           ),
                                           const SizedBox(width: 12),
-                  Text(
+                                          Text(
                                             'Loading item names...',
-                    style: TextStyle(
+                                            style: TextStyle(
                                               fontSize: 14,
-                                              color: colorScheme.onSurfaceVariant,
+                                              color:
+                                                  colorScheme.onSurfaceVariant,
                                             ),
                                           ),
                                         ],
@@ -1004,13 +1017,14 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
                                   if (itemNames.length <= 1) {
                                     return Container(
                                       padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                                        color: colorScheme.surfaceVariant.withOpacity(0.3),
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.surfaceVariant
+                                            .withOpacity(0.3),
                                         borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
+                                      ),
+                                      child: Text(
                                         'No duplicate item names found in $_selectedCategory',
-                      style: TextStyle(
+                                        style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w500,
                                           color: colorScheme.onSurfaceVariant,
@@ -1023,7 +1037,8 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
                                     spacing: 8,
                                     runSpacing: 8,
                                     children: itemNames.map((itemName) {
-                                      final isSelected = _selectedItemName == itemName;
+                                      final isSelected =
+                                          _selectedItemName == itemName;
                                       return FilterChip(
                                         label: Text(
                                           itemName,
@@ -1042,7 +1057,8 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
                                           });
                                           setModalState(() {});
                                         },
-                                        backgroundColor: colorScheme.surfaceVariant,
+                                        backgroundColor:
+                                            colorScheme.surfaceVariant,
                                         selectedColor: colorScheme.primary,
                                         checkmarkColor: colorScheme.onPrimary,
                                         side: BorderSide(
@@ -1107,7 +1123,7 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
   void _showIssueDialog(Map<String, dynamic> item) {
     _quantityController.clear();
     _notesController.clear();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1142,12 +1158,14 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: _isSubmitting ? null : () {
-              // print(item);
-              _issueItem(item);
-              // Navigator.pop(context);
-              _loadAvailableItems();
-            },
+            onPressed: _isSubmitting
+                ? null
+                : () {
+                    // print(item);
+                    _issueItem(item);
+                    // Navigator.pop(context);
+                    _loadAvailableItems();
+                  },
             child: _isSubmitting
                 ? const SizedBox(
                     width: 16,

@@ -10,10 +10,10 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:intl/intl.dart';
 import '../../utils/constants.dart';
-import '../../utils/snackbar_manager.dart';
 import '../../services/gallery_service.dart';
 import '../../providers/inventory_provider.dart';
 import '../../providers/event_repository_provider.dart';
+import '../../utils/top_snackbar_helper.dart';
 import 'widget/fullscreen_image_viewer.dart';
 import 'widget/add_cost_dialog.dart';
 import 'widget/pdf_viewer.dart';
@@ -91,9 +91,9 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
     }
   }
 
-  Future<void> _refreshEventData() async {
+  Future<void> _refreshEventData(bool snack) async {
     final colorScheme = Theme.of(context).colorScheme;
-    if (_isRefreshing) return;
+    if (_isRefreshing) return ;
 
     setState(() {
       _isRefreshing = true;
@@ -134,18 +134,11 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
               'issuances': eventDetails['data']['issuances'],
             };
           });
-
-          SnackBarManager.showSuccess(
-            context: context,
-            message: 'Event data refreshed successfully',
-          );
+          if (snack) showInfoTopSnackBar(context, 'Event data refreshed successfully!');
         }
       }
     } catch (e) {
-      SnackBarManager.showError(
-        context: context,
-        message: 'Failed to refresh: $e',
-      );
+      showErrorTopSnackBar(context, 'Failed to refresh: $e');
     } finally {
       setState(() {
         _isRefreshing = false;
@@ -172,7 +165,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
     final screenTitle = '$eventName  $eventYear';
 
     return Scaffold(
-      
       floatingActionButton: FloatingActionButton(
         onPressed: _handleFabAction,
         backgroundColor: colorScheme.primary,
@@ -186,7 +178,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        toolbarHeight: kToolbarHeight + MediaQuery.of(context).padding.top,
+        // toolbarHeight: kToolbarHeight + MediaQuery.of(context).padding.top,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             color: colorScheme.primary,
@@ -395,8 +387,8 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
           return hasOutTransactions && isCurrentlyIssued;
         }).toList();
 
-        print(
-            '🔍 Debug: Found ${issuedItems.length} issued items out of ${issuancesByItem.length} total items');
+        // print(
+        //     '🔍 Debug: Found ${issuedItems.length} issued items out of ${issuancesByItem.length} total items');
 
         // If no items found in issuances_by_item, try to get issued items from history
         List<dynamic> itemsToShow = issuedItems;
@@ -707,7 +699,9 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
     print('Design Images ${designImages.toList()}');
 
     return RefreshIndicator(
-      onRefresh: _refreshEventData,
+      onRefresh: () {
+        return _refreshEventData(true);
+      },
       child: Stack(
         children: [
           // Content area
@@ -959,27 +953,21 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
 
       if (result['success'] == true) {
         // Refresh the event data to update the UI
-        await _refreshEventData();
-        
-        SnackBarManager.showSuccessCustom(
-          context: context,
-          message: 'Image deleted successfully',
-        );
+        await _refreshEventData(false);
+        showSuccessTopSnackBar(context, 'Image deleted successfully!');
+
       } else {
-        SnackBarManager.showErrorCustom(
-          context: context,
-          message: result['message'] ?? 'Failed to delete image',
-        );
+        showErrorTopSnackBar(context, result['message'] ?? 'Failed to delete image');
       }
     } catch (e) {
       // Close loading indicator if still open
       if (Navigator.of(context, rootNavigator: true).canPop()) {
         Navigator.of(context, rootNavigator: true).pop();
       }
-      
-      SnackBarManager.showErrorCustom(
-        context: context,
-        message: 'Error deleting image: $e',
+
+      showErrorTopSnackBar(
+        context,
+        'Error deleting image: $e',
       );
     }
   }
@@ -1051,9 +1039,10 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         );
       }
     } else {
-      SnackBarManager.showError(
-        context: context,
-        message: 'File URL not available',
+
+      showErrorTopSnackBar(
+        context,
+        'File URL not available',
       );
     }
   }
@@ -1069,8 +1058,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         return _ImageUploadDialog(
           eventId: _currentEventData['id'],
           onImagesUploaded: () {
-            // Refresh the event data to show new images
-            _refreshEventData();
+            _refreshEventData(false);
           },
         );
       },
@@ -1084,8 +1072,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         return _FinalDecorationImageUploadDialog(
           eventId: _currentEventData['id'],
           onImagesUploaded: () {
-            // Refresh the event data to show new images
-            _refreshEventData();
+            _refreshEventData(false);
           },
         );
       },
@@ -1422,12 +1409,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
           print('Debug: itemInfo = $itemInfo');
           print('Debug: allTransactions = $allTransactions');
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content:
-                  Text('Unable to return: missing item info. ItemId: $itemId'),
-            ),
-          );
+          showErrorTopSnackBar(context, "Unable to return: missing item info. ItemId: $itemId");
         }
         return false; // Do not dismiss the tile
       },
@@ -1888,27 +1870,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
             },
           ),
         ),
-
-        // Issue button at bottom
-        Container(
-          padding: const EdgeInsets.all(16),
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () => _showIssueItemDialog(),
-              icon: const Icon(Icons.add, size: 20),
-              label: const Text('Issue New Item'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -2120,8 +2081,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
   // Navigate to issue item screen
   void _showIssueItemDialog() {
     Navigator.pushNamed(
-      context,
-      '/issue-item',
+      context, '/issue-item',
       arguments: {
         'eventId': _currentEventData['id'],
         'onItemIssued': () {
@@ -2355,93 +2315,98 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         }
         return false;
       },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              spreadRadius: 0,
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+      child: GestureDetector(
+        onTap: () {
+          _viewCostDocument(documentUrl, documentType);
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                spreadRadius: 0,
+                blurRadius: 10,
+                offset: const Offset(0, 2),
               ),
-              child: Icon(
-                Icons.attach_money,
-                color: colorScheme.primary,
-                size: 24,
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.attach_money,
+                  color: colorScheme.primary,
+                  size: 24,
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    description,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      description,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _formatDate(date),
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  if (documentUrl != null) ...[
                     const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          documentType == 'pdf'
-                              ? Icons.picture_as_pdf
-                              : Icons.image,
-                          size: 16,
-                          color: Colors.grey[600],
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            'Receipt attached',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
+                    Text(
+                      _formatDate(date),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    if (documentUrl != null) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            documentType == 'pdf'
+                                ? Icons.picture_as_pdf
+                                : Icons.image,
+                            size: 16,
+                            color: Colors.grey[600],
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              'Receipt attached',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            Text(
-              'Rs${amount.toStringAsFixed(2)}',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+              Text(
+                'Rs${amount.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -2463,7 +2428,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         eventId: _currentEventData['id'],
         onCostAdded: () {
           // Refresh the event data to show new cost
-          _refreshEventData();
+          _refreshEventData(false);
         },
       ),
     );
@@ -2505,13 +2470,18 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
 
     if (documentType == 'pdf') {
       // For PDF, you might want to open in a web view or external app
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Opening PDF: $fullUrl'),
-          backgroundColor: Colors.blue,
+      // showInfoTopSnackBar(context, 'Opening PDF: $fullUrl');
+      // TODO: Implement PDF viewer
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PDFViewer(
+            pdfUrl: fullUrl,
+            title: 'Cost Receipt',
+          ),
         ),
       );
-      // TODO: Implement PDF viewer
+
     } else {
       // For images, show in full screen
       Navigator.push(
@@ -2546,29 +2516,14 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
       final result = await costService.deleteEventCostItem(costId);
 
       if (result['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? 'Cost deleted successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pop(context); // Close the dialog
+        showSuccessTopSnackBar(context, result['message'] ?? 'Cost deleted successfully');
+        // Navigator.pop(context); // Close the dialog
         setState(() {}); // Refresh the cost list
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? 'Failed to delete cost'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showErrorTopSnackBar(context, result['message'] ?? 'Failed to delete cost');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error deleting cost: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showErrorTopSnackBar(context, 'Error deleting cost: $e');
     }
   }
 
@@ -2586,12 +2541,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
   Future<void> _exportCostsToPDF(List<dynamic> costs) async {
     try {
       if (costs.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No costs to export'),
-            backgroundColor: Colors.orange,
-          ),
-        );
+        showInfoTopSnackBar(context, 'No costs to export');
         return;
       }
 
@@ -2803,12 +2753,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         Navigator.of(context).pop();
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error generating PDF: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showErrorTopSnackBar(context, 'Error generating PDF: $e');
     }
   }
 
@@ -2882,16 +2827,12 @@ class _ReturnItemDialogState extends ConsumerState<_ReturnItemDialog> {
   Future<void> _submitReturn() async {
     final quantity = double.tryParse(_quantityController.text);
     if (quantity == null || quantity <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid quantity')),
-      );
+      showErrorTopSnackBar(context, 'Please enter a valid quantity');
       return;
     }
 
     if (quantity > widget.maxQuantity) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Quantity cannot exceed ${widget.maxQuantity}')),
-      );
+      showErrorTopSnackBar(context,'Quantity cannot exceed ${widget.maxQuantity}');
       return;
     }
 
@@ -2945,23 +2886,14 @@ class _ReturnItemDialogState extends ConsumerState<_ReturnItemDialog> {
       }
 
       if (response['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content:
-                  Text(response['message'] ?? 'Item returned successfully')),
-        );
+        showSuccessTopSnackBar(context, response['message'] ?? 'Item returned successfully');
         Navigator.of(context).pop();
         widget.onItemReturned();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(response['message'] ?? 'Failed to return item')),
-        );
+        showErrorTopSnackBar(context, response['message'] ?? 'Failed to return item');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      showErrorTopSnackBar(context, 'Error: $e');
     } finally {
       setState(() {
         _isSubmitting = false;
@@ -3085,7 +3017,6 @@ class _ReturnItemDialogState extends ConsumerState<_ReturnItemDialog> {
               ),
             ),
 
-            // Bottom buttons
             Container(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
               child: Row(
@@ -3093,7 +3024,21 @@ class _ReturnItemDialogState extends ConsumerState<_ReturnItemDialog> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        side: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -3101,25 +3046,64 @@ class _ReturnItemDialogState extends ConsumerState<_ReturnItemDialog> {
                     child: ElevatedButton(
                       onPressed: _isSubmitting ? null : _submitReturn,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
+                        backgroundColor: Theme.of(context).primaryColor,
                         foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: _isSubmitting
                           ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : const Text('Return Item'),
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                          AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                          : const Text('Return'),
                     ),
                   ),
                 ],
               ),
             ),
+            // Bottom buttons
+            // Container(
+            //   padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+            //   child: Row(
+            //     children: [
+            //       Expanded(
+            //         child: OutlinedButton(
+            //           onPressed: () => Navigator.pop(context),
+            //           child: const Text('Cancel'),
+            //         ),
+            //       ),
+            //       const SizedBox(width: 12),
+            //       Expanded(
+            //         child: ElevatedButton(
+            //           onPressed: _isSubmitting ? null : _submitReturn,
+            //           style: ElevatedButton.styleFrom(
+            //             backgroundColor: Theme.of(context).primaryColor,
+            //             foregroundColor: Colors.white,
+            //           ),
+            //           child: _isSubmitting
+            //               ? const SizedBox(
+            //                   width: 20,
+            //                   height: 20,
+            //                   child: CircularProgressIndicator(
+            //                     strokeWidth: 2,
+            //                     valueColor:
+            //                         AlwaysStoppedAnimation<Color>(Colors.white),
+            //                   ),
+            //                 )
+            //               : const Text('Return'),
+            //         ),
+            //       ),
+            //     ],
+            //   ),
+            // ),
           ],
         ),
       ),
@@ -3414,12 +3398,7 @@ class _ImageUploadDialogState extends State<_ImageUploadDialog> {
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error selecting files: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showErrorTopSnackBar(context, 'Error selecting files: $e');
     }
   }
 
@@ -3440,30 +3419,15 @@ class _ImageUploadDialogState extends State<_ImageUploadDialog> {
       );
 
       if (result['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? 'Images uploaded successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        showSuccessTopSnackBar(context, result['message'] ?? 'Images uploaded successfully');
 
         Navigator.pop(context);
         widget.onImagesUploaded();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? 'Upload failed'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showErrorTopSnackBar(context, result['message'] ?? 'Upload failed');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Upload error: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showErrorTopSnackBar(context, 'Upload error: $e');
     } finally {
       setState(() {
         _isUploading = false;
@@ -3785,12 +3749,7 @@ class _FinalDecorationImageUploadDialogState
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error selecting files: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showErrorTopSnackBar(context, 'Error selecting files: $e');
     }
   }
 
@@ -3814,30 +3773,15 @@ class _FinalDecorationImageUploadDialogState
       );
 
       if (result['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Final decoration images uploaded successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        showSuccessTopSnackBar(context, 'Final decoration images uploaded successfully!');
 
         Navigator.pop(context);
         widget.onImagesUploaded();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? 'Upload failed'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showErrorTopSnackBar(context, result['message'] ?? 'Upload failed');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Upload error: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showErrorTopSnackBar(context, 'Upload error: $e');
     } finally {
       setState(() {
         _isUploading = false;

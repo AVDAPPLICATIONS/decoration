@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:intl/intl.dart';
 import 'dart:io';
 import '../../../services/event_service.dart';
 import '../../../services/api_service.dart';
@@ -8,6 +9,7 @@ import '../../../utils/constants.dart';
 class AddEventDetailsForm extends StatefulWidget {
   final int templateId;
   final int yearId;
+  final String yearName;
   final Function(Map<String, dynamic>) onEventCreated;
 
   const AddEventDetailsForm({
@@ -15,6 +17,8 @@ class AddEventDetailsForm extends StatefulWidget {
     required this.templateId,
     required this.yearId,
     required this.onEventCreated,
+    required this.yearName,
+
   });
 
   @override
@@ -40,8 +44,8 @@ class _AddEventDetailsFormState extends State<AddEventDetailsForm> {
   }
 
   Future<void> _selectDate() async {
-  final DateTime now = DateTime.now();
-  final DateTime lastDate = DateTime(now.year + 1, 12, 31);
+  final DateTime now = DateTime(int.parse(widget.yearName), 1, 1);
+  final DateTime lastDate = DateTime(now.year, 12, 31);
 
   final DateTime? picked = await showDatePicker(
     context: context,
@@ -50,15 +54,14 @@ class _AddEventDetailsFormState extends State<AddEventDetailsForm> {
             ? lastDate
             : _selectedDate!
         : now, // Start from today
-    firstDate: DateTime(2012, 1, 1),
-    lastDate: lastDate,
+    firstDate: DateTime(int.parse(widget.yearName), 1, 1),
+    lastDate: DateTime(int.parse(widget.yearName), 12,31),
   );
 
   if (picked != null) {
     setState(() {
       _selectedDate = picked;
-      _dateController.text =
-          "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+      _dateController.text = DateFormat('dd-MM-yyyy').format(_selectedDate!);
     });
   }
 }

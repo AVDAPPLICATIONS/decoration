@@ -41,6 +41,7 @@ dependencies:
   share_plus: ^7.2.1
   persistent_bottom_nav_bar: ^6.2.1
   lottie: ^3.1.2
+  google_fonts: ^6.3.2
 
 dev_dependencies:
   flutter_test:
@@ -52,9 +53,9 @@ dev_dependencies:
 flutter_icons:
   android: true
   ios: true
-  image_path: "assets/images/logo.png"
+  image_path: "assets/images/Untitled-1.png"
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/images/logo.png"
+  adaptive_icon_foreground: "assets/images/Untitled-1.png"
 
 flutter:
   uses-material-design: true

@@ -1,3 +1,4 @@
+import 'package:avd_decoration_application/utils/top_snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:share_plus/share_plus.dart';
@@ -176,10 +177,7 @@ class _DesignTabState extends State<DesignTab> {
           _hasLoadedImages = true;
         });
 
-        SnackBarManager.showWarning(
-          context: context,
-          message: 'Failed to load images: ${e.toString()}',
-        );
+        showErrorTopSnackBar(context, 'Failed to load images: ${e.toString()}');
       }
     }
   }
@@ -339,7 +337,6 @@ class _DesignTabState extends State<DesignTab> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
                 Navigator.of(context).pop(); // Close add dialog
                 // Refresh images from server to show the newly uploaded images
                 _refreshImages();
@@ -900,18 +897,7 @@ class _DesignTabState extends State<DesignTab> {
                                                     if (!_areServicesReady()) {
                                                       Navigator.of(context)
                                                           .pop(); // Close loading dialog
-                                                      ScaffoldMessenger.of(
-                                                              context)
-                                                          .showSnackBar(
-                                                        const SnackBar(
-                                                          content: Text(
-                                                              'Services are still initializing. Please wait a moment and try again.'),
-                                                          backgroundColor:
-                                                              Colors.orange,
-                                                          duration: Duration(
-                                                              seconds: 3),
-                                                        ),
-                                                      );
+                                                      showInfoTopSnackBar(context, 'Services are still initializing. Please wait a moment and try again.');
                                                       return;
                                                     }
 
@@ -956,31 +942,17 @@ class _DesignTabState extends State<DesignTab> {
                                                       }
 
                                                       // Show success message
-                                                      SnackBarManager
-                                                          .showSuccess(
-                                                        context: context,
-                                                        message:
-                                                            'Image deleted successfully',
-                                                      );
+                                                      showSuccessTopSnackBar(context, 'Image deleted successfully');
                                                     } else {
                                                       // Show error message
-                                                      SnackBarManager.showError(
-                                                        context: context,
-                                                        message: result[
-                                                                'message'] ??
-                                                            'Failed to delete image',
-                                                      );
+                                                      showErrorTopSnackBar(context, result['message'] ?? 'Failed to delete image');
                                                     }
                                                   } catch (e) {
                                                     // Close loading dialog
                                                     Navigator.of(context).pop();
 
                                                     // Show error message
-                                                    SnackBarManager.showError(
-                                                      context: context,
-                                                      message:
-                                                          'An error occurred: ${e.toString()}',
-                                                    );
+                                                    showErrorTopSnackBar(context, 'An error occurred: ${e.toString()}');
                                                   }
                                                 } else {
                                                   // Image was not uploaded to server, just remove from local state
@@ -1498,11 +1470,7 @@ class _DesignTabState extends State<DesignTab> {
                                 child: ElevatedButton(
                                   onPressed: () async {
                                     if (pickedImages.isEmpty) {
-                                      SnackBarManager.showError(
-                                        context: context,
-                                        message:
-                                            'Please select at least one image.',
-                                      );
+                                      showErrorTopSnackBar(context, 'Please select at least one image.');
                                       return;
                                     }
                                     if (_formKey.currentState!.validate()) {
@@ -1523,11 +1491,7 @@ class _DesignTabState extends State<DesignTab> {
                                         if (!_areServicesReady()) {
                                           Navigator.of(context)
                                               .pop(); // Close loading dialog
-                                          SnackBarManager.showWarning(
-                                            context: context,
-                                            message:
-                                                'Services are still initializing. Please wait a moment and try again.',
-                                          );
+                                          showInfoTopSnackBar(context, 'Services are still initializing. Please wait a moment and try again.');
                                           return;
                                         }
 
@@ -1609,36 +1573,20 @@ class _DesignTabState extends State<DesignTab> {
                                               context, successCount, imageType);
                                         } else if (successCount > 0 &&
                                             failCount > 0) {
-                                          SnackBarManager.showWarning(
-                                            context: context,
-                                            message:
-                                                'Uploaded $successCount image(s), $failCount failed',
-                                            duration:
-                                                const Duration(seconds: 4),
-                                          );
+                                          showSuccessTopSnackBar(context, 'Uploaded $successCount image(s), $failCount failed');
                                           Navigator.of(context)
                                               .pop(); // Close add dialog
                                           // Refresh images from server to show the newly uploaded images
                                           _refreshImages();
                                         } else {
-                                          SnackBarManager.showError(
-                                            context: context,
-                                            message:
-                                                'Failed to upload all images. ${errorMessages.first}',
-                                            duration:
-                                                const Duration(seconds: 5),
-                                          );
+                                          showErrorTopSnackBar(context, 'Failed to upload all images. ${errorMessages.first}');
                                         }
                                       } catch (e) {
                                         // Close loading dialog
                                         Navigator.of(context).pop();
 
                                         // Show error message
-                                        SnackBarManager.showError(
-                                          context: context,
-                                          message:
-                                              'An error occurred: ${e.toString()}',
-                                        );
+                                        showErrorTopSnackBar(context, 'An error occurred: ${e.toString()}');
                                       }
                                     }
                                   },

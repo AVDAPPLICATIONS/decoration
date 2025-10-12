@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
-import '../../../utils/snackbar_manager.dart';
+
 
 final costProvider = StateNotifierProvider.family<CostNotifier,
     List<Map<String, dynamic>>, String>((ref, eventId) => CostNotifier());
@@ -157,7 +157,7 @@ class CostTab extends ConsumerWidget {
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
                   pw.Text(
-                    'Total Cost sz:',
+                    'Total Cost:',
                     style: pw.TextStyle(
                       fontSize: 18,
                       fontWeight: pw.FontWeight.bold,

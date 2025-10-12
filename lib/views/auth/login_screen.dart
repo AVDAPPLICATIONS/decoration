@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/auth_service.dart';
@@ -133,28 +134,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       key: _scaffoldMessengerKey,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        resizeToAvoidBottomInset: true,
+        // resizeToAvoidBottomInset: true,
         body: FadeTransition(
           opacity: _fadeAnimation,
           child: Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Theme.of(context).colorScheme.primary,
-                  Theme.of(context).colorScheme.secondary,
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
+              color: Theme.of(context).colorScheme.secondaryContainer,
+              // gradient: LinearGradient(
+              //   colors: [
+              //     Theme.of(context).colorScheme.primary,
+              //     Theme.of(context).colorScheme.secondary,
+              //   ],
+              //   begin: Alignment.topCenter,
+              //   end: Alignment.bottomCenter,
+              // ),
             ),
-            child: SafeArea(
-              child: Center(
-                child: ResponsiveBuilder(
-                  mobile: _buildMobileLayout(context),
-                  tablet: _buildTabletLayout(context),
-                  desktop: _buildDesktopLayout(context),
-                ),
-              ),
+            child: Center(
+              child: _buildMobileLayout(context),
             ),
           ),
         ),
@@ -164,7 +160,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   Widget _buildMobileLayout(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+      padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 16.0),
       child: _buildLoginForm(context),
     );
   }
@@ -181,7 +177,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   Widget _buildDesktopLayout(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 64.0, vertical: 48.0),
+      padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 24.0),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 600),
         child: _buildLoginForm(context),
@@ -197,7 +193,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         children: [
           // Responsive Image
           ResponsiveContainer(
-            mobileHeight: 300,
+            mobileHeight: 350,
             tabletHeight: 350,
             desktopHeight: 400,
             child: Image.asset(
@@ -214,15 +210,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               desktop: 40.0,
             ),
           ),
-
-          // Responsive Title
-          ResponsiveText(
-            'Login',
-            mobileFontSize: 28.0,
-            tabletFontSize: 32.0,
-            desktopFontSize: 36.0,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.surface,
+          Text(
+              'Hu Mathi Tu',
+            softWrap: true,
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             textAlign: TextAlign.center,
           ),
 

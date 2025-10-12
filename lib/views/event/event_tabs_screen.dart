@@ -45,7 +45,7 @@ class EventTabsScreen extends StatelessWidget {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        extendBodyBehindAppBar: true,
+        // extendBodyBehindAppBar: true,
         backgroundColor: Colors.transparent,
         body: Container(
           decoration: BoxDecoration(

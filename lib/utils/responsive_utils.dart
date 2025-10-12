@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Screen size utility class for responsive design
 class ScreenUtil {
@@ -338,10 +339,10 @@ class ResponsiveText extends StatelessWidget {
     return Text(
       text,
       softWrap: true,
-      style: TextStyle(
+      style: GoogleFonts.inter(
         fontSize: fontSize,
         fontWeight: fontWeight,
-        color: color
+        color: color,
       ),
       textAlign: textAlign,
       maxLines: maxLines,

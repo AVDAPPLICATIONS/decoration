@@ -105,8 +105,7 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
       BuildContext context, List<YearModel> years, ColorScheme colorScheme) {
     return Scaffold(
       appBar: _buildResponsiveAppBar(colorScheme),
-      backgroundColor: colorScheme.background,
-
+      backgroundColor: colorScheme.secondaryContainer,
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -386,7 +385,7 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
           background: Container(
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: colorScheme.primary,
+              color: Colors.green,
               borderRadius: BorderRadius.circular(16),
             ),
             alignment: Alignment.centerLeft,
@@ -458,7 +457,10 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
                       child: const Text('Cancel'),
                     ),
                     ElevatedButton(
-                      onPressed: () => Navigator.pop(context, true),
+                      onPressed: () {
+                        showSuccessTopSnackBar(context, 'Event Deleted successfully!');
+                        Navigator.pop(context, true);
+                        },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: colorScheme.error,
                         foregroundColor: colorScheme.onError,
@@ -771,7 +773,7 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
 
       // Open Add Event Details Form for the newly created year
       if (createdYear != null) {
-        _showAddEventDetailsForm(yearId: createdYear.id);
+        _showAddEventDetailsForm(yearId: createdYear.id,yearName: yearName);
       }
     } catch (e) {
       SnackBarManager.showError(
@@ -821,7 +823,7 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
           );
         } else {
           // Event not found, show Add Event Details form
-          _showAddEventDetailsForm(yearId: year.id);
+          _showAddEventDetailsForm(yearId: year.id,yearName: year.yearName);
         }
       }
     } catch (e) {
@@ -870,7 +872,7 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
     );
   }
 
-  void _showAddEventDetailsForm({required int yearId}) {
+  void _showAddEventDetailsForm({required int yearId,required String yearName}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -883,6 +885,7 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
         child: AddEventDetailsForm(
           templateId: widget.templateId!,
           yearId: yearId,
+          yearName: yearName,
           onEventCreated: (eventData) {
             print('✅ Event created successfully: $eventData');
 
@@ -959,7 +962,7 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
 
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) {
-            _showAddEventDetailsForm(yearId: year.id);
+            _showAddEventDetailsForm(yearId: year.id,yearName: year.yearName);
           }
         });
       }
