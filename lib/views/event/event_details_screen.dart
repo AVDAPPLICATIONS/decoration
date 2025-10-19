@@ -175,7 +175,10 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
       ),
       backgroundColor: colorScheme.background,
       appBar: AppBar(
-        automaticallyImplyLeading: false,
+        // leading: IconButton(onPressed: () {
+        //   Navigator.pop(context);
+        // }, icon: Icon(Icons.arrow_back)),
+        automaticallyImplyLeading: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
         // toolbarHeight: kToolbarHeight + MediaQuery.of(context).padding.top,
@@ -184,6 +187,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
             color: colorScheme.primary,
           ),
           child: SafeArea(
+
             child: Center(
               child: Text(
                 screenTitle,

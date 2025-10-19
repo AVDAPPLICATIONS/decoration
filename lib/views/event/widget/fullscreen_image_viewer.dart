@@ -41,13 +41,49 @@ class FullScreenImageViewer extends ConsumerWidget {
       body: FutureBuilder<String?>(
         future: imageCache.getCachedPath(imageUrl),
         builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(
+                color: Colors.white,
+              ),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    color: Colors.white,
+                    size: 64,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error loading image: ${snapshot.error}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            );
+          }
+
           final cachedPath = snapshot.data;
           final ImageProvider provider;
+          
           if (cachedPath != null && File(cachedPath).existsSync()) {
             provider = FileImage(File(cachedPath));
           } else {
             // Kick off background caching for next time
-            imageCache.ensureCached(imageUrl);
+            imageCache.ensureCached(imageUrl).catchError((error) {
+              print('Background caching failed: $error');
+              // If caching fails, we'll still try to show the network image
+            });
             provider = NetworkImage(imageUrl);
           }
 
@@ -64,21 +100,50 @@ class FullScreenImageViewer extends ConsumerWidget {
                 color: Colors.white,
               ),
             ),
-            errorBuilder: (context, error, stackTrace) => const Center(
+            errorBuilder: (context, error, stackTrace) => Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.error_outline,
                     color: Colors.white,
                     size: 64,
                   ),
-                  SizedBox(height: 16),
-                  Text(
+                  const SizedBox(height: 16),
+                  const Text(
                     'Failed to load image',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'URL: ${imageUrl.length > 50 ? '${imageUrl.substring(0, 50)}...' : imageUrl}',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      // Retry by rebuilding the widget
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => FullScreenImageViewer(
+                            imageUrl: imageUrl,
+                            title: title,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
                     ),
                   ),
                 ],

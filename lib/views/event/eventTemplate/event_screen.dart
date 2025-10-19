@@ -189,6 +189,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                   ],
                 ),
               ),
+
               Expanded(
                 child: templates.isNotEmpty
                     ? RefreshIndicator(

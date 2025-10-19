@@ -11,6 +11,32 @@ class GalleryService {
 
   static final ImagePicker _picker = ImagePicker();
 
+  /// Check if an image exists on the server without downloading it
+  Future<bool> imageExists(String imageUrl) async {
+    try {
+      print('🔍 GalleryService: Checking if image exists: $imageUrl');
+      final response = await http.head(Uri.parse(imageUrl));
+      print('🔍 GalleryService: Response status: ${response.statusCode}');
+      return response.statusCode == 200;
+    } catch (e) {
+      print('❌ GalleryService: Error checking if image exists: $e');
+      return false;
+    }
+  }
+
+  /// Test server connectivity
+  Future<bool> testServerConnectivity() async {
+    try {
+      print('🔍 GalleryService: Testing server connectivity to: $baseUrl');
+      final response = await http.get(Uri.parse('$baseUrl/health'));
+      print('🔍 GalleryService: Server response: ${response.statusCode}');
+      return response.statusCode == 200;
+    } catch (e) {
+      print('❌ GalleryService: Server connectivity test failed: $e');
+      return false;
+    }
+  }
+
   // Pick image from gallery
   static Future<File?> pickImageFromGallery() async {
     try {

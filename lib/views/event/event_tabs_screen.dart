@@ -65,6 +65,7 @@ class EventTabsScreen extends StatelessWidget {
               children: [
                 /// CustomTabAppBar reused from the scalable appbar system
                 CustomTabAppBar(
+                  // automaticallyImplyLeading: false,
                   title: '${event['name']} (${event['year']})',
                   tabs: const [
                     Tab(text: 'Inventory'),

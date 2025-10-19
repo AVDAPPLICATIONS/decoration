@@ -100,6 +100,16 @@ class _DesignTabState extends State<DesignTab> {
         List<Map<String, dynamic>> newFinalDecorationImages = [];
 
         print('🔍 Processing event data: $eventData');
+        
+        // Debug: Print the base URL being used
+        print('🔍 Using API base URL: $apiBaseUrl');
+        
+        // Test server connectivity if we have issues
+        if (_areServicesReady()) {
+          _galleryService!.testServerConnectivity().then((isConnected) {
+            print('🔍 Server connectivity test: ${isConnected ? "✅ Connected" : "❌ Failed"}');
+          });
+        }
 
         // Process design images from gallery.design array
         if (eventData['gallery'] != null &&
@@ -114,8 +124,10 @@ class _DesignTabState extends State<DesignTab> {
             if (item is Map<String, dynamic>) {
               // Convert relative URL to full URL
               String imageUrl = item['image_url'] ?? '';
+              print('🔍 Original image URL: $imageUrl');
               if (imageUrl.startsWith('/')) {
                 imageUrl = '${apiBaseUrl}$imageUrl';
+                print('🔍 Converted to full URL: $imageUrl');
               }
 
               newDesignImages.add({
@@ -160,6 +172,15 @@ class _DesignTabState extends State<DesignTab> {
         print('🔍 Total design images found: ${newDesignImages.length}');
         print(
             '🔍 Total final decoration images found: ${newFinalDecorationImages.length}');
+            
+        // Test one of the image URLs manually if we have images
+        if (newDesignImages.isNotEmpty && _areServicesReady()) {
+          final testImageUrl = newDesignImages.first['image_path'];
+          print('🔍 Testing first image URL manually: $testImageUrl');
+          _galleryService!.imageExists(testImageUrl).then((exists) {
+            print('🔍 Manual test result: ${exists ? "✅ Exists" : "❌ Missing"}');
+          });
+        }
 
         setState(() {
           _designImages = newDesignImages;
@@ -191,44 +212,119 @@ class _DesignTabState extends State<DesignTab> {
   Widget _buildImageWidget(String imagePath) {
     // Check if it's a network URL
     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-      return cnf.CachedNetworkOrFileImage(
-        imageUrl: imagePath,
-        fit: BoxFit.fill,
-        placeholder: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.grey.shade200,
-                Colors.grey.shade100,
-              ],
+      return FutureBuilder<bool>(
+        future: _areServicesReady() ? _galleryService!.imageExists(imagePath) : Future.value(false),
+        builder: (context, snapshot) {
+          // If we can't check or image doesn't exist, show error immediately
+          if (snapshot.hasData && !snapshot.data!) {
+            print('❌ Design Tab: Image does not exist on server: $imagePath');
+            return Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.grey.shade200,
+                    Colors.grey.shade100,
+                  ],
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.image_not_supported,
+                    size: 48,
+                    color: Colors.grey.shade400,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Image not found',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Server: 404',
+                    style: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+          
+          // If we're still checking or image exists, use the cached network image
+          return cnf.CachedNetworkOrFileImage(
+            imageUrl: imagePath,
+            fit: BoxFit.fill,
+            placeholder: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.grey.shade200,
+                    Colors.grey.shade100,
+                  ],
+                ),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      color: AppColors.primary,
+                      strokeWidth: 2,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Loading...',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-          child: Center(
-            child: CircularProgressIndicator(
-              color: AppColors.primary,
-              strokeWidth: 2,
+            errorWidget: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.grey.shade200,
+                    Colors.grey.shade100,
+                  ],
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.broken_image,
+                    size: 48,
+                    color: Colors.grey.shade400,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Failed to load',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ),
-        errorWidget: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.grey.shade200,
-                Colors.grey.shade100,
-              ],
-            ),
-          ),
-          child: Icon(
-            Icons.broken_image,
-            size: 48,
-            color: Colors.grey.shade400,
-          ),
-        ),
+          );
+        },
       );
     } else {
       // Local file
@@ -236,23 +332,39 @@ class _DesignTabState extends State<DesignTab> {
         File(imagePath),
         fit: BoxFit.cover,
         width: double.infinity,
-        errorBuilder: (context, error, stackTrace) => Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.grey.shade200,
-                Colors.grey.shade100,
+        errorBuilder: (context, error, stackTrace) {
+          print('Error loading local image: $error');
+          return Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.grey.shade200,
+                  Colors.grey.shade100,
+                ],
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.broken_image,
+                  size: 48,
+                  color: Colors.grey.shade400,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'File not found',
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 12,
+                  ),
+                ),
               ],
             ),
-          ),
-          child: Icon(
-            Icons.broken_image,
-            size: 48,
-            color: Colors.grey.shade400,
-          ),
-        ),
+          );
+        },
       );
     }
   }
@@ -667,9 +779,10 @@ class _DesignTabState extends State<DesignTab> {
                         children: List.generate(
                           images.length,
                           (index) => GestureDetector(
-                            onLongPress: () {
+                            onTap: () {
                               final imagePath =
                                   images[index]['image_path'] ?? '';
+                              print(imagePath);
                               if (imagePath.isNotEmpty) {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
@@ -724,10 +837,23 @@ class _DesignTabState extends State<DesignTab> {
                                                   ],
                                                 ),
                                               ),
-                                              child: Icon(
-                                                Icons.image,
-                                                size: 48,
-                                                color: Colors.grey.shade400,
+                                              child: Column(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(
+                                                    Icons.image_not_supported,
+                                                    size: 48,
+                                                    color: Colors.grey.shade400,
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  Text(
+                                                    'No image',
+                                                    style: TextStyle(
+                                                      color: Colors.grey.shade600,
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                     ),
