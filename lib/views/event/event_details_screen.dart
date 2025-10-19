@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:avd_decoration_application/widgets/cached_network_or_file_image.dart' as cnf;
+import 'package:avd_decoration_application/widgets/cached_network_or_file_image.dart'
+    as cnf;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:pdf/pdf.dart';
@@ -14,6 +16,7 @@ import '../../services/gallery_service.dart';
 import '../../providers/inventory_provider.dart';
 import '../../providers/event_repository_provider.dart';
 import '../../utils/top_snackbar_helper.dart';
+import '../custom_widget/custom_appbar.dart';
 import 'widget/fullscreen_image_viewer.dart';
 import 'widget/add_cost_dialog.dart';
 import 'widget/pdf_viewer.dart';
@@ -93,7 +96,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
 
   Future<void> _refreshEventData(bool snack) async {
     final colorScheme = Theme.of(context).colorScheme;
-    if (_isRefreshing) return ;
+    if (_isRefreshing) return;
 
     setState(() {
       _isRefreshing = true;
@@ -119,7 +122,9 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
           yearId: yearId,
         );
 
-        if (eventDetails != null && eventDetails['success'] == true && eventDetails['data'] != null) {
+        if (eventDetails != null &&
+            eventDetails['success'] == true &&
+            eventDetails['data'] != null) {
           setState(() {
             _currentEventData = {
               'id': eventDetails['data']['event']['id'],
@@ -134,7 +139,8 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
               'issuances': eventDetails['data']['issuances'],
             };
           });
-          if (snack) showInfoTopSnackBar(context, 'Event data refreshed successfully!');
+          if (snack)
+            showInfoTopSnackBar(context, 'Event data refreshed successfully!');
         }
       }
     } catch (e) {
@@ -174,36 +180,42 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         ),
       ),
       backgroundColor: colorScheme.background,
-      appBar: AppBar(
-        // leading: IconButton(onPressed: () {
-        //   Navigator.pop(context);
-        // }, icon: Icon(Icons.arrow_back)),
-        automaticallyImplyLeading: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        // toolbarHeight: kToolbarHeight + MediaQuery.of(context).padding.top,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            color: colorScheme.primary,
-          ),
-          child: SafeArea(
+      // appBar: AppBar(
+      //   // leading: IconButton(onPressed: () {
+      //   //   Navigator.pop(context);
+      //   // }, icon: Icon(Icons.arrow_back)),
+      //   // automaticallyImplyLeading: true,
+      //   backgroundColor: Colors.transparent,
+      //   elevation: 0,
+      //   // toolbarHeight: kToolbarHeight + MediaQuery.of(context).padding.top,
+      //   flexibleSpace: Container(
+      //     decoration: BoxDecoration(
+      //       color: colorScheme.primary,
+      //     ),
+      //     child: SafeArea(
+      //
+      //       child: Center(
+      //         child: Text(
+      //           screenTitle,
+      //           softWrap: true,
+      //           style: TextStyle(
+      //             color: colorScheme.onPrimary,
+      //             fontSize: 20,
+      //             fontWeight: FontWeight.bold,
+      //           ),
+      //         ),
+      //       ),
+      //     ),
+      //   ),
+      // ),
 
-            child: Center(
-              child: Text(
-                screenTitle,
-                softWrap: true,
-                style: TextStyle(
-                  color: colorScheme.onPrimary,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ),
+      appBar: CustomAppBarWithLoading(
+        automaticallyImplyLeading: false,
+        title: '${screenTitle}',
+        isLoading: _isRefreshing,
+        // backTooltip: 'Back to Events',
+        showBackButton: true, // ✅ hides the back icon
       ),
-
-
 
       body: Column(
         children: [
@@ -216,8 +228,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
               indicatorWeight: 3,
               indicatorSize: TabBarIndicatorSize.label,
               labelColor: colorScheme.onPrimary,
-              unselectedLabelColor:
-                  colorScheme.onPrimary.withOpacity(0.6),
+              unselectedLabelColor: colorScheme.onPrimary.withOpacity(0.6),
               labelStyle: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -351,7 +362,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         final data = snapshot.data!['data'];
         final issuancesByItem =
             data['issuances_by_item'] as List<dynamic>? ?? [];
-          final issuedItems = issuancesByItem.where((itemGroup) {
+        final issuedItems = issuancesByItem.where((itemGroup) {
           final transactions = itemGroup['transactions'] as List<dynamic>;
           for (var transaction in transactions) {
             print(
@@ -728,7 +739,8 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
                           itemCount: designImages.length,
                           itemBuilder: (context, index) {
                             return _buildDesignImageCard(
-                                designImages[index], index, tabType: 'design');
+                                designImages[index], index,
+                                tabType: 'design');
                           },
                         )
                       : SingleChildScrollView(
@@ -788,7 +800,8 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
                         itemCount: finalImages.length,
                         itemBuilder: (context, index) {
                           return _buildDesignImageCard(
-                              finalImages[index], index, tabType: 'final');
+                              finalImages[index], index,
+                              tabType: 'final');
                         },
                       )
                     : Center(
@@ -808,7 +821,8 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
     );
   }
 
-  Widget _buildDesignImageCard(dynamic imageData, int index, {String tabType = 'design'}) {
+  Widget _buildDesignImageCard(dynamic imageData, int index,
+      {String tabType = 'design'}) {
     final colorScheme = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: () => _showFullScreenImage(imageData),
@@ -896,7 +910,8 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
   }
 
   void _showDeleteConfirmation(dynamic imageData, String tabType) {
-    final imageType = tabType == 'design' ? 'design image' : 'final decoration image';
+    final imageType =
+        tabType == 'design' ? 'design image' : 'final decoration image';
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -959,9 +974,9 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         // Refresh the event data to update the UI
         await _refreshEventData(false);
         showSuccessTopSnackBar(context, 'Image deleted successfully!');
-
       } else {
-        showErrorTopSnackBar(context, result['message'] ?? 'Failed to delete image');
+        showErrorTopSnackBar(
+            context, result['message'] ?? 'Failed to delete image');
       }
     } catch (e) {
       // Close loading indicator if still open
@@ -1043,7 +1058,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         );
       }
     } else {
-
       showErrorTopSnackBar(
         context,
         'File URL not available',
@@ -1413,7 +1427,8 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
           print('Debug: itemInfo = $itemInfo');
           print('Debug: allTransactions = $allTransactions');
 
-          showErrorTopSnackBar(context, "Unable to return: missing item info. ItemId: $itemId");
+          showErrorTopSnackBar(
+              context, "Unable to return: missing item info. ItemId: $itemId");
         }
         return false; // Do not dismiss the tile
       },
@@ -1451,7 +1466,8 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: cnf.CachedNetworkOrFileImage(
-                              imageUrl: '${apiBaseUrl}${itemInfo['item_image']}',
+                              imageUrl:
+                                  '${apiBaseUrl}${itemInfo['item_image']}',
                               fit: BoxFit.cover,
                               errorWidget: Icon(
                                 Icons.inventory_2,
@@ -2085,7 +2101,8 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
   // Navigate to issue item screen
   void _showIssueItemDialog() {
     Navigator.pushNamed(
-      context, '/issue-item',
+      context,
+      '/issue-item',
       arguments: {
         'eventId': _currentEventData['id'],
         'onItemIssued': () {
@@ -2485,7 +2502,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
           ),
         ),
       );
-
     } else {
       // For images, show in full screen
       Navigator.push(
@@ -2520,11 +2536,13 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
       final result = await costService.deleteEventCostItem(costId);
 
       if (result['success'] == true) {
-        showSuccessTopSnackBar(context, result['message'] ?? 'Cost deleted successfully');
+        showSuccessTopSnackBar(
+            context, result['message'] ?? 'Cost deleted successfully');
         // Navigator.pop(context); // Close the dialog
         setState(() {}); // Refresh the cost list
       } else {
-        showErrorTopSnackBar(context, result['message'] ?? 'Failed to delete cost');
+        showErrorTopSnackBar(
+            context, result['message'] ?? 'Failed to delete cost');
       }
     } catch (e) {
       showErrorTopSnackBar(context, 'Error deleting cost: $e');
@@ -2836,7 +2854,8 @@ class _ReturnItemDialogState extends ConsumerState<_ReturnItemDialog> {
     }
 
     if (quantity > widget.maxQuantity) {
-      showErrorTopSnackBar(context,'Quantity cannot exceed ${widget.maxQuantity}');
+      showErrorTopSnackBar(
+          context, 'Quantity cannot exceed ${widget.maxQuantity}');
       return;
     }
 
@@ -2890,11 +2909,13 @@ class _ReturnItemDialogState extends ConsumerState<_ReturnItemDialog> {
       }
 
       if (response['success'] == true) {
-        showSuccessTopSnackBar(context, response['message'] ?? 'Item returned successfully');
+        showSuccessTopSnackBar(
+            context, response['message'] ?? 'Item returned successfully');
         Navigator.of(context).pop();
         widget.onItemReturned();
       } else {
-        showErrorTopSnackBar(context, response['message'] ?? 'Failed to return item');
+        showErrorTopSnackBar(
+            context, response['message'] ?? 'Failed to return item');
       }
     } catch (e) {
       showErrorTopSnackBar(context, 'Error: $e');
@@ -3059,14 +3080,14 @@ class _ReturnItemDialogState extends ConsumerState<_ReturnItemDialog> {
                       ),
                       child: _isSubmitting
                           ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor:
-                          AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
                           : const Text('Return'),
                     ),
                   ),
@@ -3114,9 +3135,6 @@ class _ReturnItemDialogState extends ConsumerState<_ReturnItemDialog> {
     );
   }
 }
-
-
-
 
 class _ImageUploadDialog extends StatefulWidget {
   final int eventId;
@@ -3387,23 +3405,98 @@ class _ImageUploadDialogState extends State<_ImageUploadDialog> {
   }
 
   Future<void> _selectImages() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
-        allowMultiple: true,
-      );
+    // Show app selection dialog first
+    final selectedOption = await _showImageSourceDialog();
+    if (selectedOption == null) return;
 
-      if (result != null) {
+    try {
+      final ImagePicker picker = ImagePicker();
+      List<XFile>? pickedFiles;
+
+      switch (selectedOption) {
+        case 'camera':
+          // Use image_picker for camera (iOS compatible)
+          final XFile? image = await picker.pickImage(
+            source: ImageSource.camera,
+            imageQuality: 85,
+          );
+          if (image != null) {
+            pickedFiles = [image];
+          }
+          break;
+        case 'gallery':
+          // Use image_picker for gallery (iOS compatible)
+          pickedFiles = await picker.pickMultiImage(
+            imageQuality: 85,
+          );
+          break;
+        case 'files':
+          // Use file_picker for documents (works on both platforms)
+          FilePickerResult? result = await FilePicker.platform.pickFiles(
+            type: FileType.custom,
+            allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+            allowMultiple: true,
+          );
+          if (result != null) {
+            setState(() {
+              _selectedImages.addAll(
+                result.files.map((file) => File(file.path!)).toList(),
+              );
+            });
+          }
+          return; // Early return for files
+      }
+
+      if (pickedFiles != null && pickedFiles.isNotEmpty) {
         setState(() {
           _selectedImages.addAll(
-            result.files.map((file) => File(file.path!)).toList(),
+            pickedFiles!.map((xFile) => File(xFile.path)).toList(),
           );
         });
       }
     } catch (e) {
       showErrorTopSnackBar(context, 'Error selecting files: $e');
     }
+  }
+
+  Future<String?> _showImageSourceDialog() async {
+    return showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Select Source'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: Colors.blue),
+                title: const Text('Camera'),
+                subtitle: const Text('Take a new photo'),
+                onTap: () => Navigator.of(context).pop('camera'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: Colors.green),
+                title: const Text('Gallery'),
+                subtitle: const Text('Choose from gallery'),
+                onTap: () => Navigator.of(context).pop('gallery'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.folder, color: Colors.orange),
+                title: const Text('Files'),
+                subtitle: const Text('Browse files (Images & PDFs)'),
+                onTap: () => Navigator.of(context).pop('files'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _uploadImages() async {
@@ -3423,7 +3516,8 @@ class _ImageUploadDialogState extends State<_ImageUploadDialog> {
       );
 
       if (result['success'] == true) {
-        showSuccessTopSnackBar(context, result['message'] ?? 'Images uploaded successfully');
+        showSuccessTopSnackBar(
+            context, result['message'] ?? 'Images uploaded successfully');
 
         Navigator.pop(context);
         widget.onImagesUploaded();
@@ -3738,23 +3832,98 @@ class _FinalDecorationImageUploadDialogState
   }
 
   Future<void> _selectImages() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
-        allowMultiple: true,
-      );
+    // Show app selection dialog first
+    final selectedOption = await _showImageSourceDialog();
+    if (selectedOption == null) return;
 
-      if (result != null) {
+    try {
+      final ImagePicker picker = ImagePicker();
+      List<XFile>? pickedFiles;
+
+      switch (selectedOption) {
+        case 'camera':
+          // Use image_picker for camera (iOS compatible)
+          final XFile? image = await picker.pickImage(
+            source: ImageSource.camera,
+            imageQuality: 85,
+          );
+          if (image != null) {
+            pickedFiles = [image];
+          }
+          break;
+        case 'gallery':
+          // Use image_picker for gallery (iOS compatible)
+          pickedFiles = await picker.pickMultiImage(
+            imageQuality: 85,
+          );
+          break;
+        case 'files':
+          // Use file_picker for documents (works on both platforms)
+          FilePickerResult? result = await FilePicker.platform.pickFiles(
+            type: FileType.custom,
+            allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+            allowMultiple: true,
+          );
+          if (result != null) {
+            setState(() {
+              _selectedImages.addAll(
+                result.files.map((file) => File(file.path!)).toList(),
+              );
+            });
+          }
+          return; // Early return for files
+      }
+
+      if (pickedFiles != null && pickedFiles.isNotEmpty) {
         setState(() {
           _selectedImages.addAll(
-            result.files.map((file) => File(file.path!)).toList(),
+            pickedFiles!.map((xFile) => File(xFile.path)).toList(),
           );
         });
       }
     } catch (e) {
       showErrorTopSnackBar(context, 'Error selecting files: $e');
     }
+  }
+
+  Future<String?> _showImageSourceDialog() async {
+    return showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Select Source'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: Colors.blue),
+                title: const Text('Camera'),
+                subtitle: const Text('Take a new photo'),
+                onTap: () => Navigator.of(context).pop('camera'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: Colors.green),
+                title: const Text('Gallery'),
+                subtitle: const Text('Choose from gallery'),
+                onTap: () => Navigator.of(context).pop('gallery'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.folder, color: Colors.orange),
+                title: const Text('Files'),
+                subtitle: const Text('Browse files (Images & PDFs)'),
+                onTap: () => Navigator.of(context).pop('files'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _uploadImages() async {
@@ -3777,7 +3946,8 @@ class _FinalDecorationImageUploadDialogState
       );
 
       if (result['success'] == true) {
-        showSuccessTopSnackBar(context, 'Final decoration images uploaded successfully!');
+        showSuccessTopSnackBar(
+            context, 'Final decoration images uploaded successfully!');
 
         Navigator.pop(context);
         widget.onImagesUploaded();

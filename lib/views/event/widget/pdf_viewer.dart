@@ -65,8 +65,8 @@ class _PDFViewerState extends State<PDFViewer> {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: Theme.of(context).primaryColor,
+        // foregroundColor: Colors.white,
         elevation: 1,
         title: Text(
           widget.title ?? 'PDF Document',
@@ -75,25 +75,13 @@ class _PDFViewerState extends State<PDFViewer> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
         actions: [
           if (_pdfData != null) ...[
             IconButton(
-              icon: const Icon(Icons.share, color: Colors.black),
+              icon: const Icon(Icons.share),
               onPressed: () => _sharePDF(),
             ),
-            IconButton(
-              icon: const Icon(Icons.print, color: Colors.black),
-              onPressed: () => _printPDF(),
-            ),
           ],
-          IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.black),
-            onPressed: _loadPDF,
-          ),
         ],
       ),
       body: _buildBody(),
@@ -163,30 +151,30 @@ class _PDFViewerState extends State<PDFViewer> {
 
     if (_pdfData != null) {
       return PdfPreview(
+        allowPrinting: false,
+        allowSharing: false,
         build: (format) => _pdfData!,
-        allowPrinting: true,
-        allowSharing: true,
         canChangePageFormat: false,
         canChangeOrientation: false,
         canDebug: false,
         initialPageFormat: PdfPageFormat.a4,
         pdfFileName: widget.title ?? 'document.pdf',
-        onPrinted: (context) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('PDF printed successfully'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        },
-        onShared: (context) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('PDF shared successfully'),
-              backgroundColor: Colors.blue,
-            ),
-          );
-        },
+        // onPrinted: (context) {
+        //   ScaffoldMessenger.of(context).showSnackBar(
+        //     const SnackBar(
+        //       content: Text('PDF printed successfully'),
+        //       backgroundColor: Colors.green,
+        //     ),
+        //   );
+        // },
+        // onShared: (context) {
+        //   ScaffoldMessenger.of(context).showSnackBar(
+        //     const SnackBar(
+        //       content: Text('PDF shared successfully'),
+        //       backgroundColor: Colors.blue,
+        //     ),
+        //   );
+        // },
       );
     }
 

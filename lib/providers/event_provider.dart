@@ -10,7 +10,8 @@ final eventServiceProvider = Provider<EventService>((ref) {
   return EventService(api);
 });
 
-final eventProvider = StateNotifierProvider<EventNotifier, List<EventModel>>((ref) {
+final eventProvider =
+    StateNotifierProvider<EventNotifier, List<EventModel>>((ref) {
   final service = ref.read(eventServiceProvider);
   final repo = EventRepository(
     service: service,
@@ -19,6 +20,9 @@ final eventProvider = StateNotifierProvider<EventNotifier, List<EventModel>>((re
   );
   return EventNotifier(ref, service, repo);
 });
+
+// Loading state provider for events
+final eventLoadingProvider = StateProvider<bool>((ref) => false);
 
 class EventNotifier extends StateNotifier<List<EventModel>> {
   final Ref ref;
@@ -29,10 +33,13 @@ class EventNotifier extends StateNotifier<List<EventModel>> {
 
   Future<void> fetchEvents() async {
     try {
+      ref.read(eventLoadingProvider.notifier).state = true;
       final events = await service.fetchEvents();
       state = events;
     } catch (e) {
       print('Error fetching events: $e');
+    } finally {
+      ref.read(eventLoadingProvider.notifier).state = false;
     }
   }
 

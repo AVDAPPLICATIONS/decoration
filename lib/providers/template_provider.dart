@@ -21,6 +21,9 @@ final templateProvider =
   return TemplateNotifier(ref, service, repo);
 });
 
+// Loading state provider for templates
+final templateLoadingProvider = StateProvider<bool>((ref) => false);
+
 class TemplateNotifier extends StateNotifier<List<EventTemplateModel>> {
   final Ref ref;
   final EventTemplateService service;
@@ -30,6 +33,7 @@ class TemplateNotifier extends StateNotifier<List<EventTemplateModel>> {
 
   Future<void> fetchTemplates() async {
     try {
+      ref.read(templateLoadingProvider.notifier).state = true;
       print('TemplateProvider: Starting to fetch templates from API...');
       final templates = await repo.fetchTemplates();
       print(
@@ -46,6 +50,8 @@ class TemplateNotifier extends StateNotifier<List<EventTemplateModel>> {
     } catch (e) {
       print('TemplateProvider: Error fetching templates: $e');
       // Keep the current state on error, don't clear it
+    } finally {
+      ref.read(templateLoadingProvider.notifier).state = false;
     }
   }
 

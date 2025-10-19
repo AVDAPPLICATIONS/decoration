@@ -14,6 +14,7 @@ import '../../../models/event_model.dart';
 import '../../../models/event_template_model.dart';
 import '../../../utils/responsive_utils.dart';
 import '../../custom_widget/custom_appbar.dart';
+import '../../custom_widget/custom_loading_bar.dart';
 
 class EventScreen extends ConsumerStatefulWidget {
   final bool isAdmin;
@@ -37,23 +38,26 @@ class _EventScreenState extends ConsumerState<EventScreen> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     final allEventsData = ref.watch(eventProvider);
     final templates = ref.watch(templateProvider);
+    final isEventsLoading = ref.watch(eventLoadingProvider);
+    final isTemplatesLoading = ref.watch(templateLoadingProvider);
     final colorScheme = Theme.of(context).colorScheme;
 
     // Debug logging
     print('EventScreen build: templates count = ${templates.length}');
+    print(
+        'EventScreen build: isEventsLoading = $isEventsLoading, isTemplatesLoading = $isTemplatesLoading');
 
     return ResponsiveBuilder(
-      mobile:
-          _buildMobileLayout(context, allEventsData, templates, colorScheme),
-      tablet:
-          _buildTabletLayout(context, allEventsData, templates, colorScheme),
-      desktop:
-          _buildDesktopLayout(context, allEventsData, templates, colorScheme),
+      mobile: _buildMobileLayout(context, allEventsData, templates, colorScheme,
+          isEventsLoading, isTemplatesLoading),
+      tablet: _buildTabletLayout(context, allEventsData, templates, colorScheme,
+          isEventsLoading, isTemplatesLoading),
+      desktop: _buildDesktopLayout(context, allEventsData, templates,
+          colorScheme, isEventsLoading, isTemplatesLoading),
     );
   }
 
@@ -68,28 +72,42 @@ class _EventScreenState extends ConsumerState<EventScreen> {
       BuildContext context,
       List<EventModel> allEventsData,
       List<dynamic> templates,
-      ColorScheme colorScheme) {
-    return _buildEventScreen(context, allEventsData, templates, colorScheme);
+      ColorScheme colorScheme,
+      bool isEventsLoading,
+      bool isTemplatesLoading) {
+    return _buildEventScreen(context, allEventsData, templates, colorScheme,
+        isEventsLoading, isTemplatesLoading);
   }
 
   Widget _buildTabletLayout(
       BuildContext context,
       List<EventModel> allEventsData,
       List<dynamic> templates,
-      ColorScheme colorScheme) {
-    return _buildEventScreen(context, allEventsData, templates, colorScheme);
+      ColorScheme colorScheme,
+      bool isEventsLoading,
+      bool isTemplatesLoading) {
+    return _buildEventScreen(context, allEventsData, templates, colorScheme,
+        isEventsLoading, isTemplatesLoading);
   }
 
   Widget _buildDesktopLayout(
       BuildContext context,
       List<EventModel> allEventsData,
       List<dynamic> templates,
-      ColorScheme colorScheme) {
-    return _buildEventScreen(context, allEventsData, templates, colorScheme);
+      ColorScheme colorScheme,
+      bool isEventsLoading,
+      bool isTemplatesLoading) {
+    return _buildEventScreen(context, allEventsData, templates, colorScheme,
+        isEventsLoading, isTemplatesLoading);
   }
 
-  Widget _buildEventScreen(BuildContext context, List<EventModel> allEventsData,
-      List<dynamic> templates, ColorScheme colorScheme) {
+  Widget _buildEventScreen(
+      BuildContext context,
+      List<EventModel> allEventsData,
+      List<dynamic> templates,
+      ColorScheme colorScheme,
+      bool isEventsLoading,
+      bool isTemplatesLoading) {
     return Scaffold(
       backgroundColor: colorScheme.primary,
 
@@ -138,10 +156,8 @@ class _EventScreenState extends ConsumerState<EventScreen> {
             ),
           ),
           child: Column(
-
             children: [
-              // Event Templates Sectio
-
+              // Event Templates Section
               Padding(
                 padding: EdgeInsets.symmetric(
                   horizontal: context.responsive(
@@ -155,37 +171,54 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                     desktop: 20.0,
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Column(
                   children: [
-                    ResponsiveText(
-                      'Event Templates',
-                      mobileFontSize: 18.0,
-                      tabletFontSize: 20.0,
-                      desktopFontSize: 22.0,
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.primary,
-                    ),
-                    IconButton(
-                      onPressed: () => showAddTemplateDialog(context,ref),
-                      icon: Icon(
-                        Icons.add,
-                        color: colorScheme.primary,
-                        size: context.responsive(
-                          mobile: 24.0,
-                          tablet: 26.0,
-                          desktop: 28.0,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        ResponsiveText(
+                          'Event Templates',
+                          mobileFontSize: 18.0,
+                          tabletFontSize: 20.0,
+                          desktopFontSize: 22.0,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.primary,
                         ),
-                      ),
-                      tooltip: 'Add Template',
-                      padding: EdgeInsets.all(
-                        context.responsive(
-                          mobile: 8.0,
-                          tablet: 10.0,
-                          desktop: 12.0,
+                        IconButton(
+                          onPressed: () => showAddTemplateDialog(context, ref),
+                          icon: Icon(
+                            Icons.add,
+                            color: colorScheme.primary,
+                            size: context.responsive(
+                              mobile: 24.0,
+                              tablet: 26.0,
+                              desktop: 28.0,
+                            ),
+                          ),
+                          tooltip: 'Add Template',
+                          padding: EdgeInsets.all(
+                            context.responsive(
+                              mobile: 8.0,
+                              tablet: 10.0,
+                              desktop: 12.0,
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
+                    // Loading bar for templates
+                    if (isTemplatesLoading) ...[
+                      SizedBox(
+                          height: context.responsive(
+                              mobile: 12.0, tablet: 14.0, desktop: 16.0)),
+                      CustomLoadingBar(
+                        message: 'Loading templates...',
+                        primaryColor: colorScheme.primary,
+                        backgroundColor: colorScheme.surface,
+                        height: context.responsive(
+                            mobile: 4.0, tablet: 5.0, desktop: 6.0),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -238,234 +271,273 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                       ),
               ),
               // Events List Section
-              Container(
-                height: MediaQuery.of(context).size.height * 0.0, // Fixed height for events list
-                child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  itemCount: allEventsData.length,
-                  itemBuilder: (context, index) {
-                    final eventData = allEventsData[index];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 20),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(24),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Theme.of(context).colorScheme.surface,
-                            Theme.of(context)
-                                .colorScheme
-                                .primaryContainer
-                                .withOpacity(0.1),
-                          ],
-                        ),
-                        border: Border.all(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .outline
-                              .withOpacity(0.2),
-                          width: 1,
-                        ),
+              if (isEventsLoading) ...[
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.responsive(
+                        mobile: 24.0, tablet: 28.0, desktop: 32.0),
+                    vertical: context.responsive(
+                        mobile: 16.0, tablet: 18.0, desktop: 20.0),
+                  ),
+                  child: Column(
+                    children: [
+                      ResponsiveText(
+                        'Events',
+                        mobileFontSize: 18.0,
+                        tabletFontSize: 20.0,
+                        desktopFontSize: 22.0,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.primary,
                       ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
+                      SizedBox(
+                          height: context.responsive(
+                              mobile: 12.0, tablet: 14.0, desktop: 16.0)),
+                      CustomLoadingBar(
+                        message: 'Loading events...',
+                        primaryColor: colorScheme.primary,
+                        backgroundColor: colorScheme.surface,
+                        height: context.responsive(
+                            mobile: 4.0, tablet: 5.0, desktop: 6.0),
+                      ),
+                    ],
+                  ),
+                ),
+              ] else ...[
+                Container(
+                  height: MediaQuery.of(context).size.height *
+                      0.0, // Fixed height for events list
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    itemCount: allEventsData.length,
+                    itemBuilder: (context, index) {
+                      final eventData = allEventsData[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 20),
+                        decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(24),
-                          onTap: () {
-                            if (eventData.id != null) {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => EventDetailsScreen(
-                                    eventData: {
-                                      'id': eventData.id.toString(),
-                                      'name': eventData.name ?? '',
-                                      'date':
-                                          eventData.date?.toIso8601String() ??
-                                              '',
-                                      'location': eventData.location ?? '',
-                                      'status': eventData.status ?? '',
-                                    },
-                                    isAdmin: widget.isAdmin,
-                                  ),
-                                ),
-                              );
-                            }
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 70,
-                                  height: 70,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [
-                                        Theme.of(context).colorScheme.primary,
-                                        Theme.of(context)
-                                            .colorScheme
-                                            .primary
-                                            .withOpacity(0.8),
-                                      ],
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Theme.of(context).colorScheme.surface,
+                              Theme.of(context)
+                                  .colorScheme
+                                  .primaryContainer
+                                  .withOpacity(0.1),
+                            ],
+                          ),
+                          border: Border.all(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .outline
+                                .withOpacity(0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(24),
+                            onTap: () {
+                              if (eventData.id != null) {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => EventDetailsScreen(
+                                      eventData: {
+                                        'id': eventData.id.toString(),
+                                        'name': eventData.name ?? '',
+                                        'date':
+                                            eventData.date?.toIso8601String() ??
+                                                '',
+                                        'location': eventData.location ?? '',
+                                        'status': eventData.status ?? '',
+                                      },
+                                      isAdmin: widget.isAdmin,
                                     ),
-                                    borderRadius: BorderRadius.circular(18),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary
-                                            .withOpacity(0.3),
-                                        blurRadius: 15,
-                                        spreadRadius: 0,
-                                        offset: const Offset(0, 8),
-                                      ),
-                                    ],
                                   ),
-                                  child: Icon(
-                                    Icons.event,
-                                    color:
-                                        Theme.of(context).colorScheme.onPrimary,
-                                    size: 32,
-                                  ),
-                                ),
-                                const SizedBox(width: 24),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        eventData.name ?? 'Unnamed Event',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .primary,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Event ID: ${eventData.id ?? 'N/A'}',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurfaceVariant,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                PopupMenuButton<String>(
-                                  icon: Container(
-                                    padding: const EdgeInsets.all(12),
+                                );
+                              }
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 70,
+                                    height: 70,
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
                                         colors: [
+                                          Theme.of(context).colorScheme.primary,
                                           Theme.of(context)
                                               .colorScheme
                                               .primary
-                                              .withOpacity(0.1),
-                                          Theme.of(context)
-                                              .colorScheme
-                                              .primary
-                                              .withOpacity(0.05),
+                                              .withOpacity(0.8),
                                         ],
                                       ),
-                                      borderRadius: BorderRadius.circular(14),
-                                      border: Border.all(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary
-                                            .withOpacity(0.2),
-                                        width: 1,
-                                      ),
+                                      borderRadius: BorderRadius.circular(18),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                              .withOpacity(0.3),
+                                          blurRadius: 15,
+                                          spreadRadius: 0,
+                                          offset: const Offset(0, 8),
+                                        ),
+                                      ],
                                     ),
                                     child: Icon(
-                                      Icons.more_vert,
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                      size: 18,
+                                      Icons.event,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimary,
+                                      size: 32,
                                     ),
                                   ),
-                                  onSelected: (value) {
-                                    if (value == 'edit') {
-                                      showEditEventDialog(context, ref, eventData);
-                                    } else if (value == 'delete') {
-                                      showDeleteEventDialog(context, ref, eventData);
-                                    } else if (value == 'view') {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => EventDetailsScreen(
-                                            eventData: {
-                                              'id': eventData.id.toString(),
-                                              'name': eventData.name ?? '',
-                                              'date': eventData.date
-                                                      ?.toIso8601String() ??
-                                                  '',
-                                              'location':
-                                                  eventData.location ?? '',
-                                              'status': eventData.status ?? '',
-                                            },
-                                            isAdmin: widget.isAdmin,
+                                  const SizedBox(width: 24),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          eventData.name ?? 'Unnamed Event',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
                                           ),
                                         ),
-                                      );
-                                    }
-                                  },
-                                  itemBuilder: (context) => [
-                                    const PopupMenuItem(
-                                      value: 'view',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.visibility, size: 20),
-                                          SizedBox(width: 8),
-                                          Text('View Details'),
-                                        ],
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Event ID: ${eventData.id ?? 'N/A'}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuButton<String>(
+                                    icon: Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [
+                                            Theme.of(context)
+                                                .colorScheme
+                                                .primary
+                                                .withOpacity(0.1),
+                                            Theme.of(context)
+                                                .colorScheme
+                                                .primary
+                                                .withOpacity(0.05),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(14),
+                                        border: Border.all(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                              .withOpacity(0.2),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Icon(
+                                        Icons.more_vert,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                        size: 18,
                                       ),
                                     ),
-                                    if (widget.isAdmin) ...[
+                                    onSelected: (value) {
+                                      if (value == 'edit') {
+                                        showEditEventDialog(
+                                            context, ref, eventData);
+                                      } else if (value == 'delete') {
+                                        showDeleteEventDialog(
+                                            context, ref, eventData);
+                                      } else if (value == 'view') {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (_) => EventDetailsScreen(
+                                              eventData: {
+                                                'id': eventData.id.toString(),
+                                                'name': eventData.name ?? '',
+                                                'date': eventData.date
+                                                        ?.toIso8601String() ??
+                                                    '',
+                                                'location':
+                                                    eventData.location ?? '',
+                                                'status':
+                                                    eventData.status ?? '',
+                                              },
+                                              isAdmin: widget.isAdmin,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    itemBuilder: (context) => [
                                       const PopupMenuItem(
-                                        value: 'edit',
+                                        value: 'view',
                                         child: Row(
                                           children: [
-                                            Icon(Icons.edit, size: 20),
+                                            Icon(Icons.visibility, size: 20),
                                             SizedBox(width: 8),
-                                            Text('Edit'),
+                                            Text('View Details'),
                                           ],
                                         ),
                                       ),
-                                      const PopupMenuItem(
-                                        value: 'delete',
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.delete,
-                                                size: 20, color: Colors.red),
-                                            SizedBox(width: 8),
-                                            Text('Delete',
-                                                style: TextStyle(
-                                                    color: Colors.red)),
-                                          ],
+                                      if (widget.isAdmin) ...[
+                                        const PopupMenuItem(
+                                          value: 'edit',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.edit, size: 20),
+                                              SizedBox(width: 8),
+                                              Text('Edit'),
+                                            ],
+                                          ),
                                         ),
-                                      ),
+                                        const PopupMenuItem(
+                                          value: 'delete',
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.delete,
+                                                  size: 20, color: Colors.red),
+                                              SizedBox(width: 8),
+                                              Text('Delete',
+                                                  style: TextStyle(
+                                                      color: Colors.red)),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                     ],
-                                  ],
-                                ),
-                              ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
