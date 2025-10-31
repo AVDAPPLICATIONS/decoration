@@ -3468,12 +3468,12 @@ class _ImageUploadDialogState extends State<_ImageUploadDialog> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ListTile(
-                leading: const Icon(Icons.camera_alt, color: Colors.blue),
-                title: const Text('Camera'),
-                subtitle: const Text('Take a new photo'),
-                onTap: () => Navigator.of(context).pop('camera'),
-              ),
+              // ListTile(
+              //   leading: const Icon(Icons.camera_alt, color: Colors.blue),
+              //   title: const Text('Camera'),
+              //   subtitle: const Text('Take a new photo'),
+              //   onTap: () => Navigator.of(context).pop('camera'),
+              // ),
               ListTile(
                 leading: const Icon(Icons.photo_library, color: Colors.green),
                 title: const Text('Gallery'),
