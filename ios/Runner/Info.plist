@@ -26,7 +26,21 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<key>NSCameraUsageDescription</key>
+    <string>This app needs camera access to capture new photos and images of your decoration projects (e.g., room status, materials) to incorporate into your project files within the app.</string>
+
+    <key>NSDocumentsFolderUsageDescription</key>
+    <string>This app requires access to the Documents folder to select and upload relevant structural documents, blueprints, or planning files for your decoration projects.</string>
+
+    <key>NSMicrophoneUsageDescription</key>
+    <string>This app needs microphone access for optional audio recording features, allowing you to attach voice notes or comments directly to your decoration project steps or photos.</string>
+
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>We need access to your photo library to allow you to select existing photos (e.g., inspiration, materials) to use in your decoration projects and to save the final decorated images or project progress photos to your gallery.</string>
+
+    <key>UIApplicationSupportsIndirectInputEvents</key>
+
+
 	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
