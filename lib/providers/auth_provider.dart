@@ -40,23 +40,15 @@ class AuthNotifier extends StateNotifier<UserModel?> {
   // Check if there's a saved user session
   Future<void> _checkSavedSession() async {
     try {
-      print('Checking for saved user session...');
       final localStorage = ref.read(localStorageServiceProvider);
       final savedUserData = await localStorage.getUserData();
 
       if (savedUserData != null) {
         state = savedUserData;
-        print(
-            '✅ Restored user session: ${savedUserData.username} (${savedUserData.role})');
-      } else {
-        print('❌ No saved user session found');
-      }
-    } catch (e) {
-      print('❌ Error checking saved session: $e');
+      } else {}
     } finally {
       _isInitialized = true;
       ref.read(authReadyProvider.notifier).state = true;
-      print('✅ Auth provider initialization completed');
     }
   }
 
@@ -78,11 +70,10 @@ class AuthNotifier extends StateNotifier<UserModel?> {
         return true;
       } else {
         state = null;
-        print('❌ Authentication status: Not logged in');
+
         return false;
       }
     } catch (e) {
-      print('❌ Error checking authentication status: $e');
       state = null;
       return false;
     }
@@ -116,7 +107,6 @@ class AuthNotifier extends StateNotifier<UserModel?> {
         await localStorage.saveUserData(user);
 
         state = user;
-        print('✅ User logged in and saved: ${user.username} (${user.role})');
       } else {
         throw Exception(response['message'] ?? 'Login failed');
       }
@@ -124,7 +114,6 @@ class AuthNotifier extends StateNotifier<UserModel?> {
       state = null;
       ref.read(authErrorProvider.notifier).state =
           'Login failed. Please try again.';
-      print('❌ Login error: $e');
     } finally {
       ref.read(authLoadingProvider.notifier).state = false;
     }
@@ -152,7 +141,6 @@ class AuthNotifier extends StateNotifier<UserModel?> {
     } catch (e) {
       state = null;
       ref.read(authErrorProvider.notifier).state = 'Registration failed.';
-      print('❌ Registration error: $e');
     } finally {
       ref.read(authLoadingProvider.notifier).state = false;
     }
@@ -167,9 +155,7 @@ class AuthNotifier extends StateNotifier<UserModel?> {
       await localStorage.clearUserData();
 
       state = null;
-      print('✅ User logged out and data cleared');
     } catch (e) {
-      print('❌ Logout error: $e');
       // Even if logout fails, clear local state
       state = null;
     }

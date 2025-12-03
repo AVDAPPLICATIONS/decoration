@@ -10,14 +10,13 @@ class LocalStorageService {
   Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_tokenKey, token);
-    print('✅ Token saved to shared preferences');
   }
 
   // ✅ Get token
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString(_tokenKey);
-    print('🔍 Token retrieved: ${token != null ? 'Found' : 'Not found'}');
+
     return token;
   }
 
@@ -25,7 +24,6 @@ class LocalStorageService {
   Future<void> clearToken() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
-    print('🗑️ Token cleared from shared preferences');
   }
 
   // ✅ Save user data
@@ -35,10 +33,7 @@ class LocalStorageService {
       final userJson = user.toJson();
       final userJsonString = jsonEncode(userJson);
       await prefs.setString(_userDataKey, userJsonString);
-      print('✅ User data saved to shared preferences: ${user.username}');
-      print('📝 Saved data: $userJsonString');
     } catch (e) {
-      print('❌ Error saving user data: $e');
       rethrow;
     }
   }
@@ -48,24 +43,19 @@ class LocalStorageService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userJsonString = prefs.getString(_userDataKey);
-      
-      print('🔍 Checking for saved user data: ${userJsonString != null ? 'Found' : 'Not found'}');
-      
+
       if (userJsonString != null) {
         try {
           final userJson = jsonDecode(userJsonString);
           final user = UserModel.fromJson(userJson);
-          print('✅ User data restored: ${user.username} (${user.role})');
+
           return user;
         } catch (e) {
-          print('❌ Error parsing saved user data: $e');
-          print('📝 Raw data: $userJsonString');
           return null;
         }
       }
       return null;
     } catch (e) {
-      print('❌ Error getting user data: $e');
       return null;
     }
   }
@@ -76,10 +66,7 @@ class LocalStorageService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_userDataKey);
       await prefs.remove(_tokenKey); // Also clear token
-      print('🗑️ All user data cleared from shared preferences');
-    } catch (e) {
-      print('❌ Error clearing user data: $e');
-    }
+    } catch (e) {}
   }
 
   // ✅ Check if user is logged in
@@ -93,10 +80,7 @@ class LocalStorageService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
-      print('🗑️ All shared preferences data cleared');
-    } catch (e) {
-      print('❌ Error clearing all data: $e');
-    }
+    } catch (e) {}
   }
 
   // ✅ Get all stored keys (for debugging)
@@ -105,7 +89,6 @@ class LocalStorageService {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getKeys().toList();
     } catch (e) {
-      print('❌ Error getting keys: $e');
       return [];
     }
   }

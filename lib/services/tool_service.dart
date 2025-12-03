@@ -8,9 +8,7 @@ class ToolService {
 
   Future<List<ToolModel>> fetchTools() async {
     final response = await api.get('/tools');
-    return (response as List)
-        .map((json) => ToolModel.fromJson(json))
-        .toList();
+    return (response as List).map((json) => ToolModel.fromJson(json)).toList();
   }
 
   Future<ToolModel> createTool(ToolModel tool) async {

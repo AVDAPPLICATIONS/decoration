@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart' show showTopSnackBar;
 import '../../providers/dashboard_provider.dart';
 import '../../providers/auth_provider.dart';
@@ -198,7 +197,7 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
   Widget _buildMobileLayout(BuildContext context, DashboardState dashboardState,
       ColorScheme colorScheme) {
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       appBar: _buildResponsiveAppBar(colorScheme),
       body: Container(
         decoration: BoxDecoration(
@@ -207,7 +206,7 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
             end: Alignment.bottomCenter,
             colors: [
               colorScheme.primary,
-              colorScheme.background,
+              colorScheme.surface,
             ],
             stops: const [0.0, 0.25],
           ),
@@ -247,7 +246,7 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
             end: Alignment.bottomCenter,
             colors: [
               colorScheme.primary,
-              colorScheme.background,
+              colorScheme.surface,
             ],
             stops: const [0.0, 0.25],
           ),
@@ -278,7 +277,7 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
   Widget _buildDesktopLayout(BuildContext context,
       DashboardState dashboardState, ColorScheme colorScheme) {
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       appBar: _buildResponsiveAppBar(colorScheme),
       body: Container(
         decoration: BoxDecoration(
@@ -287,7 +286,7 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
             end: Alignment.bottomCenter,
             colors: [
               colorScheme.primary,
-              colorScheme.background,
+              colorScheme.surface,
             ],
             stops: const [0.0, 0.25],
           ),
@@ -319,7 +318,6 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     if (state.isLoading) {
-      print('🔍 Showing loading indicator');
       return Center(
         child: CircularProgressIndicator(
           color: colorScheme.primary,
@@ -328,7 +326,6 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
     }
 
     if (state.error != null) {
-      print('🔍 Showing error: ${state.error}');
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -350,7 +347,6 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
             const SizedBox(height: 8),
             Text(
               state.error!,
-
               style: TextStyle(
                 color: colorScheme.onSurfaceVariant,
                 fontSize: 14,
@@ -374,7 +370,6 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
     }
 
     if (state.stats == null) {
-      print('🔍 Showing "No data available" - stats is null');
       return Center(
         child: Text(
           _getFriendlyErrorMessage(state.error),
@@ -384,11 +379,8 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
           ),
           textAlign: TextAlign.center,
         ),
-
       );
     }
-
-    print('🔍 Building dashboard content with stats');
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -401,7 +393,8 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
               borderRadius: BorderRadius.circular(10),
               color: Colors.green,
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                 child: Text(
                   'Dashboard refreshed successfully!',
                   style: TextStyle(
@@ -422,7 +415,8 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
               borderRadius: BorderRadius.circular(10),
               color: colorScheme.error,
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                 child: Text(
                   'Failed to refresh: ${e.toString()}',
                   style: TextStyle(
@@ -438,7 +432,6 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
           );
         }
       },
-
       color: colorScheme.primary,
       backgroundColor: colorScheme.surface,
       strokeWidth: 2.5,
@@ -537,12 +530,11 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
               ),
             ),
           ),
-
-
         ],
       ),
     );
   }
+
   String _getFriendlyErrorMessage(String? error) {
     if (error == null) return '';
 
@@ -804,5 +796,4 @@ class _EventDashboardScreenState extends ConsumerState<EventDashboardScreen> {
       },
     );
   }
-
 }

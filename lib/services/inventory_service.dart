@@ -15,10 +15,6 @@ class InventoryService {
     try {
       return jsonDecode(response.body);
     } catch (e) {
-      print('❌ Error parsing JSON response for $operation: $e');
-      print('❌ Status code: ${response.statusCode}');
-      print('❌ Response body: ${response.body}');
-
       // If JSON parsing fails, it's likely HTML (404, 500 error page)
       String errorMessage = 'Server error (${response.statusCode})';
       if (response.statusCode == 404) {
@@ -55,13 +51,11 @@ class InventoryService {
           )
           .timeout(const Duration(seconds: 10));
 
-      print('🔍 API Connection Test: Status ${response.statusCode}');
       print(
           '🔍 API Connection Test: Response ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}...');
 
       return response.statusCode == 200;
     } catch (e) {
-      print('❌ API Connection Test Failed: $e');
       return false;
     }
   }
@@ -252,14 +246,11 @@ class InventoryService {
       request.fields['quantity_available'] = quantityAvailable.toString();
 
       // Add image file if provided
-      print('🔍 Debug Furniture API: itemImage = $itemImage');
-      print('🔍 Debug Furniture API: itemImagePath = $itemImagePath');
+
       print(
           '🔍 Debug Furniture API: itemImageBytes = ${itemImageBytes?.length} bytes');
-      print('🔍 Debug Furniture API: itemImageName = $itemImageName');
 
       if (itemImage != null && await itemImage.exists()) {
-        print('✅ Using itemImage file for furniture: ${itemImage.path}');
         request.files.add(
           await http.MultipartFile.fromPath(
             'item_image',
@@ -275,7 +266,6 @@ class InventoryService {
             '🔍 Debug Furniture API: File exists: ${await imageFile.exists()}');
 
         if (await imageFile.exists()) {
-          print('✅ Using itemImagePath file for furniture: $itemImagePath');
           try {
             final multipartFile = await http.MultipartFile.fromPath(
               'item_image',
@@ -283,22 +273,15 @@ class InventoryService {
               filename: itemImagePath.split('/').last,
             );
             request.files.add(multipartFile);
-            print('✅ MultipartFile created successfully for furniture');
-          } catch (e) {
-            print('❌ Error creating MultipartFile for furniture: $e');
-          }
-        } else {
-          print('❌ File does not exist for furniture: $itemImagePath');
-        }
+          } catch (e) {}
+        } else {}
       } else if (itemImageBytes != null && itemImageName != null) {
-        print('🔍 Debug Furniture API: Creating temporary file from bytes');
         try {
           // Create temporary file from bytes
           final tempDir = await getTemporaryDirectory();
           final tempFile = File('${tempDir.path}/$itemImageName');
           await tempFile.writeAsBytes(itemImageBytes);
 
-          print('✅ Created temporary file for furniture: ${tempFile.path}');
           request.files.add(
             await http.MultipartFile.fromPath(
               'item_image',
@@ -309,19 +292,16 @@ class InventoryService {
 
           // Clean up temporary file after request
           tempFile.delete().catchError((e) {
-            print('Warning: Could not delete temp file: $e');
             return tempFile;
           });
-        } catch (e) {
-          print('❌ Error creating temporary file from bytes for furniture: $e');
-        }
+        } catch (e) {}
       } else {
         print(
             '❌ No image provided for furniture - itemImage: $itemImage, itemImagePath: $itemImagePath, itemImageBytes: ${itemImageBytes?.length}');
       }
 
       // Debug: Print request details
-      print('🔍 Debug Furniture API: Request fields: ${request.fields}');
+
       print(
           '🔍 Debug Furniture API: Request files count: ${request.files.length}');
       for (var file in request.files) {
@@ -332,9 +312,6 @@ class InventoryService {
       // Send request
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
-
-      print('🔍 Debug Furniture API: Response status: ${response.statusCode}');
-      print('🔍 Debug Furniture API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData =
@@ -351,7 +328,6 @@ class InventoryService {
             errorData['message'] ?? 'Failed to create furniture item');
       }
     } catch (e) {
-      print('❌ Furniture API Error: $e');
       rethrow;
     }
   }
@@ -386,14 +362,11 @@ class InventoryService {
       request.fields['quantity_available'] = quantityAvailable.toString();
 
       // Add image file if provided
-      print('🔍 Debug Murti Sets API: itemImage = $itemImage');
-      print('🔍 Debug Murti Sets API: itemImagePath = $itemImagePath');
+
       print(
           '🔍 Debug Murti Sets API: itemImageBytes = ${itemImageBytes?.length} bytes');
-      print('🔍 Debug Murti Sets API: itemImageName = $itemImageName');
 
       if (itemImage != null && await itemImage.exists()) {
-        print('✅ Using itemImage file for murti sets: ${itemImage.path}');
         request.files.add(
           await http.MultipartFile.fromPath(
             'item_image',
@@ -409,7 +382,6 @@ class InventoryService {
             '🔍 Debug Murti Sets API: File exists: ${await imageFile.exists()}');
 
         if (await imageFile.exists()) {
-          print('✅ Using itemImagePath file for murti sets: $itemImagePath');
           try {
             final multipartFile = await http.MultipartFile.fromPath(
               'item_image',
@@ -417,22 +389,15 @@ class InventoryService {
               filename: itemImagePath.split('/').last,
             );
             request.files.add(multipartFile);
-            print('✅ MultipartFile created successfully for murti sets');
-          } catch (e) {
-            print('❌ Error creating MultipartFile for murti sets: $e');
-          }
-        } else {
-          print('❌ File does not exist for murti sets: $itemImagePath');
-        }
+          } catch (e) {}
+        } else {}
       } else if (itemImageBytes != null && itemImageName != null) {
-        print('🔍 Debug Murti Sets API: Creating temporary file from bytes');
         try {
           // Create temporary file from bytes
           final tempDir = await getTemporaryDirectory();
           final tempFile = File('${tempDir.path}/$itemImageName');
           await tempFile.writeAsBytes(itemImageBytes);
 
-          print('✅ Created temporary file for murti sets: ${tempFile.path}');
           request.files.add(
             await http.MultipartFile.fromPath(
               'item_image',
@@ -443,7 +408,6 @@ class InventoryService {
 
           // Clean up temporary file after request
           tempFile.delete().catchError((e) {
-            print('Warning: Could not delete temp file: $e');
             return tempFile;
           });
         } catch (e) {
@@ -456,7 +420,7 @@ class InventoryService {
       }
 
       // Debug: Print request details
-      print('🔍 Debug Murti Sets API: Request fields: ${request.fields}');
+
       print(
           '🔍 Debug Murti Sets API: Request files count: ${request.files.length}');
       for (var file in request.files) {
@@ -467,9 +431,6 @@ class InventoryService {
       // Send request
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
-
-      print('🔍 Debug Murti Sets API: Response status: ${response.statusCode}');
-      print('🔍 Debug Murti Sets API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData =
@@ -486,7 +447,6 @@ class InventoryService {
             errorData['message'] ?? 'Failed to create murti sets item');
       }
     } catch (e) {
-      print('❌ Murti Sets API Error: $e');
       rethrow;
     }
   }
@@ -517,14 +477,11 @@ class InventoryService {
       request.fields['quantity_available'] = quantityAvailable.toString();
 
       // Add image file if provided
-      print('🔍 Debug Stationery API: itemImage = $itemImage');
-      print('🔍 Debug Stationery API: itemImagePath = $itemImagePath');
+
       print(
           '🔍 Debug Stationery API: itemImageBytes = ${itemImageBytes?.length} bytes');
-      print('🔍 Debug Stationery API: itemImageName = $itemImageName');
 
       if (itemImage != null && await itemImage.exists()) {
-        print('✅ Using itemImage file for stationery: ${itemImage.path}');
         request.files.add(
           await http.MultipartFile.fromPath(
             'item_image',
@@ -540,7 +497,6 @@ class InventoryService {
             '🔍 Debug Stationery API: File exists: ${await imageFile.exists()}');
 
         if (await imageFile.exists()) {
-          print('✅ Using itemImagePath file for stationery: $itemImagePath');
           try {
             final multipartFile = await http.MultipartFile.fromPath(
               'item_image',
@@ -548,22 +504,15 @@ class InventoryService {
               filename: itemImagePath.split('/').last,
             );
             request.files.add(multipartFile);
-            print('✅ MultipartFile created successfully for stationery');
-          } catch (e) {
-            print('❌ Error creating MultipartFile for stationery: $e');
-          }
-        } else {
-          print('❌ File does not exist for stationery: $itemImagePath');
-        }
+          } catch (e) {}
+        } else {}
       } else if (itemImageBytes != null && itemImageName != null) {
-        print('🔍 Debug Stationery API: Creating temporary file from bytes');
         try {
           // Create temporary file from bytes
           final tempDir = await getTemporaryDirectory();
           final tempFile = File('${tempDir.path}/$itemImageName');
           await tempFile.writeAsBytes(itemImageBytes);
 
-          print('✅ Created temporary file for stationery: ${tempFile.path}');
           request.files.add(
             await http.MultipartFile.fromPath(
               'item_image',
@@ -574,7 +523,6 @@ class InventoryService {
 
           // Clean up temporary file after request
           tempFile.delete().catchError((e) {
-            print('Warning: Could not delete temp file: $e');
             return tempFile;
           });
         } catch (e) {
@@ -587,7 +535,7 @@ class InventoryService {
       }
 
       // Debug: Print request details
-      print('🔍 Debug Stationery API: Request fields: ${request.fields}');
+
       print(
           '🔍 Debug Stationery API: Request files count: ${request.files.length}');
       for (var file in request.files) {
@@ -598,9 +546,6 @@ class InventoryService {
       // Send request
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
-
-      print('🔍 Debug Stationery API: Response status: ${response.statusCode}');
-      print('🔍 Debug Stationery API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData =
@@ -617,7 +562,6 @@ class InventoryService {
             errorData['message'] ?? 'Failed to create stationery item');
       }
     } catch (e) {
-      print('❌ Stationery API Error: $e');
       rethrow;
     }
   }
@@ -654,11 +598,9 @@ class InventoryService {
       request.fields['quantity_available'] = quantityAvailable.toString();
 
       // Add image file if provided
-      print('🔍 Debug Thermocol Materials API: itemImage = $itemImage');
-      print('🔍 Debug Thermocol Materials API: itemImagePath = $itemImagePath');
+
       print(
           '🔍 Debug Thermocol Materials API: itemImageBytes = ${itemImageBytes?.length} bytes');
-      print('🔍 Debug Thermocol Materials API: itemImageName = $itemImageName');
 
       if (itemImage != null && await itemImage.exists()) {
         print(
@@ -689,9 +631,7 @@ class InventoryService {
             request.files.add(multipartFile);
             print(
                 '✅ MultipartFile created successfully for thermocol materials');
-          } catch (e) {
-            print('❌ Error creating MultipartFile for thermocol materials: $e');
-          }
+          } catch (e) {}
         } else {
           print(
               '❌ File does not exist for thermocol materials: $itemImagePath');
@@ -717,7 +657,6 @@ class InventoryService {
 
           // Clean up temporary file after request
           tempFile.delete().catchError((e) {
-            print('Warning: Could not delete temp file: $e');
             return tempFile;
           });
         } catch (e) {
@@ -764,7 +703,6 @@ class InventoryService {
             'Failed to create thermocol materials item');
       }
     } catch (e) {
-      print('❌ Thermocol Materials API Error: $e');
       rethrow;
     }
   }
@@ -799,14 +737,11 @@ class InventoryService {
       request.fields['quantity_available'] = quantityAvailable.toString();
 
       // Add image file if provided
-      print('🔍 Debug Furniture Update API: itemImage = $itemImage');
-      print('🔍 Debug Furniture Update API: itemImagePath = $itemImagePath');
+
       print(
           '🔍 Debug Furniture Update API: itemImageBytes = ${itemImageBytes?.length} bytes');
-      print('🔍 Debug Furniture Update API: itemImageName = $itemImageName');
 
       if (itemImage != null && await itemImage.exists()) {
-        print('✅ Using itemImage file for furniture update: ${itemImage.path}');
         request.files.add(
           await http.MultipartFile.fromPath(
             'item_image',
@@ -831,13 +766,8 @@ class InventoryService {
               filename: itemImagePath.split('/').last,
             );
             request.files.add(multipartFile);
-            print('✅ MultipartFile created successfully for furniture update');
-          } catch (e) {
-            print('❌ Error creating MultipartFile for furniture update: $e');
-          }
-        } else {
-          print('❌ File does not exist for furniture update: $itemImagePath');
-        }
+          } catch (e) {}
+        } else {}
       } else if (itemImageBytes != null && itemImageName != null) {
         print(
             '🔍 Debug Furniture Update API: Creating temporary file from bytes');
@@ -859,7 +789,6 @@ class InventoryService {
 
           // Clean up temporary file after request
           tempFile.delete().catchError((e) {
-            print('Warning: Could not delete temp file: $e');
             return tempFile;
           });
         } catch (e) {
@@ -872,7 +801,7 @@ class InventoryService {
       }
 
       // Debug: Print request details
-      print('🔍 Debug Furniture Update API: Request fields: ${request.fields}');
+
       print(
           '🔍 Debug Furniture Update API: Request files count: ${request.files.length}');
       for (var file in request.files) {
@@ -886,7 +815,6 @@ class InventoryService {
 
       print(
           '🔍 Debug Furniture Update API: Response status: ${response.statusCode}');
-      print('🔍 Debug Furniture Update API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
@@ -902,7 +830,6 @@ class InventoryService {
             errorData['message'] ?? 'Failed to update furniture item');
       }
     } catch (e) {
-      print('❌ Furniture Update API Error: $e');
       rethrow;
     }
   }
@@ -939,14 +866,11 @@ class InventoryService {
       request.fields['size'] = size;
 
       // Add image file if provided
-      print('🔍 Debug Carpet Update API: itemImage = $itemImage');
-      print('🔍 Debug Carpet Update API: itemImagePath = $itemImagePath');
+
       print(
           '🔍 Debug Carpet Update API: itemImageBytes = ${itemImageBytes?.length} bytes');
-      print('🔍 Debug Carpet Update API: itemImageName = $itemImageName');
 
       if (itemImage != null && await itemImage.exists()) {
-        print('✅ Using itemImage file for carpet update: ${itemImage.path}');
         request.files.add(
           await http.MultipartFile.fromPath(
             'item_image',
@@ -962,7 +886,6 @@ class InventoryService {
             '🔍 Debug Carpet Update API: File exists: ${await imageFile.exists()}');
 
         if (await imageFile.exists()) {
-          print('✅ Using itemImagePath file for carpet update: $itemImagePath');
           try {
             final multipartFile = await http.MultipartFile.fromPath(
               'item_image',
@@ -970,22 +893,15 @@ class InventoryService {
               filename: itemImagePath.split('/').last,
             );
             request.files.add(multipartFile);
-            print('✅ MultipartFile created successfully for carpet update');
-          } catch (e) {
-            print('❌ Error creating MultipartFile for carpet update: $e');
-          }
-        } else {
-          print('❌ File does not exist for carpet update: $itemImagePath');
-        }
+          } catch (e) {}
+        } else {}
       } else if (itemImageBytes != null && itemImageName != null) {
-        print('🔍 Debug Carpet Update API: Creating temporary file from bytes');
         try {
           // Create temporary file from bytes
           final tempDir = await getTemporaryDirectory();
           final tempFile = File('${tempDir.path}/$itemImageName');
           await tempFile.writeAsBytes(itemImageBytes);
 
-          print('✅ Created temporary file for carpet update: ${tempFile.path}');
           request.files.add(
             await http.MultipartFile.fromPath(
               'item_image',
@@ -996,7 +912,6 @@ class InventoryService {
 
           // Clean up temporary file after request
           tempFile.delete().catchError((e) {
-            print('Warning: Could not delete temp file: $e');
             return tempFile;
           });
         } catch (e) {
@@ -1009,7 +924,7 @@ class InventoryService {
       }
 
       // Debug: Print request details
-      print('🔍 Debug Carpet Update API: Request fields: ${request.fields}');
+
       print(
           '🔍 Debug Carpet Update API: Request files count: ${request.files.length}');
       for (var file in request.files) {
@@ -1023,7 +938,6 @@ class InventoryService {
 
       print(
           '🔍 Debug Carpet Update API: Response status: ${response.statusCode}');
-      print('🔍 Debug Carpet Update API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
@@ -1038,7 +952,6 @@ class InventoryService {
         throw Exception(errorData['message'] ?? 'Failed to update carpet item');
       }
     } catch (e) {
-      print('❌ Carpet Update API Error: $e');
       rethrow;
     }
   }
@@ -1073,14 +986,11 @@ class InventoryService {
       request.fields['quantity_available'] = quantityAvailable.toString();
 
       // Add image file if provided
-      print('🔍 Debug Fabric Update API: itemImage = $itemImage');
-      print('🔍 Debug Fabric Update API: itemImagePath = $itemImagePath');
+
       print(
           '🔍 Debug Fabric Update API: itemImageBytes = ${itemImageBytes?.length} bytes');
-      print('🔍 Debug Fabric Update API: itemImageName = $itemImageName');
 
       if (itemImage != null && await itemImage.exists()) {
-        print('✅ Using itemImage file for fabric update: ${itemImage.path}');
         request.files.add(
           await http.MultipartFile.fromPath(
             'item_image',
@@ -1096,7 +1006,6 @@ class InventoryService {
             '🔍 Debug Fabric Update API: File exists: ${await imageFile.exists()}');
 
         if (await imageFile.exists()) {
-          print('✅ Using itemImagePath file for fabric update: $itemImagePath');
           try {
             final multipartFile = await http.MultipartFile.fromPath(
               'item_image',
@@ -1104,22 +1013,15 @@ class InventoryService {
               filename: itemImagePath.split('/').last,
             );
             request.files.add(multipartFile);
-            print('✅ MultipartFile created successfully for fabric update');
-          } catch (e) {
-            print('❌ Error creating MultipartFile for fabric update: $e');
-          }
-        } else {
-          print('❌ File does not exist for fabric update: $itemImagePath');
-        }
+          } catch (e) {}
+        } else {}
       } else if (itemImageBytes != null && itemImageName != null) {
-        print('🔍 Debug Fabric Update API: Creating temporary file from bytes');
         try {
           // Create temporary file from bytes
           final tempDir = await getTemporaryDirectory();
           final tempFile = File('${tempDir.path}/$itemImageName');
           await tempFile.writeAsBytes(itemImageBytes);
 
-          print('✅ Created temporary file for fabric update: ${tempFile.path}');
           request.files.add(
             await http.MultipartFile.fromPath(
               'item_image',
@@ -1130,7 +1032,6 @@ class InventoryService {
 
           // Clean up temporary file after request
           tempFile.delete().catchError((e) {
-            print('Warning: Could not delete temp file: $e');
             return tempFile;
           });
         } catch (e) {
@@ -1143,7 +1044,7 @@ class InventoryService {
       }
 
       // Debug: Print request details
-      print('🔍 Debug Fabric Update API: Request fields: ${request.fields}');
+
       print(
           '🔍 Debug Fabric Update API: Request files count: ${request.files.length}');
       for (var file in request.files) {
@@ -1157,7 +1058,6 @@ class InventoryService {
 
       print(
           '🔍 Debug Fabric Update API: Response status: ${response.statusCode}');
-      print('🔍 Debug Fabric Update API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = _parseJsonResponse(response, 'updateFabricItem');
@@ -1172,7 +1072,6 @@ class InventoryService {
         throw Exception(errorData['message'] ?? 'Failed to update fabric item');
       }
     } catch (e) {
-      print('❌ Fabric Update API Error: $e');
       rethrow;
     }
   }
@@ -1209,7 +1108,7 @@ class InventoryService {
       request.fields['dimensions'] = dimensions;
 
       // Add image file if provided
-      print('🔍 Debug Frame Structure Update API: itemImage = $itemImage');
+
       print(
           '🔍 Debug Frame Structure Update API: itemImagePath = $itemImagePath');
       print(
@@ -1275,7 +1174,6 @@ class InventoryService {
 
           // Clean up temporary file after request
           tempFile.delete().catchError((e) {
-            print('Warning: Could not delete temp file: $e');
             return tempFile;
           });
         } catch (e) {
@@ -1320,7 +1218,6 @@ class InventoryService {
             errorData['message'] ?? 'Failed to update frame structure item');
       }
     } catch (e) {
-      print('❌ Frame Structure Update API Error: $e');
       rethrow;
     }
   }
@@ -1357,7 +1254,7 @@ class InventoryService {
       request.fields['dimensions'] = dimensions;
 
       // Add image file if provided
-      print('🔍 Debug Thermocol Materials Update API: itemImage = $itemImage');
+
       print(
           '🔍 Debug Thermocol Materials Update API: itemImagePath = $itemImagePath');
       print(
@@ -1423,7 +1320,6 @@ class InventoryService {
 
           // Clean up temporary file after request
           tempFile.delete().catchError((e) {
-            print('Warning: Could not delete temp file: $e');
             return tempFile;
           });
         } catch (e) {
@@ -1468,7 +1364,6 @@ class InventoryService {
             'Failed to update thermocol materials item');
       }
     } catch (e) {
-      print('❌ Thermocol Materials Update API Error: $e');
       rethrow;
     }
   }
@@ -1505,11 +1400,9 @@ class InventoryService {
       request.fields['dimensions'] = dimensions;
 
       // Add image file if provided
-      print('🔍 Debug Murti Sets Update API: itemImage = $itemImage');
-      print('🔍 Debug Murti Sets Update API: itemImagePath = $itemImagePath');
+
       print(
           '🔍 Debug Murti Sets Update API: itemImageBytes = ${itemImageBytes?.length} bytes');
-      print('🔍 Debug Murti Sets Update API: itemImageName = $itemImageName');
 
       if (itemImage != null && await itemImage.exists()) {
         print(
@@ -1538,13 +1431,8 @@ class InventoryService {
               filename: itemImagePath.split('/').last,
             );
             request.files.add(multipartFile);
-            print('✅ MultipartFile created successfully for murti sets update');
-          } catch (e) {
-            print('❌ Error creating MultipartFile for murti sets update: $e');
-          }
-        } else {
-          print('❌ File does not exist for murti sets update: $itemImagePath');
-        }
+          } catch (e) {}
+        } else {}
       } else if (itemImageBytes != null && itemImageName != null) {
         print(
             '🔍 Debug Murti Sets Update API: Creating temporary file from bytes');
@@ -1566,7 +1454,6 @@ class InventoryService {
 
           // Clean up temporary file after request
           tempFile.delete().catchError((e) {
-            print('Warning: Could not delete temp file: $e');
             return tempFile;
           });
         } catch (e) {
@@ -1594,7 +1481,6 @@ class InventoryService {
 
       print(
           '🔍 Debug Murti Sets Update API: Response status: ${response.statusCode}');
-      print('🔍 Debug Murti Sets Update API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
@@ -1610,7 +1496,6 @@ class InventoryService {
             errorData['message'] ?? 'Failed to update murti sets item');
       }
     } catch (e) {
-      print('❌ Murti Sets Update API Error: $e');
       rethrow;
     }
   }
@@ -1643,11 +1528,9 @@ class InventoryService {
       request.fields['specifications'] = specifications;
 
       // Add image file if provided
-      print('🔍 Debug Stationery Update API: itemImage = $itemImage');
-      print('🔍 Debug Stationery Update API: itemImagePath = $itemImagePath');
+
       print(
           '🔍 Debug Stationery Update API: itemImageBytes = ${itemImageBytes?.length} bytes');
-      print('🔍 Debug Stationery Update API: itemImageName = $itemImageName');
 
       if (itemImage != null && await itemImage.exists()) {
         print(
@@ -1676,13 +1559,8 @@ class InventoryService {
               filename: itemImagePath.split('/').last,
             );
             request.files.add(multipartFile);
-            print('✅ MultipartFile created successfully for stationery update');
-          } catch (e) {
-            print('❌ Error creating MultipartFile for stationery update: $e');
-          }
-        } else {
-          print('❌ File does not exist for stationery update: $itemImagePath');
-        }
+          } catch (e) {}
+        } else {}
       } else if (itemImageBytes != null && itemImageName != null) {
         print(
             '🔍 Debug Stationery Update API: Creating temporary file from bytes');
@@ -1704,7 +1582,6 @@ class InventoryService {
 
           // Clean up temporary file after request
           tempFile.delete().catchError((e) {
-            print('Warning: Could not delete temp file: $e');
             return tempFile;
           });
         } catch (e) {
@@ -1732,7 +1609,6 @@ class InventoryService {
 
       print(
           '🔍 Debug Stationery Update API: Response status: ${response.statusCode}');
-      print('🔍 Debug Stationery Update API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
@@ -1748,7 +1624,6 @@ class InventoryService {
             errorData['message'] ?? 'Failed to update stationery item');
       }
     } catch (e) {
-      print('❌ Stationery Update API Error: $e');
       rethrow;
     }
   }
@@ -1768,9 +1643,6 @@ class InventoryService {
         }),
       );
 
-      print('🔍 Debug Delete API: Response status: ${response.statusCode}');
-      print('🔍 Debug Delete API: Response body: ${response.body}');
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
         if (responseData['success'] == true) {
@@ -1785,7 +1657,6 @@ class InventoryService {
             errorData['message'] ?? 'Failed to delete inventory item');
       }
     } catch (e) {
-      print('❌ Delete API Error: $e');
       rethrow;
     }
   }
@@ -1814,7 +1685,6 @@ class InventoryService {
 
       print(
           '🔍 Debug Issue to Event API: Response status: ${response.statusCode}');
-      print('🔍 Debug Issue to Event API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
@@ -1830,7 +1700,6 @@ class InventoryService {
             errorData['message'] ?? 'Failed to issue inventory to event');
       }
     } catch (e) {
-      print('❌ Issue to Event API Error: $e');
       rethrow;
     }
   }
@@ -1847,7 +1716,6 @@ class InventoryService {
 
       print(
           '🔍 Debug Events List API: Response status: ${response.statusCode}');
-      print('🔍 Debug Events List API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
@@ -1862,7 +1730,6 @@ class InventoryService {
         throw Exception(errorData['message'] ?? 'Failed to get events list');
       }
     } catch (e) {
-      print('❌ Events List API Error: $e');
       rethrow;
     }
   }
@@ -1884,7 +1751,6 @@ class InventoryService {
 
       print(
           '🔍 Debug Issuance History API: Response status: ${response.statusCode}');
-      print('🔍 Debug Issuance History API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
@@ -1900,7 +1766,6 @@ class InventoryService {
             errorData['message'] ?? 'Failed to get issuance history');
       }
     } catch (e) {
-      print('❌ Issuance History API Error: $e');
       rethrow;
     }
   }
@@ -1943,7 +1808,6 @@ class InventoryService {
           })}');
       print(
           '🔍 Debug Update Issuance API: Response status: ${response.statusCode}');
-      print('🔍 Debug Update Issuance API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
@@ -1958,7 +1822,6 @@ class InventoryService {
         throw Exception(errorData['message'] ?? 'Failed to update issuance');
       }
     } catch (e) {
-      print('❌ Update Issuance API Error: $e');
       rethrow;
     }
   }
@@ -1975,7 +1838,6 @@ class InventoryService {
 
       print(
           '🔍 Debug Dashboard Stats API: Response status: ${response.statusCode}');
-      print('🔍 Debug Dashboard Stats API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
@@ -1991,7 +1853,6 @@ class InventoryService {
             errorData['message'] ?? 'Failed to get dashboard stats');
       }
     } catch (e) {
-      print('❌ Dashboard Stats API Error: $e');
       rethrow;
     }
   }
@@ -2024,14 +1885,11 @@ class InventoryService {
       request.fields['quantity_available'] = quantityAvailable.toString();
 
       // Add image file if provided
-      print('🔍 Debug Frame Structure API: itemImage = $itemImage');
-      print('🔍 Debug Frame Structure API: itemImagePath = $itemImagePath');
+
       print(
           '🔍 Debug Frame Structure API: itemImageBytes = ${itemImageBytes?.length} bytes');
-      print('🔍 Debug Frame Structure API: itemImageName = $itemImageName');
 
       if (itemImage != null && await itemImage.exists()) {
-        print('✅ Using itemImage file for frame structure: ${itemImage.path}');
         request.files.add(
           await http.MultipartFile.fromPath(
             'item_image',
@@ -2056,13 +1914,8 @@ class InventoryService {
               filename: itemImagePath.split('/').last,
             );
             request.files.add(multipartFile);
-            print('✅ MultipartFile created successfully for frame structure');
-          } catch (e) {
-            print('❌ Error creating MultipartFile for frame structure: $e');
-          }
-        } else {
-          print('❌ File does not exist for frame structure: $itemImagePath');
-        }
+          } catch (e) {}
+        } else {}
       } else if (itemImageBytes != null && itemImageName != null) {
         print(
             '🔍 Debug Frame Structure API: Creating temporary file from bytes');
@@ -2084,7 +1937,6 @@ class InventoryService {
 
           // Clean up temporary file after request
           tempFile.delete().catchError((e) {
-            print('Warning: Could not delete temp file: $e');
             return tempFile;
           });
         } catch (e) {
@@ -2097,7 +1949,7 @@ class InventoryService {
       }
 
       // Debug: Print request details
-      print('🔍 Debug Frame Structure API: Request fields: ${request.fields}');
+
       print(
           '🔍 Debug Frame Structure API: Request files count: ${request.files.length}');
       for (var file in request.files) {
@@ -2111,7 +1963,6 @@ class InventoryService {
 
       print(
           '🔍 Debug Frame Structure API: Response status: ${response.statusCode}');
-      print('🔍 Debug Frame Structure API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData =
@@ -2129,7 +1980,6 @@ class InventoryService {
             errorData['message'] ?? 'Failed to create frame structure item');
       }
     } catch (e) {
-      print('❌ Frame Structure API Error: $e');
       rethrow;
     }
   }
@@ -2162,14 +2012,11 @@ class InventoryService {
       request.fields['quantity_available'] = quantityAvailable.toString();
 
       // Add image file if provided
-      print('🔍 Debug Fabric API: itemImage = $itemImage');
-      print('🔍 Debug Fabric API: itemImagePath = $itemImagePath');
+
       print(
           '🔍 Debug Fabric API: itemImageBytes = ${itemImageBytes?.length} bytes');
-      print('🔍 Debug Fabric API: itemImageName = $itemImageName');
 
       if (itemImage != null && await itemImage.exists()) {
-        print('✅ Using itemImage file for fabric: ${itemImage.path}');
         request.files.add(
           await http.MultipartFile.fromPath(
             'item_image',
@@ -2179,11 +2026,8 @@ class InventoryService {
         );
       } else if (itemImagePath != null) {
         final imageFile = File(itemImagePath);
-        print('🔍 Debug Fabric API: Checking if file exists: $itemImagePath');
-        print('🔍 Debug Fabric API: File exists: ${await imageFile.exists()}');
 
         if (await imageFile.exists()) {
-          print('✅ Using itemImagePath file for fabric: $itemImagePath');
           try {
             final multipartFile = await http.MultipartFile.fromPath(
               'item_image',
@@ -2191,22 +2035,15 @@ class InventoryService {
               filename: itemImagePath.split('/').last,
             );
             request.files.add(multipartFile);
-            print('✅ MultipartFile created successfully for fabric');
-          } catch (e) {
-            print('❌ Error creating MultipartFile for fabric: $e');
-          }
-        } else {
-          print('❌ File does not exist for fabric: $itemImagePath');
-        }
+          } catch (e) {}
+        } else {}
       } else if (itemImageBytes != null && itemImageName != null) {
-        print('🔍 Debug Fabric API: Creating temporary file from bytes');
         try {
           // Create temporary file from bytes
           final tempDir = await getTemporaryDirectory();
           final tempFile = File('${tempDir.path}/$itemImageName');
           await tempFile.writeAsBytes(itemImageBytes);
 
-          print('✅ Created temporary file for fabric: ${tempFile.path}');
           request.files.add(
             await http.MultipartFile.fromPath(
               'item_image',
@@ -2217,19 +2054,16 @@ class InventoryService {
 
           // Clean up temporary file after request
           tempFile.delete().catchError((e) {
-            print('Warning: Could not delete temp file: $e');
             return tempFile;
           });
-        } catch (e) {
-          print('❌ Error creating temporary file from bytes for fabric: $e');
-        }
+        } catch (e) {}
       } else {
         print(
             '❌ No image provided for fabric - itemImage: $itemImage, itemImagePath: $itemImagePath, itemImageBytes: ${itemImageBytes?.length}');
       }
 
       // Debug: Print request details
-      print('🔍 Debug Fabric API: Request fields: ${request.fields}');
+
       print(
           '🔍 Debug Fabric API: Request files count: ${request.files.length}');
       for (var file in request.files) {
@@ -2240,9 +2074,6 @@ class InventoryService {
       // Send request
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
-
-      print('🔍 Debug Fabric API: Response status: ${response.statusCode}');
-      print('🔍 Debug Fabric API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = _parseJsonResponse(response, 'createFabricItem');
@@ -2257,7 +2088,6 @@ class InventoryService {
         throw Exception(errorData['message'] ?? 'Failed to create fabric item');
       }
     } catch (e) {
-      print('❌ Fabric API Error: $e');
       rethrow;
     }
   }
@@ -2288,14 +2118,11 @@ class InventoryService {
       request.fields['quantity_available'] = quantityAvailable.toString();
 
       // Add image file if provided
-      print('🔍 Debug Carpet API: itemImage = $itemImage');
-      print('🔍 Debug Carpet API: itemImagePath = $itemImagePath');
+
       print(
           '🔍 Debug Carpet API: itemImageBytes = ${itemImageBytes?.length} bytes');
-      print('🔍 Debug Carpet API: itemImageName = $itemImageName');
 
       if (itemImage != null && await itemImage.exists()) {
-        print('✅ Using itemImage file for carpet: ${itemImage.path}');
         request.files.add(
           await http.MultipartFile.fromPath(
             'item_image',
@@ -2305,11 +2132,8 @@ class InventoryService {
         );
       } else if (itemImagePath != null) {
         final imageFile = File(itemImagePath);
-        print('🔍 Debug Carpet API: Checking if file exists: $itemImagePath');
-        print('🔍 Debug Carpet API: File exists: ${await imageFile.exists()}');
 
         if (await imageFile.exists()) {
-          print('✅ Using itemImagePath file for carpet: $itemImagePath');
           try {
             final multipartFile = await http.MultipartFile.fromPath(
               'item_image',
@@ -2317,22 +2141,15 @@ class InventoryService {
               filename: itemImagePath.split('/').last,
             );
             request.files.add(multipartFile);
-            print('✅ MultipartFile created successfully for carpet');
-          } catch (e) {
-            print('❌ Error creating MultipartFile for carpet: $e');
-          }
-        } else {
-          print('❌ File does not exist for carpet: $itemImagePath');
-        }
+          } catch (e) {}
+        } else {}
       } else if (itemImageBytes != null && itemImageName != null) {
-        print('🔍 Debug Carpet API: Creating temporary file from bytes');
         try {
           // Create temporary file from bytes
           final tempDir = await getTemporaryDirectory();
           final tempFile = File('${tempDir.path}/$itemImageName');
           await tempFile.writeAsBytes(itemImageBytes);
 
-          print('✅ Created temporary file for carpet: ${tempFile.path}');
           request.files.add(
             await http.MultipartFile.fromPath(
               'item_image',
@@ -2343,19 +2160,16 @@ class InventoryService {
 
           // Clean up temporary file after request
           tempFile.delete().catchError((e) {
-            print('Warning: Could not delete temp file: $e');
             return tempFile;
           });
-        } catch (e) {
-          print('❌ Error creating temporary file from bytes for carpet: $e');
-        }
+        } catch (e) {}
       } else {
         print(
             '❌ No image provided for carpet - itemImage: $itemImage, itemImagePath: $itemImagePath, itemImageBytes: ${itemImageBytes?.length}');
       }
 
       // Debug: Print request details
-      print('🔍 Debug Carpet API: Request fields: ${request.fields}');
+
       print(
           '🔍 Debug Carpet API: Request files count: ${request.files.length}');
       for (var file in request.files) {
@@ -2366,9 +2180,6 @@ class InventoryService {
       // Send request
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
-
-      print('🔍 Debug Carpet API: Response status: ${response.statusCode}');
-      print('🔍 Debug Carpet API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = _parseJsonResponse(response, 'createCarpetItem');
@@ -2383,7 +2194,6 @@ class InventoryService {
         throw Exception(errorData['message'] ?? 'Failed to create carpet item');
       }
     } catch (e) {
-      print('❌ Carpet API Error: $e');
       rethrow;
     }
   }
@@ -2418,13 +2228,8 @@ class InventoryService {
       request.fields['category_details'] = jsonEncode(categoryDetails);
 
       // Add image file if provided
-      print('🔍 Debug: itemImage = $itemImage');
-      print('🔍 Debug: itemImagePath = $itemImagePath');
-      print('🔍 Debug: itemImageBytes = ${itemImageBytes?.length} bytes');
-      print('🔍 Debug: itemImageName = $itemImageName');
 
       if (itemImage != null && await itemImage.exists()) {
-        print('✅ Using itemImage file: ${itemImage.path}');
         request.files.add(
           await http.MultipartFile.fromPath(
             'item_image',
@@ -2434,13 +2239,8 @@ class InventoryService {
         );
       } else if (itemImagePath != null) {
         final imageFile = File(itemImagePath);
-        print('🔍 Debug: Checking if file exists: $itemImagePath');
-        print('🔍 Debug: File exists: ${await imageFile.exists()}');
-        print('🔍 Debug: File path length: ${itemImagePath.length}');
-        print('🔍 Debug: File path segments: ${itemImagePath.split('/')}');
 
         if (await imageFile.exists()) {
-          print('✅ Using itemImagePath file: $itemImagePath');
           try {
             final multipartFile = await http.MultipartFile.fromPath(
               'item_image',
@@ -2448,12 +2248,8 @@ class InventoryService {
               filename: itemImagePath.split('/').last,
             );
             request.files.add(multipartFile);
-            print('✅ MultipartFile created successfully');
-          } catch (e) {
-            print('❌ Error creating MultipartFile: $e');
-          }
+          } catch (e) {}
         } else {
-          print('❌ File does not exist: $itemImagePath');
           // Try to list directory to see what's available
           try {
             final directory = Directory(
@@ -2463,19 +2259,15 @@ class InventoryService {
               print(
                   '🔍 Debug: Files in directory: ${files.map((f) => f.path).toList()}');
             }
-          } catch (e) {
-            print('❌ Error listing directory: $e');
-          }
+          } catch (e) {}
         }
       } else if (itemImageBytes != null && itemImageName != null) {
-        print('🔍 Debug: Creating temporary file from bytes');
         try {
           // Create temporary file from bytes
           final tempDir = await getTemporaryDirectory();
           final tempFile = File('${tempDir.path}/$itemImageName');
           await tempFile.writeAsBytes(itemImageBytes);
 
-          print('✅ Created temporary file: ${tempFile.path}');
           request.files.add(
             await http.MultipartFile.fromPath(
               'item_image',
@@ -2486,20 +2278,16 @@ class InventoryService {
 
           // Clean up temporary file after request
           tempFile.delete().catchError((e) {
-            print('Warning: Could not delete temp file: $e');
             return tempFile;
           });
-        } catch (e) {
-          print('❌ Error creating temporary file from bytes: $e');
-        }
+        } catch (e) {}
       } else {
         print(
             '❌ No image provided - itemImage: $itemImage, itemImagePath: $itemImagePath, itemImageBytes: ${itemImageBytes?.length}');
       }
 
       // Debug: Print request details
-      print('🔍 Debug: Request fields: ${request.fields}');
-      print('🔍 Debug: Request files count: ${request.files.length}');
+
       for (var file in request.files) {
         print(
             '🔍 Debug: File field: ${file.field}, filename: ${file.filename}');
@@ -2508,9 +2296,6 @@ class InventoryService {
       // Send request
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
-
-      print('🔍 Debug: Response status: ${response.statusCode}');
-      print('🔍 Debug: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         try {
@@ -2547,7 +2332,6 @@ class InventoryService {
         }
       }
     } catch (e) {
-      print('❌ Error creating inventory item: $e');
       rethrow;
     }
   }
@@ -2567,10 +2351,6 @@ class InventoryService {
         }),
       );
 
-      print(
-          '🔍 Debug Event Issuance History API: Response status: ${response.statusCode}');
-      print(
-          '🔍 Debug Event Issuance History API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
@@ -2586,7 +2366,6 @@ class InventoryService {
             errorData['message'] ?? 'Failed to get event issuance history');
       }
     } catch (e) {
-      print('❌ Event Issuance History API Error: $e');
       rethrow;
     }
   }
@@ -2601,9 +2380,6 @@ class InventoryService {
         },
         body: jsonEncode({}),
       );
-
-      print('🔍 Debug Inventory Items List API: Response status: ${response.statusCode}');
-      print('🔍 Debug Inventory Items List API: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
@@ -2620,7 +2396,6 @@ class InventoryService {
             errorData['message'] ?? 'Failed to get inventory items list');
       }
     } catch (e) {
-      print('❌ Inventory Items List API Error: $e');
       rethrow;
     }
   }
@@ -2667,7 +2442,6 @@ class InventoryService {
             errorData['message'] ?? 'Failed to create material issuance');
       }
     } catch (e) {
-      print('❌ Create Material Issuance API Error: $e');
       rethrow;
     }
   }
@@ -2718,7 +2492,6 @@ class InventoryService {
             errorData['message'] ?? 'Failed to update material issuance');
       }
     } catch (e) {
-      print('❌ Update Material Issuance API Error: $e');
       rethrow;
     }
   }

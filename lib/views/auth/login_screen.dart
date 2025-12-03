@@ -13,7 +13,7 @@ import '../custom_widget/custom_input_field.dart';
 final userProvider = StateProvider<Map<String, dynamic>?>((ref) => null);
 
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -102,7 +102,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         // Update auth state
         ref.read(authProvider.notifier).updateUser(user);
 
-        print('✅ User logged in successfully: ${user.username}');
         _scaffoldMessengerKey.currentState?.showSnackBar(
           SnackBar(content: Text('Welcome ${user.username}!')),
         );
@@ -110,7 +109,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         // Navigation will be handled automatically by the AppRoot widget
         // when the auth state changes
       } else {
-        print(response['message']);
         _scaffoldMessengerKey.currentState?.showSnackBar(
           SnackBar(content: Text(response['message'] ?? 'Login failed')),
         );
@@ -121,7 +119,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         Navigator.of(context).pop();
       }
 
-      print('❌ Login error: $e');
       _scaffoldMessengerKey.currentState?.showSnackBar(
         SnackBar(content: Text('Login failed: ${e.toString()}')),
       );
@@ -211,7 +208,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             ),
           ),
           Text(
-              'Hu Mathi Tu',
+            'Hu Mathi Tu',
             softWrap: true,
             style: GoogleFonts.playfairDisplay(
               fontSize: 32,

@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 
-
 final costProvider = StateNotifierProvider.family<CostNotifier,
     List<Map<String, dynamic>>, String>((ref, eventId) => CostNotifier());
 
@@ -30,8 +29,7 @@ class CostTab extends ConsumerWidget {
   final Map<String, dynamic> event;
   final bool isAdmin;
 
-  const CostTab({Key? key, required this.event, required this.isAdmin})
-      : super(key: key);
+  const CostTab({super.key, required this.event, required this.isAdmin});
 
   double _calculateTotalCost(List<Map<String, dynamic>> costs) {
     return costs.fold(0.0, (sum, cost) => sum + (cost['amount'] ?? 0.0));
@@ -50,12 +48,12 @@ class CostTab extends ConsumerWidget {
             // Header
             pw.Container(
               padding: const pw.EdgeInsets.all(20),
-              decoration: pw.BoxDecoration(
-                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(10)),
+              decoration: const pw.BoxDecoration(
+                borderRadius: pw.BorderRadius.all(pw.Radius.circular(10)),
               ),
               child: pw.Row(
                 children: [
-                  pw.Icon(pw.IconData(0xe3c9), size: 30),
+                  pw.Icon(const pw.IconData(0xe3c9), size: 30),
                   pw.SizedBox(width: 15),
                   pw.Text(
                     'Event Cost Summary',
@@ -72,8 +70,8 @@ class CostTab extends ConsumerWidget {
             // Event Info
             pw.Container(
               padding: const pw.EdgeInsets.all(15),
-              decoration: pw.BoxDecoration(
-                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
+              decoration: const pw.BoxDecoration(
+                borderRadius: pw.BorderRadius.all(pw.Radius.circular(8)),
               ),
               child: pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -86,7 +84,7 @@ class CostTab extends ConsumerWidget {
                   pw.SizedBox(height: 8),
                   pw.Text(
                     'Generated on: ${DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now())}',
-                    style: pw.TextStyle(fontSize: 12),
+                    style: const pw.TextStyle(fontSize: 12),
                   ),
                 ],
               ),
@@ -123,12 +121,12 @@ class CostTab extends ConsumerWidget {
                             ),
                             pw.Text(
                               'Date: ${cost['date'] ?? ''}',
-                              style: pw.TextStyle(fontSize: 12),
+                              style: const pw.TextStyle(fontSize: 12),
                             ),
                             if (cost['receipt_file'] != null)
                               pw.Text(
                                 'Receipt: ${cost['receipt_type'] == 'pdf' || cost['receipt_type'] == 'PDF' ? 'PDF Document' : 'Image File'}',
-                                style: pw.TextStyle(fontSize: 12),
+                                style: const pw.TextStyle(fontSize: 12),
                               ),
                           ],
                         ),
@@ -192,7 +190,7 @@ class CostTab extends ConsumerWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [colorScheme.surface, colorScheme.surfaceVariant],
+          colors: [colorScheme.surface, colorScheme.surfaceContainerHighest],
           stops: const [0.0, 0.3],
         ),
       ),
@@ -526,7 +524,7 @@ class CostTab extends ConsumerWidget {
                       end: Alignment.bottomRight,
                       colors: [
                         colorScheme.surface,
-                        colorScheme.surfaceVariant,
+                        colorScheme.surfaceContainerHighest,
                       ],
                     ),
                     boxShadow: [
@@ -790,7 +788,7 @@ class CostTab extends ConsumerWidget {
                                                 height: 120,
                                                 decoration: BoxDecoration(
                                                   color: colorScheme
-                                                      .surfaceVariant,
+                                                      .surfaceContainerHighest,
                                                   borderRadius:
                                                       BorderRadius.circular(16),
                                                 ),
@@ -903,7 +901,7 @@ class CostTab extends ConsumerWidget {
 
   void _showAddCostDialog(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
-    final _formKey = GlobalKey<FormState>();
+    final formKey = GlobalKey<FormState>();
     String description = '';
     String amount = '';
     DateTime date = DateTime.now();
@@ -998,7 +996,7 @@ class CostTab extends ConsumerWidget {
                       Padding(
                         padding: const EdgeInsets.all(24),
                         child: Form(
-                          key: _formKey,
+                          key: formKey,
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -1129,8 +1127,9 @@ class CostTab extends ConsumerWidget {
                                   ),
                                 ),
                                 child: TextFormField(
-                                  keyboardType: TextInputType.numberWithOptions(
-                                      decimal: true),
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                          decimal: true),
                                   decoration: InputDecoration(
                                     labelText: 'Amount (₹) *',
                                     labelStyle: TextStyle(
@@ -1547,8 +1546,8 @@ class CostTab extends ConsumerWidget {
                                 ),
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    if (_formKey.currentState!.validate()) {
-                                      _formKey.currentState!.save();
+                                    if (formKey.currentState!.validate()) {
+                                      formKey.currentState!.save();
                                       ref
                                           .read(costProvider(
                                                   event['id'].toString())
@@ -1620,7 +1619,7 @@ class CostTab extends ConsumerWidget {
   void _showEditCostDialog(BuildContext context, WidgetRef ref,
       Map<String, dynamic> cost, int index) {
     final colorScheme = Theme.of(context).colorScheme;
-    final _formKey = GlobalKey<FormState>();
+    final formKey = GlobalKey<FormState>();
     String description = cost['description'] ?? '';
     String amount = (cost['amount'] ?? '').toString();
     DateTime date = DateTime.tryParse(cost['date'] ?? '') ?? DateTime.now();
@@ -1715,7 +1714,7 @@ class CostTab extends ConsumerWidget {
                       Padding(
                         padding: const EdgeInsets.all(24),
                         child: Form(
-                          key: _formKey,
+                          key: formKey,
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -1848,8 +1847,9 @@ class CostTab extends ConsumerWidget {
                                 ),
                                 child: TextFormField(
                                   initialValue: amount,
-                                  keyboardType: TextInputType.numberWithOptions(
-                                      decimal: true),
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                          decimal: true),
                                   decoration: InputDecoration(
                                     labelText: 'Amount (₹) *',
                                     labelStyle: TextStyle(
@@ -2266,8 +2266,8 @@ class CostTab extends ConsumerWidget {
                                 ),
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    if (_formKey.currentState!.validate()) {
-                                      _formKey.currentState!.save();
+                                    if (formKey.currentState!.validate()) {
+                                      formKey.currentState!.save();
                                       ref
                                           .read(costProvider(
                                                   event['id'].toString())
@@ -2397,14 +2397,14 @@ class CostTab extends ConsumerWidget {
                           color: Colors.red.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.delete_forever,
                           color: Colors.red,
                           size: 28,
                         ),
                       ),
                       const SizedBox(width: 16),
-                      Expanded(
+                      const Expanded(
                         child: Text(
                           'Delete Cost',
                           style: TextStyle(

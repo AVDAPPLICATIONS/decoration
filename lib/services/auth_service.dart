@@ -91,7 +91,6 @@ class AuthService {
 
   Future<void> logout() async {
     // Add token clearance logic
-    print("Logged out");
   }
 
   Future<UserModel> getCurrentUser() async {

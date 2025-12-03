@@ -4,7 +4,6 @@ import '../../providers/inventory_provider.dart';
 import '../../providers/event_provider.dart';
 import '../custom_widget/custom_appbar.dart';
 
-
 class InventoryIssueScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> inventoryItem;
 
@@ -21,12 +20,12 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
     final events = ref.watch(eventProvider);
     return events
         .map((e) => {
-      'id': e.id.toString(),
-      'name': e.name ?? '',
-      'date': e.date?.toIso8601String() ?? '',
-      'location': e.location ?? '',
-      'status': e.status ?? '',
-    })
+              'id': e.id.toString(),
+              'name': e.name ?? '',
+              'date': e.date?.toIso8601String() ?? '',
+              'location': e.location ?? '',
+              'status': e.status ?? '',
+            })
         .toList();
   }
 
@@ -37,16 +36,14 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
   void initState() {
     super.initState();
     // Debug: Print events to console
-    print('Current Events: ${currentEvents.length}');
-    for (var event in currentEvents) {
-      print('Event: ${event['name']} - ${event['date']}');
-    }
+
+    for (var event in currentEvents) {}
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: CustomAppBar(
         title: 'Issue ${widget.inventoryItem['name']}',
         showBackButton: true,
@@ -60,7 +57,7 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
             end: Alignment.bottomCenter,
             colors: [
               Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.background,
+              Theme.of(context).colorScheme.surface,
             ],
             stops: const [0.0, 0.25],
           ),
@@ -87,14 +84,18 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
                     color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color:
-                      Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.15),
                       width: 1,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color:
-                        Theme.of(context).colorScheme.shadow.withOpacity(0.04),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .shadow
+                            .withOpacity(0.04),
                         spreadRadius: 0,
                         blurRadius: 20,
                         offset: const Offset(0, 4),
@@ -145,27 +146,30 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
                             ),
                             child: widget.inventoryItem['imageBytes'] != null
                                 ? ClipRRect(
-                              borderRadius: BorderRadius.circular(11),
-                              child: Image.memory(
-                                widget.inventoryItem['imageBytes'],
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Icon(
+                                    borderRadius: BorderRadius.circular(11),
+                                    child: Image.memory(
+                                      widget.inventoryItem['imageBytes'],
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return Icon(
+                                          _getCategoryIcon(
+                                              widget.inventoryItem['category']),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                          size: 32,
+                                        );
+                                      },
+                                    ),
+                                  )
+                                : Icon(
                                     _getCategoryIcon(
                                         widget.inventoryItem['category']),
                                     color:
-                                    Theme.of(context).colorScheme.primary,
+                                        Theme.of(context).colorScheme.primary,
                                     size: 32,
-                                  );
-                                },
-                              ),
-                            )
-                                : Icon(
-                              _getCategoryIcon(
-                                  widget.inventoryItem['category']),
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 32,
-                            ),
+                                  ),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
@@ -177,7 +181,8 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -196,7 +201,8 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w500,
-                                      color: Theme.of(context).colorScheme.primary,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
                                     ),
                                   ),
                                 ),
@@ -269,8 +275,9 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
                                       Icon(
                                         Icons.inventory,
                                         size: 16,
-                                        color:
-                                        Theme.of(context).colorScheme.primary,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
@@ -278,8 +285,9 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
                                         style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
-                                          color:
-                                          Theme.of(context).colorScheme.primary,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
                                         ),
                                       ),
                                     ],
@@ -304,14 +312,18 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
                     color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color:
-                      Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.15),
                       width: 1,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color:
-                        Theme.of(context).colorScheme.shadow.withOpacity(0.04),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .shadow
+                            .withOpacity(0.04),
                         spreadRadius: 0,
                         blurRadius: 20,
                         offset: const Offset(0, 4),
@@ -359,14 +371,15 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
                                 color: issueQuantity > 1
                                     ? Theme.of(context).colorScheme.primary
                                     : Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
+                                        .colorScheme
+                                        .onSurfaceVariant,
                               ),
                             ),
                           ),
                           Expanded(
                             child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 16),
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 16),
                               padding: const EdgeInsets.symmetric(
                                   vertical: 16, horizontal: 24),
                               decoration: BoxDecoration(
@@ -388,7 +401,8 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
                                     style: TextStyle(
                                       fontSize: 32,
                                       fontWeight: FontWeight.bold,
-                                      color: Theme.of(context).colorScheme.primary,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
@@ -414,18 +428,18 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: IconButton(
-                              onPressed:
-                              issueQuantity < widget.inventoryItem['quantity']
+                              onPressed: issueQuantity <
+                                      widget.inventoryItem['quantity']
                                   ? () => setState(() => issueQuantity++)
                                   : null,
                               icon: Icon(
                                 Icons.add_circle_outline,
-                                color:
-                                issueQuantity < widget.inventoryItem['quantity']
+                                color: issueQuantity <
+                                        widget.inventoryItem['quantity']
                                     ? Theme.of(context).colorScheme.primary
                                     : Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
+                                        .colorScheme
+                                        .onSurfaceVariant,
                               ),
                             ),
                           ),
@@ -439,7 +453,9 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
                             'Available: ${ref.watch(inventoryProvider).firstWhere((item) => item.id == widget.inventoryItem['id'], orElse: () => InventoryItem(id: '', name: '', category: '', categoryName: '', unit: '', storageLocation: '', notes: '', availableQuantity: 0.0)).availableQuantity}',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                           ),
                           Text(
@@ -448,23 +464,24 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: ((ref
-                                  .watch(inventoryProvider)
-                                  .firstWhere(
-                                      (item) =>
-                                  item.id ==
-                                      widget.inventoryItem['id'],
-                                  orElse: () => InventoryItem(
-                                      id: '',
-                                      name: '',
-                                      category: '',
-                                      categoryName: '',
-                                      unit: '',
-                                      storageLocation: '',
-                                      notes: '',
-                                      availableQuantity: 0.0))
-                                  .availableQuantity) -
-                                  issueQuantity) <
-                                  5
+                                              .watch(inventoryProvider)
+                                              .firstWhere(
+                                                  (item) =>
+                                                      item.id ==
+                                                      widget
+                                                          .inventoryItem['id'],
+                                                  orElse: () => InventoryItem(
+                                                      id: '',
+                                                      name: '',
+                                                      category: '',
+                                                      categoryName: '',
+                                                      unit: '',
+                                                      storageLocation: '',
+                                                      notes: '',
+                                                      availableQuantity: 0.0))
+                                              .availableQuantity) -
+                                          issueQuantity) <
+                                      5
                                   ? Theme.of(context).colorScheme.tertiary
                                   : Theme.of(context).colorScheme.primary,
                             ),
@@ -485,14 +502,18 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
                     color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color:
-                      Theme.of(context).colorScheme.secondary.withOpacity(0.15),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .secondary
+                          .withOpacity(0.15),
                       width: 1,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color:
-                        Theme.of(context).colorScheme.shadow.withOpacity(0.04),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .shadow
+                            .withOpacity(0.04),
                         spreadRadius: 0,
                         blurRadius: 20,
                         offset: const Offset(0, 4),
@@ -525,7 +546,9 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surfaceVariant,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Column(
@@ -533,8 +556,9 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
                               Icon(
                                 Icons.event_busy,
                                 size: 48,
-                                color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
                               ),
                               const SizedBox(height: 16),
                               Text(
@@ -569,9 +593,9 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
                                 label: const Text('Create Event'),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor:
-                                  Theme.of(context).colorScheme.primary,
+                                      Theme.of(context).colorScheme.primary,
                                   foregroundColor:
-                                  Theme.of(context).colorScheme.surface,
+                                      Theme.of(context).colorScheme.surface,
                                 ),
                               ),
                             ],
@@ -593,14 +617,18 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
                     color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color:
-                      Theme.of(context).colorScheme.tertiary.withOpacity(0.15),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .tertiary
+                          .withOpacity(0.15),
                       width: 1,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color:
-                        Theme.of(context).colorScheme.shadow.withOpacity(0.04),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .shadow
+                            .withOpacity(0.04),
                         spreadRadius: 0,
                         blurRadius: 20,
                         offset: const Offset(0, 4),
@@ -644,14 +672,18 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
                     color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color:
-                      Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.15),
                       width: 1,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color:
-                        Theme.of(context).colorScheme.shadow.withOpacity(0.04),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .shadow
+                            .withOpacity(0.04),
                         spreadRadius: 0,
                         blurRadius: 20,
                         offset: const Offset(0, 4),
@@ -698,33 +730,36 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
                       end: Alignment.bottomRight,
                       colors: selectedEvent != null
                           ? [
-                        Theme.of(context).colorScheme.primary,
-                        Theme.of(context).colorScheme.primary.withOpacity(0.8)
-                      ]
+                              Theme.of(context).colorScheme.primary,
+                              Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.8)
+                            ]
                           : [
-                        Theme.of(context).colorScheme.onSurfaceVariant,
-                        Theme.of(context)
-                            .colorScheme
-                            .onSurfaceVariant
-                            .withOpacity(0.8)
-                      ],
+                              Theme.of(context).colorScheme.onSurfaceVariant,
+                              Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant
+                                  .withOpacity(0.8)
+                            ],
                     ),
                     boxShadow: selectedEvent != null
                         ? [
-                      BoxShadow(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withOpacity(0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
-                      ),
-                    ]
+                            BoxShadow(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
+                            ),
+                          ]
                         : null,
                   ),
                   child: ElevatedButton(
                     onPressed:
-                    selectedEvent != null ? () => _issueInventory() : null,
+                        selectedEvent != null ? () => _issueInventory() : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
                       shadowColor: Colors.transparent,
@@ -785,13 +820,13 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
           ),
           boxShadow: isSelected
               ? [
-            BoxShadow(
-              color:
-              Theme.of(context).colorScheme.primary.withOpacity(0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ]
+                  BoxShadow(
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
               : null,
         ),
         child: Row(
@@ -801,7 +836,7 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
               decoration: BoxDecoration(
                 color: isSelected
                     ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.surfaceVariant,
+                    : Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
@@ -896,10 +931,10 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Are you sure you want to issue:'),
+              const Text('Are you sure you want to issue:'),
               const SizedBox(height: 8),
               Text(
-                '${issueQuantity} × ${widget.inventoryItem['name']}',
+                '$issueQuantity × ${widget.inventoryItem['name']}',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 4),
@@ -941,10 +976,10 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
   void _confirmIssue() {
     // Update inventory quantity using the provider
     ref.read(inventoryProvider.notifier).issueInventory(
-      widget.inventoryItem['id'],
-      issueQuantity,
-      selectedEvent!['name'],
-    );
+          widget.inventoryItem['id'],
+          issueQuantity,
+          selectedEvent!['name'],
+        );
 
     // Show success message
     showDialog(
@@ -963,7 +998,7 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${issueQuantity} × ${widget.inventoryItem['name']}',
+              '$issueQuantity × ${widget.inventoryItem['name']}',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
@@ -1066,7 +1101,7 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
       return Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceVariant,
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -1102,72 +1137,72 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
     return Column(
       children: itemIssues
           .map((issue) => Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color:
-            Theme.of(context).colorScheme.tertiary.withOpacity(0.2),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .tertiary
-                    .withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                Icons.event_note,
-                color: Theme.of(context).colorScheme.tertiary,
-                size: 16,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${issue['quantity']} units issued',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color:
+                        Theme.of(context).colorScheme.tertiary.withOpacity(0.2),
+                    width: 1,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Event: ${issue['eventName']}',
-                    style: TextStyle(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurfaceVariant,
-                      fontSize: 12,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .tertiary
+                            .withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.event_note,
+                        color: Theme.of(context).colorScheme.tertiary,
+                        size: 16,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Date: ${issue['issueDate']} • Remaining: ${issue['remainingQuantity']}',
-                    style: TextStyle(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurfaceVariant,
-                      fontSize: 11,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${issue['quantity']} units issued',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Event: ${issue['eventName']}',
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Date: ${issue['issueDate']} • Remaining: ${issue['remainingQuantity']}',
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ))
+                  ],
+                ),
+              ))
           .toList(),
     );
   }
@@ -1179,7 +1214,7 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
       return Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceVariant,
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -1218,72 +1253,72 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
     return Column(
       children: recentItems
           .map((item) => Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color:
-            Theme.of(context).colorScheme.primary.withOpacity(0.2),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                Icons.check_circle,
-                color: Theme.of(context).colorScheme.primary,
-                size: 16,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${item['quantity']} × ${item['itemName']}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                    width: 1,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Issued to: ${item['eventName']}',
-                    style: TextStyle(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurfaceVariant,
-                      fontSize: 12,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.check_circle,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 16,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Date: ${item['issueDate']} • Remaining: ${item['remainingQuantity']}',
-                    style: TextStyle(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurfaceVariant,
-                      fontSize: 11,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${item['quantity']} × ${item['itemName']}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Issued to: ${item['eventName']}',
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Date: ${item['issueDate']} • Remaining: ${item['remainingQuantity']}',
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ))
+                  ],
+                ),
+              ))
           .toList(),
     );
   }

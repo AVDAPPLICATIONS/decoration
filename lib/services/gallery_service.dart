@@ -14,12 +14,10 @@ class GalleryService {
   /// Check if an image exists on the server without downloading it
   Future<bool> imageExists(String imageUrl) async {
     try {
-      print('🔍 GalleryService: Checking if image exists: $imageUrl');
       final response = await http.head(Uri.parse(imageUrl));
-      print('🔍 GalleryService: Response status: ${response.statusCode}');
+
       return response.statusCode == 200;
     } catch (e) {
-      print('❌ GalleryService: Error checking if image exists: $e');
       return false;
     }
   }
@@ -27,12 +25,10 @@ class GalleryService {
   /// Test server connectivity
   Future<bool> testServerConnectivity() async {
     try {
-      print('🔍 GalleryService: Testing server connectivity to: $baseUrl');
       final response = await http.get(Uri.parse('$baseUrl/health'));
-      print('🔍 GalleryService: Server response: ${response.statusCode}');
+
       return response.statusCode == 200;
     } catch (e) {
-      print('❌ GalleryService: Server connectivity test failed: $e');
       return false;
     }
   }
@@ -52,7 +48,6 @@ class GalleryService {
       }
       return null;
     } catch (e) {
-      print('Error picking image from gallery: $e');
       return null;
     }
   }
@@ -72,7 +67,6 @@ class GalleryService {
       }
       return null;
     } catch (e) {
-      print('Error picking image from camera: $e');
       return null;
     }
   }
@@ -87,16 +81,12 @@ class GalleryService {
   // Get event images
   Future<Map<String, dynamic>> getEventImages(String eventId) async {
     try {
-      print('🔄 Getting event images for event ID: $eventId');
       final response = await http.get(
         Uri.parse('$baseUrl/api/events/$eventId'),
         headers: {
           'Content-Type': 'application/json',
         },
       );
-
-      print('🔄 Response status: ${response.statusCode}');
-      print('🔄 Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -106,7 +96,6 @@ class GalleryService {
       }
       return {};
     } catch (e) {
-      print('❌ Error getting event images: $e');
       return {};
     }
   }
@@ -132,7 +121,6 @@ class GalleryService {
 
       return data;
     } catch (e) {
-      print('Error uploading design image: $e');
       return {'success': false, 'message': 'Upload failed'};
     }
   }
@@ -158,7 +146,6 @@ class GalleryService {
 
       return data;
     } catch (e) {
-      print('Error uploading final decoration image: $e');
       return {'success': false, 'message': 'Upload failed'};
     }
   }
@@ -169,9 +156,6 @@ class GalleryService {
     required String eventId,
   }) async {
     try {
-      print('🗑️ Deleting design image with ID: $imageId for event: $eventId');
-      print('🗑️ API URL: $baseUrl/api/gallery/design/delete');
-
       final response = await http.post(
         Uri.parse('$baseUrl/api/gallery/design/delete'),
         headers: {
@@ -182,26 +166,28 @@ class GalleryService {
         }),
       );
 
-      print('🗑️ Response status: ${response.statusCode}');
-      print('🗑️ Response body: ${response.body}');
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data;
       } else if (response.statusCode == 404) {
         return {
-          'success': false, 
-          'message': 'Delete endpoint not available. Image deletion may not be supported yet.'
+          'success': false,
+          'message':
+              'Delete endpoint not available. Image deletion may not be supported yet.'
         };
       } else {
-        return {'success': false, 'message': 'Delete failed with status ${response.statusCode}'};
+        return {
+          'success': false,
+          'message': 'Delete failed with status ${response.statusCode}'
+        };
       }
     } catch (e) {
-      print('❌ Error deleting design image: $e');
-      if (e.toString().contains('SyntaxError') || e.toString().contains('<!DOCTYPE')) {
+      if (e.toString().contains('SyntaxError') ||
+          e.toString().contains('<!DOCTYPE')) {
         return {
-          'success': false, 
-          'message': 'Delete endpoint not available. Image deletion may not be supported yet.'
+          'success': false,
+          'message':
+              'Delete endpoint not available. Image deletion may not be supported yet.'
         };
       }
       return {'success': false, 'message': 'Delete failed: $e'};
@@ -214,9 +200,6 @@ class GalleryService {
     required String eventId,
   }) async {
     try {
-      print('🗑️ Deleting final decoration image with ID: $imageId for event: $eventId');
-      print('🗑️ API URL: $baseUrl/api/gallery/final/delete');
-
       final response = await http.post(
         Uri.parse('$baseUrl/api/gallery/final/delete'),
         headers: {
@@ -227,26 +210,28 @@ class GalleryService {
         }),
       );
 
-      print('🗑️ Response status: ${response.statusCode}');
-      print('🗑️ Response body: ${response.body}');
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data;
       } else if (response.statusCode == 404) {
         return {
-          'success': false, 
-          'message': 'Delete endpoint not available. Image deletion may not be supported yet.'
+          'success': false,
+          'message':
+              'Delete endpoint not available. Image deletion may not be supported yet.'
         };
       } else {
-        return {'success': false, 'message': 'Delete failed with status ${response.statusCode}'};
+        return {
+          'success': false,
+          'message': 'Delete failed with status ${response.statusCode}'
+        };
       }
     } catch (e) {
-      print('❌ Error deleting final decoration image: $e');
-      if (e.toString().contains('SyntaxError') || e.toString().contains('<!DOCTYPE')) {
+      if (e.toString().contains('SyntaxError') ||
+          e.toString().contains('<!DOCTYPE')) {
         return {
-          'success': false, 
-          'message': 'Delete endpoint not available. Image deletion may not be supported yet.'
+          'success': false,
+          'message':
+              'Delete endpoint not available. Image deletion may not be supported yet.'
         };
       }
       return {'success': false, 'message': 'Delete failed: $e'};
@@ -279,7 +264,6 @@ class GalleryService {
 
       return data;
     } catch (e) {
-      print('Error uploading multiple images: $e');
       return {'success': false, 'message': 'Upload failed'};
     }
   }
@@ -308,18 +292,12 @@ class GalleryService {
       request.fields['event_id'] = eventId;
       request.fields['notes'] = notes;
 
-      print('Uploading ${imageFiles.length} design images for event $eventId');
-      print('Notes: $notes');
-
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
       final data = jsonDecode(responseBody);
 
-      print('Design images upload response: $data');
-
       return data;
     } catch (e) {
-      print('Error uploading design images: $e');
       return {'success': false, 'message': 'Upload failed: $e'};
     }
   }
@@ -350,17 +328,13 @@ class GalleryService {
 
       print(
           'Uploading ${imageFiles.length} final decoration images for event $eventId');
-      print('Notes: $notes');
 
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
       final data = jsonDecode(responseBody);
 
-      print('Final decoration images upload response: $data');
-
       return data;
     } catch (e) {
-      print('Error uploading final decoration images: $e');
       return {'success': false, 'message': 'Upload failed: $e'};
     }
   }

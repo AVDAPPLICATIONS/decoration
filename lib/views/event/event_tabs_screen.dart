@@ -12,10 +12,10 @@ class EventTabsScreen extends StatelessWidget {
   final bool isAdmin;
 
   const EventTabsScreen({
-    Key? key,
+    super.key,
     required this.event,
     required this.isAdmin,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +54,7 @@ class EventTabsScreen extends StatelessWidget {
               end: Alignment.bottomCenter,
               colors: [
                 colorScheme.primary,
-                colorScheme.background,
+                colorScheme.surface,
               ],
               stops: const [0.0, 0.3],
             ),
@@ -110,12 +110,12 @@ class EventTabsScreen extends StatelessWidget {
 
 /// Separate widget for TabBarView to improve readability and maintainability
 class _EventTabContent extends StatelessWidget {
-  const _EventTabContent({Key? key}) : super(key: key);
+  const _EventTabContent();
 
   @override
   Widget build(BuildContext context) {
     final EventTabsScreen parent =
-    context.findAncestorWidgetOfExactType<EventTabsScreen>()!;
+        context.findAncestorWidgetOfExactType<EventTabsScreen>()!;
 
     return TabBarView(
       children: [

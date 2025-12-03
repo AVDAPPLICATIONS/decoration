@@ -66,7 +66,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             backgroundColor: colorScheme.surface,
             decoration: NavBarDecoration(
               borderRadius: BorderRadius.circular(24),
-              colorBehindNavBar: colorScheme.background,
+              colorBehindNavBar: colorScheme.surface,
               boxShadow: [
                 BoxShadow(
                   color: colorScheme.shadow.withOpacity(0.1),
@@ -88,7 +88,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             // Add these properties to help with navigation state
             onItemSelected: (index) {
               // Handle tab selection
-              ref.read(bottomNavIndexProvider.notifier).update((state) => index);
+              ref
+                  .read(bottomNavIndexProvider.notifier)
+                  .update((state) => index);
             },
           ),
         ),
@@ -101,7 +103,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final screens = _buildScreens(isAdmin);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: Column(
         children: [
           const OfflineIndicator(),
@@ -186,7 +188,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     constraints: const BoxConstraints(
                       minWidth: 0,
                     ),
-                    color: Theme.of(context).colorScheme.background,
+                    color: Theme.of(context).colorScheme.surface,
                     child: IndexedStack(
                       index: currentIndex,
                       children: screens,
@@ -207,187 +209,196 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final user = ref.watch(authProvider);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: Column(
         children: [
           const OfflineIndicator(),
           Expanded(
             child: Row(
-        children: [
-          // Side Navigation for Desktop
-          Container(
-            width: MediaQuery.of(context).size.width * 0.2,
-            constraints: const BoxConstraints(
-              minWidth: 250,
-              maxWidth: 350,
-            ),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              border: Border(
-                right: BorderSide(
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
-                  width: 1,
-                ),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.shadow.withOpacity(0.1),
-                  blurRadius: 12,
-                  offset: const Offset(2, 0),
-                ),
-              ],
-            ),
-            child: Column(
               children: [
-                const SizedBox(height: 30),
-                // App Logo/Title with enhanced styling
+                // Side Navigation for Desktop
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16.0),
-                  padding: const EdgeInsets.all(20.0),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .outline
-                          .withOpacity(0.3),
-                      width: 1,
-                    ),
+                  width: MediaQuery.of(context).size.width * 0.2,
+                  constraints: const BoxConstraints(
+                    minWidth: 250,
+                    maxWidth: 350,
                   ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.event_note_rounded,
-                        size: 32,
-                        color: Theme.of(context).colorScheme.primary,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    border: Border(
+                      right: BorderSide(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .outline
+                            .withOpacity(0.2),
+                        width: 1,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Event Management',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color:
-                              Theme.of(context).colorScheme.onPrimaryContainer,
-                        ),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .shadow
+                            .withOpacity(0.1),
+                        blurRadius: 12,
+                        offset: const Offset(2, 0),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 32),
-                _buildNavItem(
-                  context,
-                  ref,
-                  0,
-                  currentIndex,
-                  Icons.dashboard_rounded,
-                  'Dashboard',
-                ),
-                _buildNavItem(
-                  context,
-                  ref,
-                  1,
-                  currentIndex,
-                  Icons.event_rounded,
-                  'Events',
-                ),
-                _buildNavItem(
-                  context,
-                  ref,
-                  2,
-                  currentIndex,
-                  Icons.inventory_2_rounded,
-                  'Inventory',
-                ),
-                const Spacer(),
-                // User info at bottom with enhanced styling
-                Container(
-                  margin: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.secondaryContainer,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .outline
-                          .withOpacity(0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            Icons.person_rounded,
-                            color: Theme.of(context).colorScheme.onPrimary,
-                            size: 24,
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 30),
+                      // App Logo/Title with enhanced styling
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                        padding: const EdgeInsets.all(20.0),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .outline
+                                .withOpacity(0.3),
+                            width: 1,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.event_note_rounded,
+                              size: 32,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Event Management',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimaryContainer,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      _buildNavItem(
+                        context,
+                        ref,
+                        0,
+                        currentIndex,
+                        Icons.dashboard_rounded,
+                        'Dashboard',
+                      ),
+                      _buildNavItem(
+                        context,
+                        ref,
+                        1,
+                        currentIndex,
+                        Icons.event_rounded,
+                        'Events',
+                      ),
+                      _buildNavItem(
+                        context,
+                        ref,
+                        2,
+                        currentIndex,
+                        Icons.inventory_2_rounded,
+                        'Inventory',
+                      ),
+                      const Spacer(),
+                      // User info at bottom with enhanced styling
+                      Container(
+                        margin: const EdgeInsets.all(16.0),
+                        decoration: BoxDecoration(
+                          color:
+                              Theme.of(context).colorScheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .outline
+                                .withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
                             children: [
-                              Text(
-                                user?.username ?? 'Admin User',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSecondaryContainer,
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.person_rounded,
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                  size: 24,
                                 ),
                               ),
-                              Text(
-                                isAdmin ? 'Administrator' : 'User',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSecondaryContainer
-                                      .withOpacity(0.7),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      user?.username ?? 'Admin User',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSecondaryContainer,
+                                      ),
+                                    ),
+                                    Text(
+                                      isAdmin ? 'Administrator' : 'User',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSecondaryContainer
+                                            .withOpacity(0.7),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      ],
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+                // Main Content
+                Expanded(
+                  child: Container(
+                    constraints: const BoxConstraints(
+                      minWidth: 0,
+                    ),
+                    color: Theme.of(context).colorScheme.surface,
+                    child: IndexedStack(
+                      index: currentIndex,
+                      children: screens,
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
               ],
-            ),
-          ),
-          // Main Content
-          Expanded(
-            child: Container(
-              constraints: const BoxConstraints(
-                minWidth: 0,
-              ),
-              color: Theme.of(context).colorScheme.background,
-              child: IndexedStack(
-                index: currentIndex,
-                children: screens,
-              ),
             ),
           ),
         ],
       ),
-          ),
-    ],
-  ),
-);
+    );
   }
 
   List<Widget> _buildScreens(bool isAdmin) {

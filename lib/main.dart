@@ -58,27 +58,21 @@ class _AppRootState extends ConsumerState<AppRoot> {
   @override
   Widget build(BuildContext context) {
     if (_showSplash) {
-      print('🔄 AppRoot: Showing initial splash screen');
       return const SplashScreen();
     }
 
     final isAuthReady = ref.watch(authReadyProvider);
     final user = ref.watch(authProvider);
 
-    print(
-        '🔄 AppRoot: isAuthReady=$isAuthReady, user=${user?.username ?? 'null'}');
 
     if (!isAuthReady) {
-      print('🔄 AppRoot: Auth not ready, showing splash screen');
       return const SplashScreen();
     }
 
     if (user != null) {
-      print('🔄 AppRoot: User authenticated, showing home screen');
       return const HomeScreen();
     }
 
-    print('🔄 AppRoot: User not authenticated, showing login screen');
     return const LoginScreen();
   }
 }

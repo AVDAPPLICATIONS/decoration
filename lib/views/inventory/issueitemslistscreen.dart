@@ -1,17 +1,7 @@
-import 'package:avd_decoration_application/utils/responsive_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
-import 'dart:typed_data';
-import 'inventory_screen.dart';
-import '../../providers/auth_provider.dart';
 import '../../providers/inventory_provider.dart';
-import '../../utils/snackbar_manager.dart';
-import 'issue_inventory_screen.dart';
-import 'item_issue_history_screen.dart';
-import 'edit_inventory_screen.dart';
 import '../custom_widget/custom_appbar.dart';
-
 
 class IssuedItemsListScreen extends ConsumerStatefulWidget {
   const IssuedItemsListScreen({super.key});
@@ -27,8 +17,8 @@ class _IssuedItemsListScreenState extends ConsumerState<IssuedItemsListScreen> {
     final issuedItems = ref.watch(inventoryProvider.notifier).issuedItems;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
-      appBar: CustomAppBar(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: const CustomAppBar(
         title: 'Issued Items to Events',
         showBackButton: true,
         curvedBottom: true,
@@ -41,7 +31,7 @@ class _IssuedItemsListScreenState extends ConsumerState<IssuedItemsListScreen> {
             end: Alignment.bottomCenter,
             colors: [
               Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.background,
+              Theme.of(context).colorScheme.surface,
             ],
             stops: const [0.0, 0.25],
           ),
@@ -65,7 +55,10 @@ class _IssuedItemsListScreenState extends ConsumerState<IssuedItemsListScreen> {
                   color: Theme.of(context).colorScheme.surface,
                   boxShadow: [
                     BoxShadow(
-                      color: Theme.of(context).colorScheme.shadow.withOpacity(0.04),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .shadow
+                          .withOpacity(0.04),
                       spreadRadius: 0,
                       blurRadius: 20,
                       offset: const Offset(0, 4),
@@ -151,20 +144,20 @@ class _IssuedItemsListScreenState extends ConsumerState<IssuedItemsListScreen> {
                 child: issuedItems.isEmpty
                     ? _buildEmptyState()
                     : RefreshIndicator(
-                  onRefresh: () async {
-                    await ref
-                        .read(inventoryProvider.notifier)
-                        .loadInventoryData();
-                  },
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(24),
-                    itemCount: issuedItems.length,
-                    itemBuilder: (context, index) {
-                      final item = issuedItems[index];
-                      return _buildIssuedItemCard(item);
-                    },
-                  ),
-                ),
+                        onRefresh: () async {
+                          await ref
+                              .read(inventoryProvider.notifier)
+                              .loadInventoryData();
+                        },
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(24),
+                          itemCount: issuedItems.length,
+                          itemBuilder: (context, index) {
+                            final item = issuedItems[index];
+                            return _buildIssuedItemCard(item);
+                          },
+                        ),
+                      ),
               ),
             ],
           ),
@@ -274,7 +267,7 @@ class _IssuedItemsListScreenState extends ConsumerState<IssuedItemsListScreen> {
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Theme.of(context).colorScheme.surface,
                 padding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
             ),
           ],
@@ -404,6 +397,4 @@ class _IssuedItemsListScreenState extends ConsumerState<IssuedItemsListScreen> {
       ),
     );
   }
-
 }
-

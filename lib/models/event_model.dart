@@ -32,7 +32,9 @@ class EventModel {
       location: json['location'],
       description: json['description'],
       coverImage: json['cover_image'],
-      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : null,
       name: json['name'],
       status: json['status'],
     );

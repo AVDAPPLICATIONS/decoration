@@ -8,7 +8,8 @@ final materialServiceProvider = Provider<MaterialService>((ref) {
   return MaterialService(api);
 });
 
-final materialProvider = StateNotifierProvider<MaterialNotifier, List<MaterialModel>>((ref) {
+final materialProvider =
+    StateNotifierProvider<MaterialNotifier, List<MaterialModel>>((ref) {
   final service = ref.read(materialServiceProvider);
   return MaterialNotifier(ref, service);
 });
@@ -23,35 +24,27 @@ class MaterialNotifier extends StateNotifier<List<MaterialModel>> {
     try {
       final data = await service.fetchMaterials();
       state = data;
-    } catch (e) {
-      print('Error fetching materials: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> addMaterial(MaterialModel material) async {
     try {
       await service.createMaterial(material);
       await fetchMaterials();
-    } catch (e) {
-      print('Error adding material: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> updateMaterial(int id, MaterialModel material) async {
     try {
       await service.updateMaterial(id, material);
       await fetchMaterials();
-    } catch (e) {
-      print('Error updating material: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> deleteMaterial(int id) async {
     try {
       await service.deleteMaterial(id);
       state = state.where((m) => m.id != id).toList();
-    } catch (e) {
-      print('Error deleting material: $e');
-    }
+    } catch (e) {}
   }
 }

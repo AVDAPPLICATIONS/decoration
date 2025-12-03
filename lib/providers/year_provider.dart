@@ -30,19 +30,15 @@ class YearNotifier extends StateNotifier<List<YearModel>> {
 
   Future<void> fetchYears({int? templateId}) async {
     try {
-      print('YearProvider: Starting to fetch years...');
-      print('YearProvider: Template ID: $templateId');
       final years = await repo.fetchYears(templateId: templateId);
-      print('YearProvider: Received ${years.length} years from repository');
+
       state = years;
-      print('YearProvider: State updated with ${state.length} years');
 
       // Force a rebuild by setting state again
       if (mounted) {
         state = [...years];
       }
     } catch (e) {
-      print('YearProvider: Error fetching years: $e');
       state = []; // Set empty state on error
     }
   }
@@ -53,19 +49,16 @@ class YearNotifier extends StateNotifier<List<YearModel>> {
       await fetchYears(templateId: year.templateId);
       return createdYear;
     } catch (e) {
-      print('Error adding year: $e');
       return null;
     }
   }
 
   Future<void> deleteYear(int id) async {
     try {
-      print('YearProvider: Attempting to delete year with ID: $id');
       await repo.deleteYear(id);
-      print('YearProvider: Successfully deleted year with ID: $id');
+
       // State will be updated by removeYearFromState in the UI
     } catch (e) {
-      print('YearProvider: Error deleting year $id: $e');
       rethrow; // Re-throw to handle in UI
     }
   }

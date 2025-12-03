@@ -7,9 +7,12 @@ class IssuanceService {
   IssuanceService(this.api);
 
   Future<List<IssuanceModel>> fetchIssuances({int? eventId}) async {
-    final endpoint = eventId != null ? '/issuances/event/$eventId' : '/issuances';
+    final endpoint =
+        eventId != null ? '/issuances/event/$eventId' : '/issuances';
     final response = await api.get(endpoint);
-    return (response as List).map((json) => IssuanceModel.fromJson(json)).toList();
+    return (response as List)
+        .map((json) => IssuanceModel.fromJson(json))
+        .toList();
   }
 
   Future<IssuanceModel> createIssuance(IssuanceModel issuance) async {

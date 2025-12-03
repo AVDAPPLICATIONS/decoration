@@ -3,15 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../models/event_model.dart' show EventModel;
 import '../../../providers/event_provider.dart' show eventProvider;
-import '../../../utils/top_snackbar_helper.dart' show showErrorTopSnackBar, showSuccessTopSnackBar;
+import '../../../utils/top_snackbar_helper.dart'
+    show showErrorTopSnackBar, showSuccessTopSnackBar;
 
 Future<void> showEditEventDialog(
-    BuildContext context,
-    WidgetRef ref,
-    EventModel eventData,
-    ) async {
+  BuildContext context,
+  WidgetRef ref,
+  EventModel eventData,
+) async {
   final TextEditingController nameController =
-  TextEditingController(text: eventData.name ?? '');
+      TextEditingController(text: eventData.name ?? '');
 
   final result = await showDialog<Map<String, dynamic>>(
     context: context,
@@ -68,7 +69,9 @@ Future<void> showEditEventDialog(
         createdAt: eventData.createdAt,
       );
 
-      await ref.read(eventProvider.notifier).updateEvent(eventData.id!, updatedEvent);
+      await ref
+          .read(eventProvider.notifier)
+          .updateEvent(eventData.id!, updatedEvent);
 
       if (context.mounted) {
         showSuccessTopSnackBar(

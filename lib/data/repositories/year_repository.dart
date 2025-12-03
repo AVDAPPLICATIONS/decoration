@@ -26,9 +26,8 @@ class YearRepository {
   }
 
   Future<List<YearModel>> fetchYears({int? templateId}) async {
-    final cacheKey = templateId != null 
-        ? '${_yearsByTemplateKey}_$templateId' 
-        : _yearsKey;
+    final cacheKey =
+        templateId != null ? '${_yearsByTemplateKey}_$templateId' : _yearsKey;
 
     if (!await _isOnline() && offline != null) {
       final cached = await offline!.readJson<List<YearModel>>(
@@ -36,8 +35,8 @@ class YearRepository {
         (obj) {
           if (obj is List) {
             return obj
-                .map((e) => YearModel.fromJson(
-                    Map<String, dynamic>.from(e as Map)))
+                .map((e) =>
+                    YearModel.fromJson(Map<String, dynamic>.from(e as Map)))
                 .toList();
           }
           return <YearModel>[];
@@ -66,7 +65,7 @@ class YearRepository {
 
   Future<YearModel> createYear(YearModel year) async {
     final createdYear = await service.createYear(year);
-    
+
     // Update cache if offline storage is available
     if (offline != null) {
       // Add to the appropriate cache
@@ -76,14 +75,14 @@ class YearRepository {
         (obj) {
           if (obj is List) {
             return obj
-                .map((e) => YearModel.fromJson(
-                    Map<String, dynamic>.from(e as Map)))
+                .map((e) =>
+                    YearModel.fromJson(Map<String, dynamic>.from(e as Map)))
                 .toList();
           }
           return <YearModel>[];
         },
       );
-      
+
       if (cached != null) {
         cached.add(createdYear);
         await offline!.saveJson(
@@ -100,13 +99,13 @@ class YearRepository {
         );
       }
     }
-    
+
     return createdYear;
   }
 
   Future<void> deleteYear(int id) async {
     await service.deleteYear(id);
-    
+
     // Remove from cache if offline storage is available
     if (offline != null) {
       // We need to find which cache contains this year and remove it
@@ -118,14 +117,14 @@ class YearRepository {
           (obj) {
             if (obj is List) {
               return obj
-                  .map((e) => YearModel.fromJson(
-                      Map<String, dynamic>.from(e as Map)))
+                  .map((e) =>
+                      YearModel.fromJson(Map<String, dynamic>.from(e as Map)))
                   .toList();
             }
             return <YearModel>[];
           },
         );
-        
+
         if (cached != null) {
           final updated = cached.where((y) => y.id != id).toList();
           if (updated.length != cached.length) {

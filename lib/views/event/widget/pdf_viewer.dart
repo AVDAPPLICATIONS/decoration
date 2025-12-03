@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:http/http.dart' as http;
 import 'dart:typed_data';
 import '../../../services/sharing_service.dart';
@@ -40,7 +38,7 @@ class _PDFViewerState extends State<PDFViewer> {
       });
 
       final response = await http.get(Uri.parse(widget.pdfUrl));
-      
+
       if (response.statusCode == 200) {
         setState(() {
           _pdfData = response.bodyBytes;
@@ -218,5 +216,4 @@ class _PDFViewerState extends State<PDFViewer> {
       );
     }
   }
-
 }

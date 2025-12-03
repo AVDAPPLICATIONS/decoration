@@ -32,9 +32,11 @@ class SnackBarManager {
             child: Material(
               color: Colors.transparent,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: backgroundColor ?? Theme.of(context).colorScheme.primary,
+                  color:
+                      backgroundColor ?? Theme.of(context).colorScheme.primary,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(

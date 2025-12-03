@@ -88,7 +88,7 @@ class _IssueInventoryPageState extends ConsumerState<IssueInventoryPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       appBar: CustomAppBar(
         title: 'Issue ${widget.inventoryItem['name']}',
         showBackButton: true,
@@ -394,7 +394,7 @@ class _IssueInventoryPageState extends ConsumerState<IssueInventoryPage> {
 
   Future<void> _confirmIssue() async {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     // Validate inputs
     if (selectedEvent == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -494,7 +494,7 @@ class _IssueInventoryPageState extends ConsumerState<IssueInventoryPage> {
               ],
             ),
             content: Text(
-                '${issueQuantity} × ${widget.inventoryItem['name']} issued to ${selectedEvent!['name']}'),
+                '$issueQuantity × ${widget.inventoryItem['name']} issued to ${selectedEvent!['name']}'),
             actions: [
               TextButton(
                 onPressed: () {

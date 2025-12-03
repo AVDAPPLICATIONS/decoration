@@ -62,7 +62,6 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
       categoryName = item.categoryName.toLowerCase();
       _initializeFormFields();
     } catch (e) {
-      print('Error initializing item: $e');
       // Show error and navigate back
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -108,7 +107,6 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
         // Set size field with combined width and length or use item.size if available
         if (item.size != null && item.size!.isNotEmpty) {
           sizeCtrl.text = item.size!;
-          print('🔍 Debug Fabric Edit: Using item.size = ${item.size}');
         } else if (item.width != null && item.length != null) {
           sizeCtrl.text = '${item.width}x${item.length}';
           print(
@@ -154,7 +152,7 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       appBar: CustomAppBar(
         title: 'Edit ${item.categoryName} Item',
         showBackButton: true,
@@ -240,7 +238,8 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
           _buildSizeField('Dimensions (e.g., 45x45x90)', dimensionsCtrl),
           _buildTextField('Material', materialCtrl),
           _buildTextField('Total Stock', quantityCtrl,
-              keyboardType: TextInputType.numberWithOptions(decimal: true)),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true)),
           _buildTextField('Storage Location', storageLocationCtrl),
           _buildTextField('Notes', notesCtrl, maxLines: 3),
         ];
@@ -251,7 +250,8 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
           _buildTextField('Fabric Type', fabricTypeCtrl),
           _buildSizeField('Size (e.g., 1x2)', sizeCtrl),
           _buildTextField('Total Stock', quantityCtrl,
-              keyboardType: TextInputType.numberWithOptions(decimal: true)),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true)),
           _buildTextField('Storage Location', storageLocationCtrl),
           _buildTextField('Notes', notesCtrl, maxLines: 3),
         ];
@@ -307,7 +307,8 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
               keyboardType: TextInputType.number),
           _buildThicknessDropdown('Thickness', thermocolTypeCtrl),
           _buildTextField('Density', densityCtrl,
-              keyboardType: TextInputType.numberWithOptions(decimal: true)),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true)),
           _buildTextField('Storage Location', storageLocationCtrl),
           _buildTextField('Notes', notesCtrl, maxLines: 3),
         ];
@@ -406,9 +407,7 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
             print(
                 '🔍 Debug _buildSizeField: No unit found, using full text as sizeValue = "$sizeValue"');
           }
-        } else {
-          print('🔍 Debug _buildSizeField: controller.text is empty');
-        }
+        } else {}
 
         // Create a separate controller for the size input field
         final sizeController = TextEditingController(text: sizeValue);
@@ -457,7 +456,7 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
                 flex: 1,
                 child: DropdownButtonFormField<String>(
                   isExpanded: true,
-                  value: selectedUnit,
+                  initialValue: selectedUnit,
                   onChanged: (String? newValue) {
                     if (newValue != null) {
                       setState(() {
@@ -534,7 +533,8 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
           margin: const EdgeInsets.only(bottom: 16),
           child: DropdownButtonFormField<String>(
             isExpanded: true,
-            value: selectedThickness.isNotEmpty ? selectedThickness : null,
+            initialValue:
+                selectedThickness.isNotEmpty ? selectedThickness : null,
             onChanged: (String? newValue) {
               if (newValue != null) {
                 setState(() {
@@ -667,7 +667,7 @@ class _EditInventoryPageState extends ConsumerState<EditInventoryPage> {
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
-                              color: colorScheme.surfaceVariant,
+                              color: colorScheme.surfaceContainerHighest,
                               child: Icon(Icons.image,
                                   size: 50,
                                   color: colorScheme.onSurfaceVariant),

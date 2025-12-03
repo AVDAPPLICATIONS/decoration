@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/category_model.dart';
 import '../services/inventory_service.dart';
-import '../utils/constants.dart';
 import 'inventory_provider.dart';
 
 class CategoryNotifier extends StateNotifier<List<CategoryModel>> {
@@ -37,7 +36,6 @@ class CategoryNotifier extends StateNotifier<List<CategoryModel>> {
       }
     } catch (e) {
       _error = e.toString();
-      print('❌ Error loading categories: $e');
     } finally {
       _isLoading = false;
     }
@@ -78,18 +76,17 @@ class CategoryNotifier extends StateNotifier<List<CategoryModel>> {
       if (response['success'] == true) {
         final categoryData = response['data'];
         final newCategory = CategoryModel.fromJson(categoryData);
-        
+
         // Add the new category to the state
         state = [...state, newCategory];
-        
-        print('✅ Category created successfully: ${newCategory.name}');
+
         return response;
       } else {
         throw Exception(response['message'] ?? 'Failed to create category');
       }
     } catch (e) {
       _error = e.toString();
-      print('❌ Error creating category: $e');
+
       rethrow;
     } finally {
       _isLoading = false;

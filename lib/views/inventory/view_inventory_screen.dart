@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:avd_decoration_application/widgets/cached_network_or_file_image.dart' as cnf;
+import 'package:avd_decoration_application/widgets/cached_network_or_file_image.dart'
+    as cnf;
 import '../../providers/inventory_provider.dart';
 import '../../utils/responsive_utils.dart';
 import '../../utils/snackbar_manager.dart';
@@ -19,7 +20,7 @@ class _ViewInventoryPageState extends ConsumerState<ViewInventoryPage> {
   late String categoryName;
 
   // Loading state
-  bool _isLoading = false;
+  final bool _isLoading = false;
 
   @override
   void initState() {
@@ -33,7 +34,6 @@ class _ViewInventoryPageState extends ConsumerState<ViewInventoryPage> {
       item = inventoryItems.firstWhere((i) => i.id == widget.itemId);
       categoryName = item.categoryName.toLowerCase();
     } catch (e) {
-      print('Error initializing item: $e');
       // Show error and navigate back
       WidgetsBinding.instance.addPostFrameCallback((_) {
         SnackBarManager.showErrorCustom(
@@ -94,7 +94,10 @@ class _ViewInventoryPageState extends ConsumerState<ViewInventoryPage> {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.7),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -166,7 +169,9 @@ class _ViewInventoryPageState extends ConsumerState<ViewInventoryPage> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => FullScreenImageViewer(
-                    imageUrl: ref.read(inventoryServiceProvider).getImageUrl(item.itemImage),
+                    imageUrl: ref
+                        .read(inventoryServiceProvider)
+                        .getImageUrl(item.itemImage),
                     itemName: item.name,
                   ),
                 ),
@@ -184,7 +189,9 @@ class _ViewInventoryPageState extends ConsumerState<ViewInventoryPage> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: cnf.CachedNetworkOrFileImage(
-                  imageUrl: ref.read(inventoryServiceProvider).getImageUrl(item.itemImage),
+                  imageUrl: ref
+                      .read(inventoryServiceProvider)
+                      .getImageUrl(item.itemImage),
                   fit: BoxFit.cover,
                   placeholder: Container(
                     color: Theme.of(context).colorScheme.surface,
@@ -195,7 +202,10 @@ class _ViewInventoryPageState extends ConsumerState<ViewInventoryPage> {
                     child: Icon(
                       Icons.image_not_supported_outlined,
                       size: 48,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.5),
                     ),
                   ),
                 ),
@@ -265,9 +275,9 @@ class _ViewInventoryPageState extends ConsumerState<ViewInventoryPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       appBar: _buildResponsiveAppBar(colorScheme),
       body: Container(
         decoration: BoxDecoration(
@@ -276,7 +286,7 @@ class _ViewInventoryPageState extends ConsumerState<ViewInventoryPage> {
             end: Alignment.bottomCenter,
             colors: [
               colorScheme.primary,
-              colorScheme.background,
+              colorScheme.surface,
             ],
             stops: const [0.0, 0.25],
           ),
@@ -308,80 +318,80 @@ class _ViewInventoryPageState extends ConsumerState<ViewInventoryPage> {
                 : SingleChildScrollView(
                     padding: const EdgeInsets.all(16),
                     child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Image Section
-                  _buildImageSection(),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Image Section
+                        _buildImageSection(),
 
-                  // Basic Information
-                  Text(
-                    'Basic Information',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
+                        // Basic Information
+                        Text(
+                          'Basic Information',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        _buildInfoCard(
+                          title: 'Item Name',
+                          value: item.name,
+                          icon: Icons.inventory_2_outlined,
+                        ),
+
+                        _buildInfoCard(
+                          title: 'Category',
+                          value: item.categoryName,
+                          icon: Icons.category_outlined,
+                        ),
+
+                        _buildInfoCard(
+                          title: 'Available Quantity',
+                          value: '${item.availableQuantity} ${item.unit}',
+                          icon: Icons.inventory_outlined,
+                        ),
+
+                        if (item.totalStock != null)
+                          _buildInfoCard(
+                            title: 'Total Quantity',
+                            value: '${item.totalStock} ${item.unit}',
+                            icon: Icons.storage_outlined,
+                          ),
+
+                        if (item.storageLocation.isNotEmpty)
+                          _buildInfoCard(
+                            title: 'Storage Location',
+                            value: item.storageLocation,
+                            icon: Icons.location_on_outlined,
+                          ),
+
+                        if (item.notes.isNotEmpty)
+                          _buildInfoCard(
+                            title: 'Notes',
+                            value: item.notes,
+                            icon: Icons.note_outlined,
+                          ),
+
+                        // Category-specific information
+                        if (_getCategorySpecificFields().isNotEmpty) ...[
+                          const SizedBox(height: 24),
+                          Text(
+                            'Category Details',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          ..._getCategorySpecificFields(),
+                        ],
+
+                        const SizedBox(height: 32),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 12),
-
-                  _buildInfoCard(
-                    title: 'Item Name',
-                    value: item.name,
-                    icon: Icons.inventory_2_outlined,
-                  ),
-
-                  _buildInfoCard(
-                    title: 'Category',
-                    value: item.categoryName,
-                    icon: Icons.category_outlined,
-                  ),
-
-                  _buildInfoCard(
-                    title: 'Available Quantity',
-                    value: '${item.availableQuantity} ${item.unit}',
-                    icon: Icons.inventory_outlined,
-                  ),
-
-                  if (item.totalStock != null)
-                    _buildInfoCard(
-                      title: 'Total Quantity',
-                      value: '${item.totalStock} ${item.unit}',
-                      icon: Icons.storage_outlined,
-                    ),
-
-                  if (item.storageLocation.isNotEmpty)
-                    _buildInfoCard(
-                      title: 'Storage Location',
-                      value: item.storageLocation,
-                      icon: Icons.location_on_outlined,
-                    ),
-
-                  if (item.notes.isNotEmpty)
-                    _buildInfoCard(
-                      title: 'Notes',
-                      value: item.notes,
-                      icon: Icons.note_outlined,
-                    ),
-
-                  // Category-specific information
-                  if (_getCategorySpecificFields().isNotEmpty) ...[
-                    const SizedBox(height: 24),
-                    Text(
-                      'Category Details',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    ..._getCategorySpecificFields(),
-                  ],
-
-                  const SizedBox(height: 32),
-                ],
-              ),
-            ),
           ),
         ),
       ),

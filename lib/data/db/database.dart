@@ -7,7 +7,6 @@ import 'package:path_provider/path_provider.dart';
 
 part 'database.g.dart';
 
-
 class KeyValueCaches extends Table {
   TextColumn get cacheKey => text()();
   TextColumn get jsonValue => text()();
@@ -79,5 +78,3 @@ LazyDatabase _openConnection() {
     return NativeDatabase.createInBackground(file);
   });
 }
-
-

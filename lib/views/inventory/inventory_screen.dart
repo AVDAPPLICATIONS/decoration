@@ -46,13 +46,10 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               Navigator.of(context, rootNavigator: true).pop(result);
             }
           } catch (e) {
-            print('Navigation error: $e');
             // If all else fails, just pop without result
             try {
               Navigator.of(context, rootNavigator: true).pop();
-            } catch (e2) {
-              print('Fallback navigation also failed: $e2');
-            }
+            } catch (e2) {}
           }
         }
       });
@@ -66,7 +63,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
     final categoryNotifier = ref.watch(categoryProvider.notifier);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: Text(
           'Inventory Management',
@@ -557,22 +554,21 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                     sizeValue = newValue; // ✅ Also update the local variable
                   });
                   final combinedValue =
-                  newValue.isNotEmpty ? '$newValue $selectedUnit' : '';
+                      newValue.isNotEmpty ? '$newValue $selectedUnit' : '';
                   onChanged(combinedValue);
-                  print('TextField → $combinedValue');
                 },
                 validator: validator,
                 decoration: InputDecoration(
                   labelText: isOptional ? '$label (optional)' : label,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                    BorderSide(color: Theme.of(context).colorScheme.outline),
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.outline),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                    BorderSide(color: Theme.of(context).colorScheme.outline),
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.outline),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -582,7 +578,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.surface,
                   contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 ),
               ),
             ),
@@ -591,7 +587,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               flex: 1,
               child: DropdownButtonFormField<String>(
                 isExpanded: true,
-                value: selectedUnit,
+                initialValue: selectedUnit,
                 onChanged: (String? newValue) {
                   if (newValue != null) {
                     setState(() {
@@ -600,22 +596,24 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
 
                     // Use the current text field value (sizeValue) which is now properly updated
                     final numericPart = sizeValue.trim().split(' ').first;
-                    final combinedValue =
-                    numericPart.isNotEmpty ? '$numericPart $newValue' : newValue;
+                    final combinedValue = numericPart.isNotEmpty
+                        ? '$numericPart $newValue'
+                        : newValue;
 
                     onChanged(combinedValue);
-                    print('Dropdown → $combinedValue');
                   }
                 },
                 decoration: InputDecoration(
                   labelText: 'Unit',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.outline),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),
+                    borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.outline),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -627,7 +625,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                   filled: true,
                   fillColor: Theme.of(context).colorScheme.surface,
                   contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
                 ),
                 items: const [
                   DropdownMenuItem(value: 'mm', child: Text('Millimeter (mm)')),
@@ -645,7 +643,6 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
     );
   }
 
-
   Widget _buildThicknessDropdown() {
     return Consumer(
       builder: (context, ref, child) {
@@ -655,7 +652,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
 
         return DropdownButtonFormField<String>(
           isExpanded: true,
-          value: currentThickness.isNotEmpty ? currentThickness : null,
+          initialValue: currentThickness.isNotEmpty ? currentThickness : null,
           onChanged: (String? newValue) {
             if (newValue != null) {
               // Extract numeric value from the selected option
@@ -803,15 +800,16 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                 // Parse the size input to extract width and length
 
                 final value1 = value;
-                    ref.read(inventoryFormNotifierProvider.notifier)
-                        .updateFabricData(dimensions:value1);
-
+                ref
+                    .read(inventoryFormNotifierProvider.notifier)
+                    .updateFabricData(dimensions: value1);
               }),
           const SizedBox(height: 16),
           // 4. Total Stock
           _buildTextField(
               label: "Total Stock",
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
@@ -928,7 +926,6 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
           // 2. Size
           _buildSizeField(
               label: "Size (e.g., 4x3)",
-
               value: ref.watch(inventoryFormNotifierProvider).carpet.size,
               onChanged: (value) {
                 ref
@@ -989,7 +986,8 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
           // 2. Dimensions
           _buildSizeField(
               label: "Dimensions (e.g., 70x50x12)",
-              value: ref.watch(inventoryFormNotifierProvider).thermocol.dimensions,
+              value:
+                  ref.watch(inventoryFormNotifierProvider).thermocol.dimensions,
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
@@ -1012,7 +1010,8 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
           // 5. Density
           _buildTextField(
               label: "Density",
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               onChanged: (value) {
                 ref
                     .read(inventoryFormNotifierProvider.notifier)
@@ -1121,8 +1120,8 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
               label: "Dimensions (e.g., 8x12)",
               value: ref.watch(inventoryFormNotifierProvider).murti.dimensions,
               onChanged: (value) {
-                print('Murti dimensions changed: $value');
-                ref.read(inventoryFormNotifierProvider.notifier)
+                ref
+                    .read(inventoryFormNotifierProvider.notifier)
                     .updateMurtiData(dimensions: value);
               }),
           const SizedBox(height: 16),
@@ -1327,13 +1326,11 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                   final file = File(result.files.single.path!);
                   print(
                       '🔍 Debug: Selected file path: ${result.files.single.path}');
-                  print('🔍 Debug: File name: ${result.files.single.name}');
-                  print('🔍 Debug: File exists: ${await file.exists()}');
 
                   if (await file.exists()) {
                     // Read bytes from the file
                     final bytes = await file.readAsBytes();
-                    print('🔍 Debug: File size: ${bytes.length} bytes');
+
                     ref.read(inventoryFormNotifierProvider.notifier).setImage(
                           bytes: bytes,
                           name: result.files.single.name,
@@ -1346,20 +1343,14 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
                         '❌ Selected file does not exist: ${result.files.single.path}');
                     // Try to get bytes directly as fallback
                     if (result.files.single.bytes != null) {
-                      print('🔍 Debug: Using bytes directly as fallback');
                       ref.read(inventoryFormNotifierProvider.notifier).setImage(
                             bytes: result.files.single.bytes!,
                             name: result.files.single.name,
                             path: null, // No path available
                           );
-                      print('✅ Image selected using bytes fallback');
-                    } else {
-                      print('❌ No bytes available either');
-                    }
+                    } else {}
                   }
-                } else {
-                  print('❌ No file selected or path is null');
-                }
+                } else {}
               },
               icon: const Icon(Icons.attach_file),
               label: const Text('Choose Image'),
@@ -1411,11 +1402,8 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
   }
 
   void _submitForm() async {
-    print('Form submission started');
-
     // Prevent multiple simultaneous submissions
     if (_isSubmitting || _isLoading) {
-      print('Submission blocked: already submitting');
       return;
     }
 
@@ -1423,7 +1411,6 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
     final now = DateTime.now();
     if (_lastSubmissionTime != null &&
         now.difference(_lastSubmissionTime!).inSeconds < 3) {
-      print('Submission blocked: too soon after last submission');
       // Show a brief message to user
       Future.delayed(const Duration(milliseconds: 100), () {
         if (mounted) {
@@ -1442,12 +1429,9 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
 
     try {
       if (_formKey.currentState!.validate()) {
-        print('Form validation passed');
         final notifier = ref.read(inventoryFormNotifierProvider.notifier);
 
         if (notifier.validateForm()) {
-          print('Business validation passed');
-
           // Set loading state
           setState(() {
             _isLoading = true;
@@ -1455,19 +1439,16 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
 
           // Prepare data for API
           final formData = _prepareFormData();
-          print('Form data prepared: $formData');
-          print('🔍 Debug: Image path in form data: ${formData['imagePath']}');
 
           try {
             // Test API connection first
-            print('🔍 Testing API connection before creating item...');
+
             final isConnected =
                 await ref.read(inventoryProvider.notifier).testApiConnection();
             if (!isConnected) {
               throw Exception(
                   'Cannot connect to server. Please check your internet connection and try again.');
             }
-            print('✅ API connection test passed');
 
             // Show loading dialog with progress indicator
             showDialog(
@@ -1538,8 +1519,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
             } else if (category?.name.toLowerCase() == 'murti set' ||
                 category?.name.toLowerCase() == 'murti sets') {
               // Use murti sets-specific API
-              print('murti set dimension ${formData['dimensions']}');
-              print('murti data  ${formData}');
+
               await ref.read(inventoryProvider.notifier).createMurtiSetsItem(
                     name: formData['name'],
                     setNumber: formData['set_number'],
@@ -1617,13 +1597,10 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
             // Refresh inventory data to clear any errors and update the list
             try {
               await ref.read(inventoryProvider.notifier).refreshInventoryData();
-              print('✅ Inventory data refreshed successfully');
-            } catch (e) {
-              print('⚠️ Warning: Could not refresh inventory data: $e');
-            }
+            } catch (e) {}
 
             // Navigate back with result data using safe navigation
-            print('🔍 Debug: Navigating back with form data: $formData');
+
             _safePop({'success': true, 'data': formData});
           } catch (e) {
             // Close loading dialog
@@ -1648,7 +1625,6 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
             // Don't navigate back on error, let user fix the form
           }
         } else {
-          print('Business validation failed');
           // Show error message with a small delay to ensure UI is stable
           Future.delayed(const Duration(milliseconds: 100), () {
             if (mounted) {
@@ -1660,11 +1636,8 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
             }
           });
         }
-      } else {
-        print('Form validation failed');
-      }
+      } else {}
     } catch (e) {
-      print('Unexpected error during form submission: $e');
       // Show error message with a small delay to ensure UI is stable
       Future.delayed(const Duration(milliseconds: 100), () {
         if (mounted) {
@@ -1714,14 +1687,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
           'material': formState.furniture.material ?? 'Unknown',
           'dimensions': formState.furniture.dimensions ?? 'Unknown',
         };
-        print('🔍 Debug Furniture Form Data:');
-        print('  - Name: ${formState.furniture.name}');
-        print('  - Material: ${formState.furniture.material}');
-        print('  - Dimensions: ${formState.furniture.dimensions}');
-        print('  - Unit: ${formState.furniture.unit}');
-        print('  - Notes: ${formState.furniture.notes}');
-        print('  - Storage Location: ${formState.furniture.storageLocation}');
-        print('  - Quantity: ${formState.furniture.quantity}');
+
         break;
       case 'fabric':
       case 'fabrics':
@@ -1740,7 +1706,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
         data['category_details'] = {
           'fabric_type': formState.fabric.type ?? 'Unknown',
           'pattern': formState.fabric.pattern ?? 'Unknown',
-          'dimensions':formState.fabric.dimensions ?? '0x0 m',
+          'dimensions': formState.fabric.dimensions ?? '0x0 m',
           'color': formState.fabric.color ?? 'Unknown',
         };
         break;
@@ -1767,12 +1733,7 @@ class _InventoryFormPageState extends ConsumerState<InventoryFormPage> {
             formState.carpet.storageLocation ?? 'Unknown';
         data['notes'] = formState.carpet.notes ?? 'Carpet item';
         data['quantity_available'] = (formState.carpet.stock ?? 1).toDouble();
-        print('🔍 Debug Carpet Form Data:');
-        print('  - Name: ${formState.carpet.name}');
-        print('  - Size: ${formState.carpet.size}');
-        print('  - Storage Location: ${formState.carpet.storageLocation}');
-        print('  - Notes: ${formState.carpet.notes}');
-        print('  - Stock: ${formState.carpet.stock}');
+
         break;
       case 'thermocol':
       case 'thermocol material':

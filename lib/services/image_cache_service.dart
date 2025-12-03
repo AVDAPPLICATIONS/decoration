@@ -60,11 +60,10 @@ class ImageCacheService {
       if (url.startsWith('/')) {
         fullUrl = '$apiBaseUrl$url';
       }
-      
+
       await _dio.head(fullUrl);
       return true;
     } catch (e) {
-      print('Image does not exist: $url - $e');
       return false;
     }
   }
@@ -75,27 +74,22 @@ class ImageCacheService {
       String fullUrl = url;
       if (url.startsWith('/')) {
         fullUrl = '$apiBaseUrl$url';
-        print('🔄 ImageCache: Converting relative URL to full URL: $url -> $fullUrl');
-      } else {
-        print('🔄 ImageCache: Using full URL: $url');
-      }
-      
+      } else {}
+
       // First, check if the image exists with a HEAD request
-      print('🔄 ImageCache: Checking if image exists at: $fullUrl');
+
       try {
         await _dio.head(fullUrl);
-        print('✅ ImageCache: Image exists, proceeding with download');
       } catch (e) {
-        print('❌ ImageCache: Image does not exist (404 or other error): $e');
         return null;
       }
-      
-      print('🔄 ImageCache: Attempting to download from: $fullUrl');
+
       final bytes = await _dio.get<List<int>>(fullUrl,
           options: Options(responseType: ResponseType.bytes));
       final dir = await getApplicationDocumentsDirectory();
       final parsed = Uri.parse(fullUrl);
-      final tail = parsed.pathSegments.isNotEmpty ? parsed.pathSegments.last : 'img';
+      final tail =
+          parsed.pathSegments.isNotEmpty ? parsed.pathSegments.last : 'img';
       final safeName = '${tail}_${url.hashCode}.bin';
       final localPath = p.join(dir.path, 'image_cache', safeName);
       final localFile = File(localPath);
@@ -103,13 +97,10 @@ class ImageCacheService {
       await localFile.writeAsBytes(bytes.data!);
       await db.upsertImage(url, localPath);
       _inMemoryPathByUrl[url] = localPath;
-      print('✅ ImageCache: Successfully downloaded and cached image: $url -> $localPath');
+
       return localFile;
     } catch (e) {
-      print('Error downloading and storing image: $e');
       return null;
     }
   }
 }
-
-

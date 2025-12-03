@@ -10,10 +10,9 @@ class ApiService {
 
   Future<dynamic> get(String endpoint) async {
     final url = Uri.parse('$baseUrl$endpoint');
-    print('Making GET request to: $url');
+
     final response = await http.get(url, headers: _headers());
-    print('Response status: ${response.statusCode}');
-    print('Response headers: ${response.headers}');
+
     print(
         'Response body (first 200 chars): ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}');
     return _processResponse(response);
@@ -22,16 +21,9 @@ class ApiService {
   Future<dynamic> post(String endpoint,
       {required Map<String, dynamic> body}) async {
     final url = Uri.parse('$baseUrl$endpoint');
-    print('Making POST request to: $url');
-    print('Request body: ${jsonEncode(body)}');
-    print('Request headers: ${_headers()}');
 
     final response =
         await http.post(url, headers: _headers(), body: jsonEncode(body));
-
-    print('Response status: ${response.statusCode}');
-    print('Response headers: ${response.headers}');
-    print('Response body: ${response.body}');
 
     return _processResponse(response);
   }
@@ -56,9 +48,6 @@ class ApiService {
     required Map<String, File> files,
   }) async {
     final url = Uri.parse('$baseUrl$endpoint');
-    print('Making POST form-data request to: $url');
-    print('Fields: $fields');
-    print('Files: ${files.keys}');
 
     var request = http.MultipartRequest('POST', url);
 
@@ -82,9 +71,6 @@ class ApiService {
 
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
-
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
 
     return _processResponse(response);
   }

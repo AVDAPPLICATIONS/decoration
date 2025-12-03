@@ -9,7 +9,7 @@ final toolServiceProvider = Provider<ToolService>((ref) {
 });
 
 final toolProvider =
-StateNotifierProvider<ToolNotifier, List<ToolModel>>((ref) {
+    StateNotifierProvider<ToolNotifier, List<ToolModel>>((ref) {
   final service = ref.read(toolServiceProvider);
   return ToolNotifier(ref, service);
 });
@@ -24,35 +24,27 @@ class ToolNotifier extends StateNotifier<List<ToolModel>> {
     try {
       final tools = await service.fetchTools();
       state = tools;
-    } catch (e) {
-      print('Error fetching tools: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> addTool(ToolModel tool) async {
     try {
       await service.createTool(tool);
       await fetchTools();
-    } catch (e) {
-      print('Error adding tool: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> updateTool(int id, ToolModel tool) async {
     try {
       await service.updateTool(id, tool);
       await fetchTools();
-    } catch (e) {
-      print('Error updating tool: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> deleteTool(int id) async {
     try {
       await service.deleteTool(id);
       state = state.where((t) => t.id != id).toList();
-    } catch (e) {
-      print('Error deleting tool: $e');
-    }
+    } catch (e) {}
   }
 }

@@ -95,12 +95,12 @@ class ResponsiveBuilder extends StatelessWidget {
   final Widget? largeDesktop;
 
   const ResponsiveBuilder({
-    Key? key,
+    super.key,
     required this.mobile,
     this.tablet,
     required this.desktop,
     this.largeDesktop,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -132,7 +132,7 @@ class ResponsiveLayout extends StatelessWidget {
   final Color? backgroundColor;
 
   const ResponsiveLayout({
-    Key? key,
+    super.key,
     this.mobileBody,
     this.tabletBody,
     this.desktopBody,
@@ -141,7 +141,7 @@ class ResponsiveLayout extends StatelessWidget {
     this.bottomNavigationBar,
     this.floatingActionButton,
     this.backgroundColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -182,7 +182,7 @@ class ResponsiveGrid extends StatelessWidget {
   final ScrollPhysics? physics;
 
   const ResponsiveGrid({
-    Key? key,
+    super.key,
     required this.children,
     this.spacing = 16.0,
     this.runSpacing = 16.0,
@@ -193,7 +193,7 @@ class ResponsiveGrid extends StatelessWidget {
     this.childAspectRatio,
     this.shrinkWrap = false,
     this.physics,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -233,7 +233,7 @@ class ResponsiveWrap extends StatelessWidget {
   final WrapCrossAlignment crossAxisAlignment;
 
   const ResponsiveWrap({
-    Key? key,
+    super.key,
     required this.children,
     this.mobileSpacing = 8.0,
     this.tabletSpacing = 12.0,
@@ -243,7 +243,7 @@ class ResponsiveWrap extends StatelessWidget {
     this.desktopRunSpacing = 16.0,
     this.alignment = WrapAlignment.start,
     this.crossAxisAlignment = WrapCrossAlignment.start,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -279,12 +279,12 @@ class ResponsivePadding extends StatelessWidget {
   final EdgeInsets desktopPadding;
 
   const ResponsivePadding({
-    Key? key,
+    super.key,
     required this.child,
     this.mobilePadding = const EdgeInsets.all(16.0),
     this.tabletPadding = const EdgeInsets.all(24.0),
     this.desktopPadding = const EdgeInsets.all(32.0),
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -316,7 +316,7 @@ class ResponsiveText extends StatelessWidget {
 
   const ResponsiveText(
     this.text, {
-    Key? key,
+    super.key,
     required this.mobileFontSize,
     required this.tabletFontSize,
     required this.desktopFontSize,
@@ -325,7 +325,7 @@ class ResponsiveText extends StatelessWidget {
     this.textAlign,
     this.maxLines,
     this.overflow,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -369,7 +369,7 @@ class ResponsiveContainer extends StatelessWidget {
   final Decoration? decoration;
 
   const ResponsiveContainer({
-    Key? key,
+    super.key,
     this.child,
     this.mobileWidth,
     this.tabletWidth,
@@ -384,7 +384,7 @@ class ResponsiveContainer extends StatelessWidget {
     this.tabletMargin,
     this.desktopMargin,
     this.decoration,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

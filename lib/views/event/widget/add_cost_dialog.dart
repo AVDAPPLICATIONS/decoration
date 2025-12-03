@@ -13,11 +13,11 @@ class AddCostDialog extends StatefulWidget {
   final Map<String, dynamic>? existingCost;
 
   const AddCostDialog({
-    Key? key,
+    super.key,
     required this.eventId,
     required this.onCostAdded,
     this.existingCost,
-  }) : super(key: key);
+  });
 
   @override
   State<AddCostDialog> createState() => _AddCostDialogState();
@@ -30,7 +30,7 @@ class _AddCostDialogState extends State<AddCostDialog> {
   bool _isSubmitting = false;
   File? _selectedReceiptFile;
   DateTime _selectedDate = DateTime.now();
-  
+
   // Validation states
   String? _descriptionError;
   String? _amountError;
@@ -168,7 +168,7 @@ class _AddCostDialogState extends State<AddCostDialog> {
   Future<void> _submitCost() async {
     // Validate all fields
     _validateAllFields();
-    
+
     // Check if there are any validation errors
     if (_descriptionError != null || _amountError != null) {
       return; // Don't proceed if there are validation errors
@@ -204,21 +204,24 @@ class _AddCostDialogState extends State<AddCostDialog> {
       }
 
       if (result['success'] == true) {
-        showSuccessTopSnackBar(context, result['message'] ??
-            (widget.existingCost != null
-                ? 'Cost updated successfully'
-                : 'Cost added successfully'));
+        showSuccessTopSnackBar(
+            context,
+            result['message'] ??
+                (widget.existingCost != null
+                    ? 'Cost updated successfully'
+                    : 'Cost added successfully'));
 
         Navigator.pop(context);
         widget.onCostAdded();
       } else {
-        showErrorTopSnackBar(context, result['message'] ??
-            (widget.existingCost != null
-                ? 'Failed to update cost'
-                : 'Failed to add cost'));
+        showErrorTopSnackBar(
+            context,
+            result['message'] ??
+                (widget.existingCost != null
+                    ? 'Failed to update cost'
+                    : 'Failed to add cost'));
       }
     } catch (e) {
-      print('Exception: $e');
       showErrorTopSnackBar(context, 'Error: $e');
     } finally {
       setState(() {
@@ -532,7 +535,7 @@ class _AddCostDialogState extends State<AddCostDialog> {
                       ],
                     ),
                   ),
-                  Icon(
+                  const Icon(
                     Icons.visibility,
                     color: Colors.blue,
                     size: 20,
@@ -581,7 +584,7 @@ class _AddCostDialogState extends State<AddCostDialog> {
                         _selectedReceiptFile = null;
                       });
                     },
-                    child: Icon(
+                    child: const Icon(
                       Icons.close,
                       color: Colors.red,
                       size: 20,

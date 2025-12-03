@@ -31,7 +31,10 @@ class EventRepository {
         _eventsAllKey,
         (obj) {
           if (obj is List) {
-            return obj.map((e) => EventModel.fromJson(Map<String, dynamic>.from(e as Map))).toList();
+            return obj
+                .map((e) =>
+                    EventModel.fromJson(Map<String, dynamic>.from(e as Map)))
+                .toList();
           }
           return <EventModel>[];
         },
@@ -41,7 +44,8 @@ class EventRepository {
 
     final events = await service.getAllEvents();
     if (offline != null) {
-      await offline!.saveJson(_eventsAllKey, events.map((e) => e.toJson()).toList());
+      await offline!
+          .saveJson(_eventsAllKey, events.map((e) => e.toJson()).toList());
     }
     return events;
   }
@@ -53,7 +57,10 @@ class EventRepository {
         cacheKey,
         (obj) {
           if (obj is List) {
-            return obj.map((e) => EventModel.fromJson(Map<String, dynamic>.from(e as Map))).toList();
+            return obj
+                .map((e) =>
+                    EventModel.fromJson(Map<String, dynamic>.from(e as Map)))
+                .toList();
           }
           return <EventModel>[];
         },
@@ -73,7 +80,7 @@ class EventRepository {
     required int yearId,
   }) async {
     final cacheKey = 'event_details_${templateId}_$yearId';
-    
+
     if (!await _isOnline() && offline != null) {
       final cached = await offline!.readJson<Map<String, dynamic>>(
         cacheKey,
@@ -85,7 +92,6 @@ class EventRepository {
         },
       );
       if (cached != null) {
-        print('📱 Using cached event details for template $templateId, year $yearId');
         return cached;
       }
     }
@@ -95,16 +101,13 @@ class EventRepository {
         templateId: templateId,
         yearId: yearId,
       );
-      
-      if (offline != null && eventDetails != null) {
+
+      if (offline != null) {
         await offline!.saveJson(cacheKey, eventDetails);
-        print('💾 Cached event details for template $templateId, year $yearId');
       }
-      
+
       return eventDetails;
     } catch (e) {
-      print('❌ Error fetching event details: $e');
-      
       // Try to return cached data even if online but request failed
       if (offline != null) {
         final cached = await offline!.readJson<Map<String, dynamic>>(
@@ -117,14 +120,11 @@ class EventRepository {
           },
         );
         if (cached != null) {
-          print('📱 Using cached event details after error for template $templateId, year $yearId');
           return cached;
         }
       }
-      
+
       rethrow;
     }
   }
 }
-
-

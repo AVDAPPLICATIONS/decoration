@@ -15,6 +15,7 @@ class EditEventForm extends StatefulWidget {
   final VoidCallback onEventUpdated;
 
   const EditEventForm({
+    super.key,
     required this.eventDetails,
     required this.year,
     required this.templateId,
@@ -32,15 +33,22 @@ class _EditEventFormState extends State<EditEventForm> {
   File? selectedImage;
   String? currentImageUrl;
   bool isUpdating = false;
-
+  DateTime? dateData = DateTime.now();
+  String Stringdate = '';
   @override
   void initState() {
     super.initState();
     final eventData = widget.eventDetails['data']['event'];
-    String date = DateFormat('dd-MM-yyyy').format(DateTime.parse(eventData['date']));
-    eventNameController = TextEditingController(text: eventData['description'] ?? '');
-    locationController = TextEditingController(text: eventData['location'] ?? '');
-    dateController = TextEditingController(text: date ?? '');
+    dateData = DateTime.tryParse(eventData['date']);
+    print(eventData);
+    print(DateTime.tryParse(eventData['date']));
+    Stringdate = DateFormat('dd-MM-yyyy').format(dateData!);
+    print(Stringdate);
+    eventNameController =
+        TextEditingController(text: eventData['description'] ?? '');
+    locationController =
+        TextEditingController(text: eventData['location'] ?? '');
+    dateController = TextEditingController(text: Stringdate);
     currentImageUrl = eventData['cover_image'];
   }
 
@@ -61,241 +69,249 @@ class _EditEventFormState extends State<EditEventForm> {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: Container(
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          padding: const EdgeInsets.all(24),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header
-                Row(
-                  children: [
-                    Icon(
-                      Icons.edit,
-                      color: colorScheme.primary,
-                      size: 28,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Edit Event - ${widget.year.yearName}',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.primary,
-                        ),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Icon(
+                    Icons.edit,
+                    color: colorScheme.primary,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Edit Event - ${widget.year.yearName}',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.primary,
                       ),
                     ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: Icon(
-                        Icons.close,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-            
-                // Event Name Field
-                TextField(
-                  controller: eventNameController,
-                  decoration: InputDecoration(
-                    labelText: 'Event Name',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixIcon: const Icon(Icons.event),
                   ),
-                ),
-                const SizedBox(height: 16),
-            
-                // Location Field
-                TextField(
-                  controller: locationController,
-                  decoration: InputDecoration(
-                    labelText: 'Location',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(
+                      Icons.close,
+                      color: colorScheme.onSurface,
                     ),
-                    prefixIcon: const Icon(Icons.location_on),
                   ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // Event Name Field
+              TextField(
+                controller: eventNameController,
+                decoration: InputDecoration(
+                  labelText: 'Event Name',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  prefixIcon: const Icon(Icons.event),
                 ),
-                const SizedBox(height: 16),
-            
-                // Date Field
-                TextField(
-                  controller: dateController,
-                  decoration: InputDecoration(
-                    labelText: 'Date',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+              ),
+              const SizedBox(height: 16),
+
+              // Location Field
+              TextField(
+                controller: locationController,
+                decoration: InputDecoration(
+                  labelText: 'Location',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  prefixIcon: const Icon(Icons.location_on),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Date Field
+              TextField(
+                controller: dateController,
+                decoration: InputDecoration(
+                  labelText: 'Date',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  prefixIcon: const Icon(Icons.calendar_today),
+                  suffixIcon: const Icon(Icons.calendar_today_outlined),
+                ),
+                readOnly: true,
+                onTap: () async {
+                  print(DateTime.tryParse(dateController.text));
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: dateData,
+                    firstDate: DateTime(dateData!.year),
+                    lastDate: DateTime(dateData!.year, 12, 31),
+
+                  );
+                  if (date != null) {
+                    String val = date.toIso8601String().split('T')[0];
+                    dateController.text = DateFormat('dd-MM-yyyy').format(DateTime.parse(val));
+                    Stringdate = DateTime.parse(val).toString();
+                    print(dateController.text);
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Cover Image Section
+              Text(
+                'Cover Image',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () async {
+                  final image = await GalleryService.pickImageFromGallery();
+                  if (image != null) {
+                    setState(() {
+                      selectedImage = image;
+                    });
+                  }
+                },
+                child: Container(
+                  width: double.infinity,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: colorScheme.outline,
+                      width: 2,
+                      style: BorderStyle.solid,
                     ),
-                    prefixIcon: const Icon(Icons.calendar_today),
-                    suffixIcon: const Icon(Icons.calendar_today_outlined),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  readOnly: true,
-                  onTap: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime(2020),
-                      lastDate: DateTime(2030),
-                    );
-                    if (date != null) {
-                      dateController.text = date.toIso8601String().split('T')[0];
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-            
-                // Cover Image Section
-                Text(
-                  'Cover Image',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () async {
-                    final image = await GalleryService.pickImageFromGallery();
-                    if (image != null) {
-                      setState(() {
-                        selectedImage = image;
-                      });
-                    }
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: colorScheme.outline,
-                        width: 2,
-                        style: BorderStyle.solid,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: selectedImage != null
-                        ? ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.file(
-                        selectedImage!,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
-                      ),
-                    )
-                        : currentImageUrl != null
-                        ? ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.network(
-                        apiBaseUrl + currentImageUrl!,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: colorScheme.surfaceContainerHighest,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.image,
-                                  size: 40,
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Tap to change image',
-                                  style: TextStyle(
+                  child: selectedImage != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.file(
+                            selectedImage!,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                          ),
+                        )
+                      : currentImageUrl != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image.network(
+                                apiBaseUrl + currentImageUrl!,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: colorScheme.surfaceContainerHighest,
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.image,
+                                          size: 40,
+                                          color: colorScheme.onSurfaceVariant,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Tap to change image',
+                                          style: TextStyle(
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            )
+                          : Container(
+                              color: colorScheme.surfaceContainerHighest,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.add_photo_alternate,
+                                    size: 40,
                                     color: colorScheme.onSurfaceVariant,
                                   ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    )
-                        : Container(
-                      color: colorScheme.surfaceVariant,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.add_photo_alternate,
-                            size: 40,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Tap to add cover image',
-                            style: TextStyle(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-            
-                // Action Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: isUpdating ? null : () => Navigator.pop(context),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          side: BorderSide(color: colorScheme.outline),
-                        ),
-                        child: const Text('Cancel'),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: isUpdating ? null : _updateEvent,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary,
-                          foregroundColor: colorScheme.onPrimary,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: isUpdating
-                            ? Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Tap to add cover image',
+                                    style: TextStyle(
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            const Text('Updating...'),
-                          ],
-                        )
-                            : const Text('Update Event'),
-                      ),
-                    ),
-                  ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 24),
+
+              // Action Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed:
+                          isUpdating ? null : () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side: BorderSide(color: colorScheme.outline),
+                      ),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: isUpdating ? null : _updateEvent,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.primary,
+                        foregroundColor: colorScheme.onPrimary,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: isUpdating
+                          ? const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white),
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Text('Updating...'),
+                              ],
+                            )
+                          : const Text('Update Event'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
+      ),
     );
   }
 
@@ -317,7 +333,7 @@ class _EditEventFormState extends State<EditEventForm> {
         eventId: eventData['id'],
         eventName: eventNameController.text,
         location: locationController.text,
-        date: dateController.text,
+        date: Stringdate,
         templateId: widget.templateId,
         yearId: widget.year.id,
         coverImage: selectedImage,
@@ -330,9 +346,11 @@ class _EditEventFormState extends State<EditEventForm> {
 
         // Navigator.pop(context);
         widget.onEventUpdated();
+        print(result);
       }
       // ❌ Explicit failure case
       else if (result['success'] == false) {
+        print(result);
         showErrorTopSnackBar(
           context,
           result['message'] ?? 'Failed to update event. Please try again.',
@@ -345,13 +363,13 @@ class _EditEventFormState extends State<EditEventForm> {
           'Unexpected response from server. Please try again.',
         );
       }
-
     } catch (e) {
       // Determine specific error type
       String errorMessage;
       final errorStr = e.toString();
 
-      if (errorStr.contains('SocketException') || errorStr.contains('HandshakeException')) {
+      if (errorStr.contains('SocketException') ||
+          errorStr.contains('HandshakeException')) {
         errorMessage = 'Network error. Please check your internet connection.';
       } else if (errorStr.contains('TimeoutException')) {
         errorMessage = 'Request timed out. Please try again.';
@@ -367,7 +385,6 @@ class _EditEventFormState extends State<EditEventForm> {
 
       // ❌ Error snackbar
       showErrorTopSnackBar(context, errorMessage);
-
     } finally {
       if (mounted) {
         setState(() {

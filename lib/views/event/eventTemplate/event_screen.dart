@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../utils/top_snackbar_helper.dart';
 import 'add_template_dialog.dart';
 import 'deleteTemplate.dart';
 import 'delete_template_dialog.dart';
@@ -11,14 +10,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../providers/event_provider.dart';
 import '../../../providers/template_provider.dart';
 import '../../../models/event_model.dart';
-import '../../../models/event_template_model.dart';
 import '../../../utils/responsive_utils.dart';
 import '../../custom_widget/custom_appbar.dart';
 import '../../custom_widget/custom_loading_bar.dart';
 
 class EventScreen extends ConsumerStatefulWidget {
   final bool isAdmin;
-  const EventScreen({Key? key, required this.isAdmin}) : super(key: key);
+  const EventScreen({super.key, required this.isAdmin});
 
   @override
   ConsumerState<EventScreen> createState() => _EventScreenState();
@@ -31,10 +29,8 @@ class _EventScreenState extends ConsumerState<EventScreen> {
 
     // Fetch events and templates on screen load
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      print('EventScreen initState: Starting to fetch data...');
       ref.read(eventProvider.notifier).fetchEvents();
       ref.read(templateProvider.notifier).fetchTemplates();
-      print('EventScreen initState: Fetch calls initiated');
     });
   }
 
@@ -47,7 +43,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     // Debug logging
-    print('EventScreen build: templates count = ${templates.length}');
+
     print(
         'EventScreen build: isEventsLoading = $isEventsLoading, isTemplatesLoading = $isTemplatesLoading');
 
@@ -62,7 +58,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
   }
 
   PreferredSizeWidget _buildResponsiveAppBar(ColorScheme colorScheme) {
-    return CustomAppBar(
+    return const CustomAppBar(
       title: 'Events',
       showBackButton: false,
     );
@@ -227,7 +223,6 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                 child: templates.isNotEmpty
                     ? RefreshIndicator(
                         onRefresh: () async {
-                          print('Pull-to-refresh triggered');
                           await ref
                               .read(templateProvider.notifier)
                               .fetchTemplates();
@@ -254,7 +249,6 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                       )
                     : RefreshIndicator(
                         onRefresh: () async {
-                          print('Pull-to-refresh triggered (empty state)');
                           await ref
                               .read(templateProvider.notifier)
                               .fetchTemplates();
@@ -303,7 +297,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                   ),
                 ),
               ] else ...[
-                Container(
+                SizedBox(
                   height: MediaQuery.of(context).size.height *
                       0.0, // Fixed height for events list
                   child: ListView.builder(
@@ -630,7 +624,7 @@ class _EventScreenState extends ConsumerState<EventScreen> {
       ),
       confirmDismiss: (direction) async {
         // Handle swipe actions based on direction
-        print('🔄 Swipe detected: $direction for template: ${template.name}');
+
         if (direction == DismissDirection.startToEnd) {
           showEditTemplateDialog(context, ref, template);
         } else if (direction == DismissDirection.endToStart) {
@@ -712,7 +706,6 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                   .then((_) {
                 // This callback is called when the Years Screen is popped
                 // We can use this to ensure we're back on the Event Screen
-                print('Back from Years Screen to Event Screen');
               });
             },
             child: Padding(

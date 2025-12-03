@@ -5,10 +5,10 @@ import '../../../providers/template_provider.dart';
 import '../../../utils/top_snackbar_helper.dart';
 
 Future<void> showDeleteTemplateDialog(
-    BuildContext context,
-    WidgetRef ref,
-    dynamic template,
-    ) async {
+  BuildContext context,
+  WidgetRef ref,
+  dynamic template,
+) async {
   final colorScheme = Theme.of(context).colorScheme;
 
   await showDialog(
@@ -24,7 +24,7 @@ Future<void> showDeleteTemplateDialog(
             end: Alignment.bottomRight,
             colors: [
               colorScheme.surface,
-              colorScheme.surfaceVariant,
+              colorScheme.surfaceContainerHighest,
             ],
           ),
           boxShadow: [

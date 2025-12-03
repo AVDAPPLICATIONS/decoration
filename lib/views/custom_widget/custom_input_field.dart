@@ -12,7 +12,7 @@ class CustomTextField extends StatelessWidget {
   final String? Function(String?)? validator;
 
   const CustomTextField({
-    Key? key,
+    super.key,
     required this.controller,
     required this.label,
     required this.icon,
@@ -20,7 +20,7 @@ class CustomTextField extends StatelessWidget {
     this.obscureText = false,
     this.toggleVisibility,
     this.validator,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +63,6 @@ class CustomTextField extends StatelessWidget {
           fontWeight: FontWeight.w500,
         ),
         stylusHandwritingEnabled: true,
-
         decoration: InputDecoration(
           prefixIcon: Icon(
             icon,
@@ -108,17 +107,18 @@ class CustomTextField extends StatelessWidget {
           // ✅ Key Fixes:
           isDense: true, // makes layout more balanced
           floatingLabelAlignment: FloatingLabelAlignment.start,
-          contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16), // slightly more vertical space
+          contentPadding: const EdgeInsets.symmetric(
+              vertical: 20, horizontal: 16), // slightly more vertical space
 
           suffixIcon: isPassword
               ? IconButton(
-            icon: Icon(
-              obscureText ? Icons.visibility_off : Icons.visibility,
-              color: fieldLabel,
-              size: 22,
-            ),
-            onPressed: toggleVisibility,
-          )
+                  icon: Icon(
+                    obscureText ? Icons.visibility_off : Icons.visibility,
+                    color: fieldLabel,
+                    size: 22,
+                  ),
+                  onPressed: toggleVisibility,
+                )
               : null,
         ),
       ),

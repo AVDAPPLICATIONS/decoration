@@ -36,8 +36,6 @@ class EventNotifier extends StateNotifier<List<EventModel>> {
       ref.read(eventLoadingProvider.notifier).state = true;
       final events = await service.fetchEvents();
       state = events;
-    } catch (e) {
-      print('Error fetching events: $e');
     } finally {
       ref.read(eventLoadingProvider.notifier).state = false;
     }
@@ -48,7 +46,6 @@ class EventNotifier extends StateNotifier<List<EventModel>> {
       final events = await repo.getAllEvents();
       return events;
     } catch (e) {
-      print('Error fetching all events: $e');
       return [];
     }
   }
@@ -58,7 +55,6 @@ class EventNotifier extends StateNotifier<List<EventModel>> {
       final events = await repo.fetchEventsByYear(yearId);
       return events;
     } catch (e) {
-      print('Error fetching events by year: $e');
       return [];
     }
   }
@@ -67,26 +63,20 @@ class EventNotifier extends StateNotifier<List<EventModel>> {
     try {
       await service.createEvent(event);
       await fetchEvents();
-    } catch (e) {
-      print('Error adding event: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> updateEvent(int id, EventModel event) async {
     try {
       await service.updateEvent(id, event);
       await fetchEvents();
-    } catch (e) {
-      print('Error updating event: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> deleteEvent(int id) async {
     try {
       await service.deleteEvent(id);
       await fetchEvents();
-    } catch (e) {
-      print('Error deleting event: $e');
-    }
+    } catch (e) {}
   }
 }

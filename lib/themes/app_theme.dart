@@ -7,7 +7,7 @@ class AppColors {
   static const Color background = Color(0xFFFBF9D1); // Pale cream
   static const Color accentIcon = Color(0xFFE6CFA9); // Light beige for icons
   static const Color chartDivider =
-  Color(0xFFC1856D); // Warm brown for chart dividers
+      Color(0xFFC1856D); // Warm brown for chart dividers
 }
 
 class AppTheme {
@@ -15,13 +15,12 @@ class AppTheme {
     brightness: Brightness.light,
     colorScheme: ColorSchemes.lightColorScheme,
     primaryColor: ColorSchemes.lightColorScheme.primary,
-    scaffoldBackgroundColor: ColorSchemes.lightColorScheme.background,
+    scaffoldBackgroundColor: ColorSchemes.lightColorScheme.surface,
     hintColor: ColorSchemes.lightColorScheme.primary,
     appBarTheme: AppBarTheme(
       backgroundColor: ColorSchemes.lightColorScheme.primary,
       foregroundColor: ColorSchemes.lightColorScheme.onPrimary,
     ),
-
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: ColorSchemes.lightColorScheme.primary,
@@ -42,13 +41,12 @@ class AppTheme {
     brightness: Brightness.dark,
     colorScheme: ColorSchemes.darkColorScheme,
     primaryColor: ColorSchemes.darkColorScheme.primary,
-    scaffoldBackgroundColor: ColorSchemes.darkColorScheme.background,
+    scaffoldBackgroundColor: ColorSchemes.darkColorScheme.surface,
     hintColor: ColorSchemes.darkColorScheme.secondary,
     appBarTheme: AppBarTheme(
       backgroundColor: ColorSchemes.darkColorScheme.primary,
       foregroundColor: ColorSchemes.darkColorScheme.onPrimary,
     ),
-
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: ColorSchemes.darkColorScheme.primary,

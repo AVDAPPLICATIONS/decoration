@@ -42,8 +42,7 @@ class CostService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         // Parse JSON response
         final responseData = response.body;
-        print('Cost API Response: $responseData');
-        
+
         // Return success response
         return {
           'success': true,
@@ -51,7 +50,6 @@ class CostService {
           'data': responseData,
         };
       } else {
-        print('Cost API Error: ${response.statusCode} - ${response.body}');
         return {
           'success': false,
           'message': 'Failed to create cost item: ${response.statusCode}',
@@ -59,7 +57,6 @@ class CostService {
         };
       }
     } catch (e) {
-      print('Cost Service Exception: $e');
       return {
         'success': false,
         'message': 'Error creating cost item: $e',
@@ -139,7 +136,8 @@ class CostService {
         final responseData = jsonDecode(response.body);
         return {
           'success': responseData['success'] ?? true,
-          'message': responseData['message'] ?? 'Cost item updated successfully',
+          'message':
+              responseData['message'] ?? 'Cost item updated successfully',
           'data': responseData['data'],
         };
       } else {
@@ -176,7 +174,8 @@ class CostService {
         final responseData = jsonDecode(response.body);
         return {
           'success': responseData['success'] ?? true,
-          'message': responseData['message'] ?? 'Cost item deleted successfully',
+          'message':
+              responseData['message'] ?? 'Cost item deleted successfully',
         };
       } else {
         return {

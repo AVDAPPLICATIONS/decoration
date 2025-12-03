@@ -15,7 +15,7 @@ class YearSelectionDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
-      value: selectedYear,
+      initialValue: selectedYear,
       decoration: const InputDecoration(
         labelText: 'Select Year',
         border: OutlineInputBorder(),

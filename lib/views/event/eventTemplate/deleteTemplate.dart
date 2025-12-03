@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../providers/event_provider.dart' show eventProvider;
-import '../../../utils/top_snackbar_helper.dart' show showSuccessTopSnackBar, showErrorTopSnackBar;
+import '../../../utils/top_snackbar_helper.dart'
+    show showSuccessTopSnackBar, showErrorTopSnackBar;
 
 Future<void> showDeleteEventDialog(
-    BuildContext context,
-    WidgetRef ref,
-    EventModel eventData,
-    ) async {
+  BuildContext context,
+  WidgetRef ref,
+  EventModel eventData,
+) async {
   final colorScheme = Theme.of(context).colorScheme;
 
   await showDialog(

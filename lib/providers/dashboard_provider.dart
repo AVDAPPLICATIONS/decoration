@@ -66,18 +66,12 @@ class DashboardNotifier extends StateNotifier<DashboardState> {
 
       if (response['success'] == true) {
         final stats = DashboardStats.fromJson(response['data']);
-        print('🔍 Debug: Parsed dashboard stats:');
-        print('  - Totals: ${stats.totals}');
-        print('  - Cost by year: ${stats.costByYear.length} items');
-        print('  - Recent events: ${stats.recentEvents.length} items');
-        print('  - Top categories: ${stats.topCategories.length} items');
-        
+
         state = state.copyWith(
           stats: stats,
           isLoading: false,
           error: null,
         );
-        print('✅ Dashboard stats loaded successfully');
       } else {
         throw Exception(
             response['message'] ?? 'Failed to load dashboard stats');
@@ -87,18 +81,14 @@ class DashboardNotifier extends StateNotifier<DashboardState> {
         isLoading: false,
         error: e.toString(),
       );
-      print('❌ Error loading dashboard stats: $e');
     }
   }
 
   // Refresh dashboard data
   Future<void> refreshDashboard() async {
-    print('🔄 Refreshing dashboard data...');
     try {
       await loadDashboardStats();
-      print('✅ Dashboard refresh completed successfully');
     } catch (e) {
-      print('❌ Dashboard refresh failed: $e');
       rethrow; // Re-throw to let the UI handle the error
     }
   }

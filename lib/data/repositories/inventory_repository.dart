@@ -14,7 +14,8 @@ class InventoryRepository {
   final Connectivity connectivity;
   final OfflineCacheRepository? offline;
 
-  InventoryRepository({required this.service, required this.connectivity, this.offline});
+  InventoryRepository(
+      {required this.service, required this.connectivity, this.offline});
 
   Future<bool> _isOnline() async {
     final res = await connectivity.checkConnectivity();
@@ -26,12 +27,14 @@ class InventoryRepository {
   Future<List<Map<String, dynamic>>> getAllItems() async {
     final prefs = await SharedPreferences.getInstance();
     if (!await _isOnline()) {
-      final cached = await (offline?.readJson<String>(_itemsCacheKey, (o) => o as String)) ?? prefs.getString(_itemsCacheKey);
+      final cached = await (offline?.readJson<String>(
+              _itemsCacheKey, (o) => o as String)) ??
+          prefs.getString(_itemsCacheKey);
       if (cached != null) {
         final list = jsonDecode(cached);
         if (list is List) {
           return list
-              .where((e) => e is Map)
+              .whereType<Map>()
               .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
               .toList();
         }
@@ -46,20 +49,22 @@ class InventoryRepository {
       await offline!.saveJson(_itemsCacheKey, data);
     }
     return data
-        .where((e) => e is Map)
-        .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e as Map))
+        .whereType<Map>()
+        .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
         .toList();
   }
 
   Future<List<Map<String, dynamic>>> getAllCategories() async {
     final prefs = await SharedPreferences.getInstance();
     if (!await _isOnline()) {
-      final cached = await (offline?.readJson<String>(_categoriesCacheKey, (o) => o as String)) ?? prefs.getString(_categoriesCacheKey);
+      final cached = await (offline?.readJson<String>(
+              _categoriesCacheKey, (o) => o as String)) ??
+          prefs.getString(_categoriesCacheKey);
       if (cached != null) {
         final list = jsonDecode(cached);
         if (list is List) {
           return list
-              .where((e) => e is Map)
+              .whereType<Map>()
               .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
               .toList();
         }
@@ -73,10 +78,8 @@ class InventoryRepository {
       await offline!.saveJson(_categoriesCacheKey, data);
     }
     return data
-        .where((e) => e is Map)
-        .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e as Map))
+        .whereType<Map>()
+        .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
         .toList();
   }
 }
-
-

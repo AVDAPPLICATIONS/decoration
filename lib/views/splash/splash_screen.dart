@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lottie/lottie.dart';
 import 'dart:convert';
-import '../../providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
@@ -18,7 +15,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late AnimationController _textController;
   late AnimationController _pulseController;
   late AnimationController _fadeController;
-  
+
   late Animation<double> _logoScaleAnimation;
   late Animation<double> _logoRotationAnimation;
   late Animation<double> _textSlideAnimation;
@@ -43,9 +40,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       setState(() {
         _logoConfig = json.decode(configString);
       });
-    } catch (e) {
-      print('Error loading logo config: $e');
-    }
+    } catch (e) {}
   }
 
   void _initializeAnimations() {
@@ -54,7 +49,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
-    
+
     _logoScaleAnimation = Tween<double>(
       begin: 0.3,
       end: 1.0,
@@ -125,14 +120,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   void _startAnimations() async {
     // Start logo animation
     await _logoController.forward();
-    
+
     // Start text animation after logo
     await Future.delayed(const Duration(milliseconds: 500));
     await _textController.forward();
-    
+
     // Start pulse animation
     _pulseController.repeat(reverse: true);
-    
+
     // Start fade animation
     _fadeController.forward();
   }
@@ -150,7 +145,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   Widget build(BuildContext context) {
     final logoConfig = _logoConfig?['logo'];
     final colors = logoConfig?['colors'] ?? {};
-    
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(

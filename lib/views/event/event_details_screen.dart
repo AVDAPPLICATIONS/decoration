@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:avd_decoration_application/widgets/cached_network_or_file_image.dart'
     as cnf;
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
@@ -57,7 +56,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         TabController(length: 2, vsync: this, initialIndex: 0);
     _currentEventData = widget.eventData;
 
-    print('EventDetailsScreen initState - eventData: $_currentEventData');
     print(
         'template_id: ${_currentEventData['template_id']} (${_currentEventData['template_id'].runtimeType})');
     print(
@@ -139,8 +137,9 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
               'issuances': eventDetails['data']['issuances'],
             };
           });
-          if (snack)
+          if (snack) {
             showInfoTopSnackBar(context, 'Event data refreshed successfully!');
+          }
         }
       }
     } catch (e) {
@@ -163,9 +162,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
       try {
         final date = DateTime.parse(eventDate);
         eventYear = date.year.toString();
-      } catch (e) {
-        print('Error parsing date: $e');
-      }
+      } catch (e) {}
     }
 
     final screenTitle = '$eventName  $eventYear';
@@ -179,7 +176,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
           color: colorScheme.onPrimary,
         ),
       ),
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       // appBar: AppBar(
       //   // leading: IconButton(onPressed: () {
       //   //   Navigator.pop(context);
@@ -211,7 +208,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
 
       appBar: CustomAppBarWithLoading(
         automaticallyImplyLeading: false,
-        title: '${screenTitle}',
+        title: screenTitle,
         isLoading: _isRefreshing,
         // backTooltip: 'Back to Events',
         showBackButton: true, // ✅ hides the back icon
@@ -418,10 +415,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
                 'OUT'; // Only show OUT transactions (issued items)
           }).toList();
 
-          print(
-              '🔍 Debug: No items in issuances_by_item, checking history for issued items');
-          print(
-              '🔍 Debug: Found ${currentlyIssuedFromHistory.length} issued items in history');
 
           // Convert history items to the expected format for display
           itemsToShow = currentlyIssuedFromHistory.map((transaction) {
@@ -437,8 +430,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
           }).toList();
         }
 
-        print('🔍 Debug: Showing ${itemsToShow.length} currently issued items');
-
         if (itemsToShow.isEmpty) {
           // Check if there's any history to show
           final issuanceHistory =
@@ -446,8 +437,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
           final hasHistory = issuanceHistory.isNotEmpty;
 
           // Debug: Print issuance history
-          print('🔍 Debug: issuance_history length: ${issuanceHistory.length}');
-          print('🔍 Debug: issuance_history: $issuanceHistory');
 
           return Column(
             children: [
@@ -711,7 +700,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         galleryData != null && galleryData is Map<String, dynamic>
             ? (galleryData['design'] as List<dynamic>? ?? [])
             : [];
-    print('Design Images ${designImages.toList()}');
 
     return RefreshIndicator(
       onRefresh: () {
@@ -727,7 +715,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
               children: [
                 // Design image cards
                 Expanded(
-                  child: designImages != null && designImages.isNotEmpty
+                  child: designImages.isNotEmpty
                       ? GridView.builder(
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
@@ -745,7 +733,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
                         )
                       : SingleChildScrollView(
                           physics: const AlwaysScrollableScrollPhysics(),
-                          child: Container(
+                          child: SizedBox(
                             height: 400,
                             child: Center(
                               child: Text(
@@ -788,7 +776,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
             children: [
               // Final decoration image cards
               Expanded(
-                child: finalImages != null && finalImages.isNotEmpty
+                child: finalImages.isNotEmpty
                     ? GridView.builder(
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
@@ -850,7 +838,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
                     topLeft: Radius.circular(12),
                     topRight: Radius.circular(12),
                   ),
-                  child: Container(
+                  child: SizedBox(
                     width: double.infinity,
                     height: double.infinity,
                     child: _buildImageWidget(imageData),
@@ -1145,7 +1133,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.picture_as_pdf,
                       color: Colors.red,
                       size: 40,
@@ -1190,7 +1178,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         // Show image with type indicator
         return Stack(
           children: [
-            Container(
+            SizedBox(
               width: double.infinity,
               height: double.infinity,
               child: cnf.CachedNetworkOrFileImage(
@@ -1259,7 +1247,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceVariant,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(16),
           bottomRight: Radius.circular(16),
@@ -1332,10 +1320,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
     final netIssuedQuantity = totalIssuedQuantity - totalReturnedQuantity;
 
     // Debug logging
-    print('🔍 Debug Item Card: ${itemInfo['name']}');
-    print('  Total Issued: $totalIssuedQuantity');
-    print('  Total Returned: $totalReturnedQuantity');
-    print('  Net Issued: $netIssuedQuantity');
 
     // Determine status based on net quantity
     final isFullyReturned = netIssuedQuantity <= 0;
@@ -1346,7 +1330,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
     final displayQuantity = netIssuedQuantity < 0 ? 0 : netIssuedQuantity;
 
     return Dismissible(
-      key: Key('item_${itemInfo['id']}_${latestIssuanceId}'),
+      key: Key('item_${itemInfo['id']}_$latestIssuanceId'),
       direction: isFullyReturned
           ? DismissDirection.none
           : DismissDirection
@@ -1424,8 +1408,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
           // Debug information
           print(
               'Debug: latestIssuanceId = $latestIssuanceId, itemId = $itemId');
-          print('Debug: itemInfo = $itemInfo');
-          print('Debug: allTransactions = $allTransactions');
 
           showErrorTopSnackBar(
               context, "Unable to return: missing item info. ItemId: $itemId");
@@ -1466,8 +1448,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: cnf.CachedNetworkOrFileImage(
-                              imageUrl:
-                                  '${apiBaseUrl}${itemInfo['item_image']}',
+                              imageUrl: '$apiBaseUrl${itemInfo['item_image']}',
                               fit: BoxFit.cover,
                               errorWidget: Icon(
                                 Icons.inventory_2,
@@ -1648,9 +1629,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
           ),
         ),
         const SizedBox(height: 12),
-        ...issuancesByItem
-            .map((itemGroup) => _buildItemGroupCard(itemGroup))
-            .toList(),
+        ...issuancesByItem.map((itemGroup) => _buildItemGroupCard(itemGroup)),
       ],
     );
   }
@@ -1705,7 +1684,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: cnf.CachedNetworkOrFileImage(
-                        imageUrl: '${apiBaseUrl}${itemInfo['item_image']}',
+                        imageUrl: '$apiBaseUrl${itemInfo['item_image']}',
                         fit: BoxFit.cover,
                         errorWidget: Icon(
                           Icons.inventory_2,
@@ -1769,8 +1748,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
                 ),
                 const SizedBox(height: 8),
                 ...transactions
-                    .map((transaction) => _buildTransactionItem(transaction))
-                    .toList(),
+                    .map((transaction) => _buildTransactionItem(transaction)),
               ],
             ),
           ),
@@ -1799,7 +1777,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
       ),
       child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.arrow_upward,
             color: Colors.orange,
             size: 20,
@@ -2620,7 +2598,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
                       pw.SizedBox(height: 8),
                       pw.Text(
                         widget.eventData['name'] ?? 'Event',
-                        style: pw.TextStyle(
+                        style: const pw.TextStyle(
                           fontSize: 18,
                           color: PdfColors.white,
                         ),
@@ -2628,7 +2606,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
                       pw.SizedBox(height: 4),
                       pw.Text(
                         'Generated on: ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.now())}',
-                        style: pw.TextStyle(
+                        style: const pw.TextStyle(
                           fontSize: 12,
                           color: PdfColors.white,
                         ),
@@ -2696,28 +2674,26 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
                       ],
                     ),
                     // Data rows
-                    ...costs
-                        .map((cost) => pw.TableRow(
-                              children: [
-                                pw.Padding(
-                                  padding: const pw.EdgeInsets.all(8),
-                                  child: pw.Text(cost['description'] ?? ''),
-                                ),
-                                pw.Padding(
-                                  padding: const pw.EdgeInsets.all(8),
-                                  child: pw.Text(
-                                      'Rs${_formatAmount(cost['amount'])}'),
-                                ),
-                                pw.Padding(
-                                  padding: const pw.EdgeInsets.all(8),
-                                  child: pw.Text(cost['uploaded_at'] != null
-                                      ? DateFormat('dd MMM yyyy').format(
-                                          DateTime.parse(cost['uploaded_at']))
-                                      : 'N/A'),
-                                ),
-                              ],
-                            ))
-                        .toList(),
+                    ...costs.map((cost) => pw.TableRow(
+                          children: [
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(8),
+                              child: pw.Text(cost['description'] ?? ''),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(8),
+                              child:
+                                  pw.Text('Rs${_formatAmount(cost['amount'])}'),
+                            ),
+                            pw.Padding(
+                              padding: const pw.EdgeInsets.all(8),
+                              child: pw.Text(cost['uploaded_at'] != null
+                                  ? DateFormat('dd MMM yyyy').format(
+                                      DateTime.parse(cost['uploaded_at']))
+                                  : 'N/A'),
+                            ),
+                          ],
+                        )),
                   ],
                 ),
 
@@ -2787,7 +2763,6 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
       if (result['success'] == true) {
         // Parse the JSON response
         final responseData = jsonDecode(result['data']);
-        print('Cost API Response: $responseData');
 
         if (responseData['success'] == true && responseData['data'] != null) {
           final costItems =
@@ -2800,8 +2775,7 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen>
         throw Exception(result['message'] ?? 'Failed to fetch costs');
       }
     } catch (e) {
-      print('Error fetching costs: $e');
-      throw e;
+      rethrow;
     }
   }
 }
@@ -2882,7 +2856,7 @@ class _ReturnItemDialogState extends ConsumerState<_ReturnItemDialog> {
                   );
         } catch (e) {
           // If update fails, fall back to creating a new issuance
-          print('Update issuance failed, falling back to create: $e');
+
           response =
               await ref.read(inventoryProvider.notifier).createMaterialIssuance(
                     itemId: widget.itemId,
@@ -3151,7 +3125,7 @@ class _ImageUploadDialog extends StatefulWidget {
 
 class _ImageUploadDialogState extends State<_ImageUploadDialog> {
   final TextEditingController _notesController = TextEditingController();
-  List<File> _selectedImages = [];
+  final List<File> _selectedImages = [];
   bool _isUploading = false;
 
   @override
@@ -3216,7 +3190,7 @@ class _ImageUploadDialogState extends State<_ImageUploadDialog> {
                 ),
               ),
               const SizedBox(height: 10),
-              Container(
+              SizedBox(
                 height: 120,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
@@ -3246,7 +3220,7 @@ class _ImageUploadDialogState extends State<_ImageUploadDialog> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
-                                        Icon(
+                                        const Icon(
                                           Icons.picture_as_pdf,
                                           color: Colors.red,
                                           size: 32,
@@ -3551,7 +3525,7 @@ class _FinalDecorationImageUploadDialog extends StatefulWidget {
 class _FinalDecorationImageUploadDialogState
     extends State<_FinalDecorationImageUploadDialog> {
   final TextEditingController _notesController = TextEditingController();
-  List<File> _selectedImages = [];
+  final List<File> _selectedImages = [];
   bool _isUploading = false;
 
   @override
@@ -3626,7 +3600,7 @@ class _FinalDecorationImageUploadDialogState
                         ),
                       ),
                       const SizedBox(height: 10),
-                      Container(
+                      SizedBox(
                         height: 120,
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
@@ -3659,7 +3633,7 @@ class _FinalDecorationImageUploadDialogState
                                               mainAxisAlignment:
                                                   MainAxisAlignment.center,
                                               children: [
-                                                Icon(
+                                                const Icon(
                                                   Icons.picture_as_pdf,
                                                   color: Colors.red,
                                                   size: 32,

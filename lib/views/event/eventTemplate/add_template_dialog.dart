@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' show WidgetRef;
 
 import '../../../providers/template_provider.dart';
-import '../../../utils/top_snackbar_helper.dart' show showInfoTopSnackBar, showSuccessTopSnackBar, showErrorTopSnackBar;
-
+import '../../../utils/top_snackbar_helper.dart'
+    show showInfoTopSnackBar, showSuccessTopSnackBar, showErrorTopSnackBar;
 
 Future<void> showAddTemplateDialog(BuildContext context, WidgetRef ref) async {
   final TextEditingController nameController = TextEditingController();
@@ -62,9 +62,7 @@ Future<void> showAddTemplateDialog(BuildContext context, WidgetRef ref) async {
                   }
 
                   ref.read(templateProvider.notifier).fetchTemplates();
-                  print('✅ Template created successfully: $response');
                 } catch (e) {
-                  print('❌ Error creating template: $e');
                   if (context.mounted) {
                     showErrorTopSnackBar(
                       context,

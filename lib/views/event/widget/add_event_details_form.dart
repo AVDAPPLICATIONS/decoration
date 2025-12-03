@@ -18,7 +18,6 @@ class AddEventDetailsForm extends StatefulWidget {
     required this.yearId,
     required this.onEventCreated,
     required this.yearName,
-
   });
 
   @override
@@ -44,28 +43,27 @@ class _AddEventDetailsFormState extends State<AddEventDetailsForm> {
   }
 
   Future<void> _selectDate() async {
-  final DateTime now = DateTime(int.parse(widget.yearName), 1, 1);
-  final DateTime lastDate = DateTime(now.year, 12, 31);
+    final DateTime now = DateTime(int.parse(widget.yearName), 1, 1);
+    final DateTime lastDate = DateTime(now.year, 12, 31);
 
-  final DateTime? picked = await showDatePicker(
-    context: context,
-    initialDate: _selectedDate != null
-        ? _selectedDate!.isAfter(lastDate)
-            ? lastDate
-            : _selectedDate!
-        : now, // Start from today
-    firstDate: DateTime(int.parse(widget.yearName), 1, 1),
-    lastDate: DateTime(int.parse(widget.yearName), 12,31),
-  );
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate != null
+          ? _selectedDate!.isAfter(lastDate)
+              ? lastDate
+              : _selectedDate!
+          : now, // Start from today
+      firstDate: DateTime(int.parse(widget.yearName), 1, 1),
+      lastDate: DateTime(int.parse(widget.yearName), 12, 31),
+    );
 
-  if (picked != null) {
-    setState(() {
-      _selectedDate = picked;
-      _dateController.text = DateFormat('dd-MM-yyyy').format(_selectedDate!);
-    });
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+        _dateController.text = DateFormat('dd-MM-yyyy').format(_selectedDate!);
+      });
+    }
   }
-}
-
 
   Future<void> _pickImage() async {
     try {
@@ -124,8 +122,6 @@ class _AddEventDetailsFormState extends State<AddEventDetailsForm> {
 
       // Check if response has an id (indicating successful creation)
       if (response['id'] != null) {
-        print('Event creation response: $response');
-
         final eventData = {
           'id': response['id'] is int
               ? response['id']
@@ -148,8 +144,6 @@ class _AddEventDetailsFormState extends State<AddEventDetailsForm> {
           'cost': [],
           'issuances': [],
         };
-
-        print('Calling onEventCreated with: $eventData');
 
         // Call the callback with the created event data
         // The callback will handle navigation and closing the form
@@ -410,7 +404,7 @@ class _AddEventDetailsFormState extends State<AddEventDetailsForm> {
                       ),
                     ),
                     // Add extra padding to avoid bottom navigation bar
-                    SizedBox(
+                    const SizedBox(
                         height: 100), // Fixed larger padding for bottom nav
                   ],
                 ),

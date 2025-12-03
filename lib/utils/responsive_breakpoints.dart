@@ -10,8 +10,7 @@ class ResponsiveBreakpoints {
   static double screenWidth(BuildContext context) =>
       MediaQuery.of(context).size.width;
 
-  static bool isMobile(BuildContext context) =>
-      screenWidth(context) < mobile;
+  static bool isMobile(BuildContext context) => screenWidth(context) < mobile;
 
   static bool isTablet(BuildContext context) =>
       screenWidth(context) >= mobile && screenWidth(context) < tablet;

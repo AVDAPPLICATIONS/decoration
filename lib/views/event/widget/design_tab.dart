@@ -1,23 +1,21 @@
 import 'package:avd_decoration_application/utils/top_snackbar_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:avd_decoration_application/widgets/cached_network_or_file_image.dart' as cnf;
+import 'package:avd_decoration_application/widgets/cached_network_or_file_image.dart'
+    as cnf;
 import 'dart:io';
 
 import '../../../themes/app_theme.dart';
 import '../../../services/gallery_service.dart';
 import '../../../services/local_storage_service.dart';
 import '../../../utils/constants.dart';
-import '../../../utils/snackbar_manager.dart';
 import 'fullscreen_image_viewer.dart';
 
 class DesignTab extends StatefulWidget {
   final Map<String, dynamic> event;
   final bool isAdmin;
 
-  const DesignTab({Key? key, required this.event, required this.isAdmin})
-      : super(key: key);
+  const DesignTab({super.key, required this.event, required this.isAdmin});
 
   @override
   State<DesignTab> createState() => _DesignTabState();
@@ -46,23 +44,19 @@ class _DesignTabState extends State<DesignTab> {
     try {
       _localStorageService = LocalStorageService();
       _galleryService = GalleryService(apiBaseUrl, _localStorageService!);
-      print('Services initialized successfully');
 
       // Load images from server after services are initialized
       _loadImagesFromServer();
     } catch (e) {
-      print('Error initializing services: $e');
       // Retry initialization after a short delay
       await Future.delayed(const Duration(milliseconds: 1000));
       try {
         _localStorageService = LocalStorageService();
         _galleryService = GalleryService(apiBaseUrl, _localStorageService!);
-        print('Services initialized successfully on retry');
 
         // Load images from server after services are initialized
         _loadImagesFromServer();
       } catch (retryError) {
-        print('Failed to initialize services on retry: $retryError');
         // Set to null to indicate failure
         _galleryService = null;
         _localStorageService = null;
@@ -83,8 +77,6 @@ class _DesignTabState extends State<DesignTab> {
     });
 
     try {
-      print('🔄 Loading images from server for event: ${widget.event['id']}');
-
       // Fetch all event images in a single API call
       final eventData =
           await _galleryService!.getEventImages(widget.event['id'].toString());
@@ -99,35 +91,27 @@ class _DesignTabState extends State<DesignTab> {
         List<Map<String, dynamic>> newDesignImages = [];
         List<Map<String, dynamic>> newFinalDecorationImages = [];
 
-        print('🔍 Processing event data: $eventData');
-        
         // Debug: Print the base URL being used
-        print('🔍 Using API base URL: $apiBaseUrl');
-        
+
         // Test server connectivity if we have issues
         if (_areServicesReady()) {
-          _galleryService!.testServerConnectivity().then((isConnected) {
-            print('🔍 Server connectivity test: ${isConnected ? "✅ Connected" : "❌ Failed"}');
-          });
+          _galleryService!.testServerConnectivity().then((isConnected) {});
         }
 
         // Process design images from gallery.design array
         if (eventData['gallery'] != null &&
             eventData['gallery']['design'] is List) {
           final designImages = eventData['gallery']['design'];
-          print('🔍 Found ${designImages.length} design images');
 
           for (int i = 0; i < designImages.length; i++) {
             var item = designImages[i];
-            print('🔍 Design image $i: $item');
 
             if (item is Map<String, dynamic>) {
               // Convert relative URL to full URL
               String imageUrl = item['image_url'] ?? '';
-              print('🔍 Original image URL: $imageUrl');
+
               if (imageUrl.startsWith('/')) {
-                imageUrl = '${apiBaseUrl}$imageUrl';
-                print('🔍 Converted to full URL: $imageUrl');
+                imageUrl = '$apiBaseUrl$imageUrl';
               }
 
               newDesignImages.add({
@@ -136,7 +120,6 @@ class _DesignTabState extends State<DesignTab> {
                 'api_data': item,
                 'id': item['id'], // Store ID directly for easier access
               });
-              print('🔍 Added design image: $imageUrl');
             }
           }
         }
@@ -145,17 +128,15 @@ class _DesignTabState extends State<DesignTab> {
         if (eventData['gallery'] != null &&
             eventData['gallery']['final'] is List) {
           final finalImages = eventData['gallery']['final'];
-          print('🔍 Found ${finalImages.length} final decoration images');
 
           for (int i = 0; i < finalImages.length; i++) {
             var item = finalImages[i];
-            print('🔍 Final decoration image $i: $item');
 
             if (item is Map<String, dynamic>) {
               // Convert relative URL to full URL
               String imageUrl = item['image_url'] ?? '';
               if (imageUrl.startsWith('/')) {
-                imageUrl = '${apiBaseUrl}$imageUrl';
+                imageUrl = '$apiBaseUrl$imageUrl';
               }
 
               newFinalDecorationImages.add({
@@ -164,22 +145,18 @@ class _DesignTabState extends State<DesignTab> {
                 'api_data': item,
                 'id': item['id'], // Store ID directly for easier access
               });
-              print('🔍 Added final decoration image: $imageUrl');
             }
           }
         }
 
-        print('🔍 Total design images found: ${newDesignImages.length}');
         print(
             '🔍 Total final decoration images found: ${newFinalDecorationImages.length}');
-            
+
         // Test one of the image URLs manually if we have images
         if (newDesignImages.isNotEmpty && _areServicesReady()) {
           final testImageUrl = newDesignImages.first['image_path'];
-          print('🔍 Testing first image URL manually: $testImageUrl');
-          _galleryService!.imageExists(testImageUrl).then((exists) {
-            print('🔍 Manual test result: ${exists ? "✅ Exists" : "❌ Missing"}');
-          });
+
+          _galleryService!.imageExists(testImageUrl).then((exists) {});
         }
 
         setState(() {
@@ -191,7 +168,6 @@ class _DesignTabState extends State<DesignTab> {
             '✅ Loaded ${_designImages.length} design images and ${_finalDecorationImages.length} final decoration images');
       }
     } catch (e) {
-      print('❌ Error loading images from server: $e');
       if (mounted) {
         setState(() {
           _isLoadingImages = false;
@@ -213,11 +189,12 @@ class _DesignTabState extends State<DesignTab> {
     // Check if it's a network URL
     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
       return FutureBuilder<bool>(
-        future: _areServicesReady() ? _galleryService!.imageExists(imagePath) : Future.value(false),
+        future: _areServicesReady()
+            ? _galleryService!.imageExists(imagePath)
+            : Future.value(false),
         builder: (context, snapshot) {
           // If we can't check or image doesn't exist, show error immediately
           if (snapshot.hasData && !snapshot.data!) {
-            print('❌ Design Tab: Image does not exist on server: $imagePath');
             return Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -257,7 +234,7 @@ class _DesignTabState extends State<DesignTab> {
               ),
             );
           }
-          
+
           // If we're still checking or image exists, use the cached network image
           return cnf.CachedNetworkOrFileImage(
             imageUrl: imagePath,
@@ -273,7 +250,7 @@ class _DesignTabState extends State<DesignTab> {
                   ],
                 ),
               ),
-              child: Center(
+              child: const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -281,7 +258,7 @@ class _DesignTabState extends State<DesignTab> {
                       color: AppColors.primary,
                       strokeWidth: 2,
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Text(
                       'Loading...',
                       style: TextStyle(
@@ -333,7 +310,6 @@ class _DesignTabState extends State<DesignTab> {
         fit: BoxFit.cover,
         width: double.infinity,
         errorBuilder: (context, error, stackTrace) {
-          print('Error loading local image: $error');
           return Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -479,7 +455,7 @@ class _DesignTabState extends State<DesignTab> {
   Widget build(BuildContext context) {
     final designImages = _designImages;
     final finalDecorationImages = _finalDecorationImages;
-    print('grid images ${designImages.toList()}');
+
     return Container(
       height: MediaQuery.of(context).size.height -
           kToolbarHeight -
@@ -535,7 +511,7 @@ class _DesignTabState extends State<DesignTab> {
                         Row(
                           children: [
                             if (_isLoadingImages)
-                              Container(
+                              const SizedBox(
                                 width: 10,
                                 height: 10,
                                 child: CircularProgressIndicator(
@@ -546,7 +522,7 @@ class _DesignTabState extends State<DesignTab> {
                             const SizedBox(width: 8),
                             Text(
                               '${_designImages.length + _finalDecorationImages.length} images',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.primary,
@@ -668,7 +644,6 @@ class _DesignTabState extends State<DesignTab> {
 
   Widget _buildImageGrid(BuildContext context, bool isAdmin, String label,
       bool isDesignTab, List<Map<String, dynamic>> images) {
-    print('grid images ${images.toList()}');
     return Container(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -679,12 +654,12 @@ class _DesignTabState extends State<DesignTab> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircularProgressIndicator(
+                        const CircularProgressIndicator(
                           color: AppColors.primary,
                           strokeWidth: 3,
                         ),
                         const SizedBox(height: 24),
-                        Text(
+                        const Text(
                           'Loading images...',
                           style: TextStyle(
                             fontSize: 18,
@@ -742,7 +717,7 @@ class _DesignTabState extends State<DesignTab> {
                               isDesignTab
                                   ? 'No Design Images'
                                   : 'No Final Decoration Images',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.primary,
@@ -782,7 +757,7 @@ class _DesignTabState extends State<DesignTab> {
                             onTap: () {
                               final imagePath =
                                   images[index]['image_path'] ?? '';
-                              print(imagePath);
+
                               if (imagePath.isNotEmpty) {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
@@ -838,7 +813,8 @@ class _DesignTabState extends State<DesignTab> {
                                                 ),
                                               ),
                                               child: Column(
-                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
                                                 children: [
                                                   Icon(
                                                     Icons.image_not_supported,
@@ -849,7 +825,8 @@ class _DesignTabState extends State<DesignTab> {
                                                   Text(
                                                     'No image',
                                                     style: TextStyle(
-                                                      color: Colors.grey.shade600,
+                                                      color:
+                                                          Colors.grey.shade600,
                                                       fontSize: 12,
                                                     ),
                                                   ),
@@ -1003,7 +980,7 @@ class _DesignTabState extends State<DesignTab> {
                                                 // Check if image has API data (was uploaded to server)
                                                 final imageData = images[index];
                                                 print(
-                                                    'Image data is ${imageData}');
+                                                    'Image data is $imageData');
                                                 if (imageData['id'] != null) {
                                                   // Show loading indicator
                                                   showDialog(
@@ -1023,7 +1000,9 @@ class _DesignTabState extends State<DesignTab> {
                                                     if (!_areServicesReady()) {
                                                       Navigator.of(context)
                                                           .pop(); // Close loading dialog
-                                                      showInfoTopSnackBar(context, 'Services are still initializing. Please wait a moment and try again.');
+                                                      showInfoTopSnackBar(
+                                                          context,
+                                                          'Services are still initializing. Please wait a moment and try again.');
                                                       return;
                                                     }
 
@@ -1036,7 +1015,8 @@ class _DesignTabState extends State<DesignTab> {
                                                               .deleteDesignImage(
                                                         imageId: imageData['id']
                                                             .toString(),
-                                                        eventId: widget.event['id']
+                                                        eventId: widget
+                                                            .event['id']
                                                             .toString(),
                                                       );
                                                     } else {
@@ -1047,7 +1027,8 @@ class _DesignTabState extends State<DesignTab> {
                                                               .deleteFinalDecorationImage(
                                                         imageId: imageData['id']
                                                             .toString(),
-                                                        eventId: widget.event['id']
+                                                        eventId: widget
+                                                            .event['id']
                                                             .toString(),
                                                       );
                                                     }
@@ -1068,17 +1049,24 @@ class _DesignTabState extends State<DesignTab> {
                                                       }
 
                                                       // Show success message
-                                                      showSuccessTopSnackBar(context, 'Image deleted successfully');
+                                                      showSuccessTopSnackBar(
+                                                          context,
+                                                          'Image deleted successfully');
                                                     } else {
                                                       // Show error message
-                                                      showErrorTopSnackBar(context, result['message'] ?? 'Failed to delete image');
+                                                      showErrorTopSnackBar(
+                                                          context,
+                                                          result['message'] ??
+                                                              'Failed to delete image');
                                                     }
                                                   } catch (e) {
                                                     // Close loading dialog
                                                     Navigator.of(context).pop();
 
                                                     // Show error message
-                                                    showErrorTopSnackBar(context, 'An error occurred: ${e.toString()}');
+                                                    showErrorTopSnackBar(
+                                                        context,
+                                                        'An error occurred: ${e.toString()}');
                                                   }
                                                 } else {
                                                   // Image was not uploaded to server, just remove from local state
@@ -1163,7 +1151,7 @@ class _DesignTabState extends State<DesignTab> {
   }
 
   void _showAddDialog(BuildContext context, String label, bool isDesignTab) {
-    final _formKey = GlobalKey<FormState>();
+    final formKey = GlobalKey<FormState>();
     List<XFile> pickedImages = [];
     String notesOrDesc = '';
     showDialog(
@@ -1238,7 +1226,7 @@ class _DesignTabState extends State<DesignTab> {
                             Expanded(
                               child: Text(
                                 label,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.primary,
@@ -1252,7 +1240,7 @@ class _DesignTabState extends State<DesignTab> {
                       Padding(
                         padding: const EdgeInsets.all(24),
                         child: Form(
-                          key: _formKey,
+                          key: formKey,
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -1270,7 +1258,7 @@ class _DesignTabState extends State<DesignTab> {
                                         children: [
                                           Text(
                                             'Selected Images (${pickedImages.length})',
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.w600,
                                               color: AppColors.primary,
@@ -1392,7 +1380,7 @@ class _DesignTabState extends State<DesignTab> {
                                       color: AppColors.primary.withOpacity(0.2),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: Icon(
+                                    child: const Icon(
                                       Icons.browse_gallery,
                                       color: AppColors.primary,
                                       size: 20,
@@ -1400,7 +1388,7 @@ class _DesignTabState extends State<DesignTab> {
                                   ),
                                   label: Text(
                                     'Select Images (${pickedImages.length})',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       color: AppColors.primary,
                                       fontWeight: FontWeight.w600,
                                       fontSize: 16,
@@ -1460,7 +1448,7 @@ class _DesignTabState extends State<DesignTab> {
                                     labelText: isDesignTab
                                         ? 'Notes (Optional)'
                                         : 'Description (Optional)',
-                                    labelStyle: TextStyle(
+                                    labelStyle: const TextStyle(
                                       color: AppColors.primary,
                                       fontWeight: FontWeight.w600,
                                       fontSize: 16,
@@ -1500,7 +1488,7 @@ class _DesignTabState extends State<DesignTab> {
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(20),
-                                      borderSide: BorderSide(
+                                      borderSide: const BorderSide(
                                         color: AppColors.primary,
                                         width: 2,
                                       ),
@@ -1596,11 +1584,12 @@ class _DesignTabState extends State<DesignTab> {
                                 child: ElevatedButton(
                                   onPressed: () async {
                                     if (pickedImages.isEmpty) {
-                                      showErrorTopSnackBar(context, 'Please select at least one image.');
+                                      showErrorTopSnackBar(context,
+                                          'Please select at least one image.');
                                       return;
                                     }
-                                    if (_formKey.currentState!.validate()) {
-                                      _formKey.currentState!.save();
+                                    if (formKey.currentState!.validate()) {
+                                      formKey.currentState!.save();
 
                                       // Show loading dialog with progress
                                       showDialog(
@@ -1617,7 +1606,8 @@ class _DesignTabState extends State<DesignTab> {
                                         if (!_areServicesReady()) {
                                           Navigator.of(context)
                                               .pop(); // Close loading dialog
-                                          showInfoTopSnackBar(context, 'Services are still initializing. Please wait a moment and try again.');
+                                          showInfoTopSnackBar(context,
+                                              'Services are still initializing. Please wait a moment and try again.');
                                           return;
                                         }
 
@@ -1699,20 +1689,23 @@ class _DesignTabState extends State<DesignTab> {
                                               context, successCount, imageType);
                                         } else if (successCount > 0 &&
                                             failCount > 0) {
-                                          showSuccessTopSnackBar(context, 'Uploaded $successCount image(s), $failCount failed');
+                                          showSuccessTopSnackBar(context,
+                                              'Uploaded $successCount image(s), $failCount failed');
                                           Navigator.of(context)
                                               .pop(); // Close add dialog
                                           // Refresh images from server to show the newly uploaded images
                                           _refreshImages();
                                         } else {
-                                          showErrorTopSnackBar(context, 'Failed to upload all images. ${errorMessages.first}');
+                                          showErrorTopSnackBar(context,
+                                              'Failed to upload all images. ${errorMessages.first}');
                                         }
                                       } catch (e) {
                                         // Close loading dialog
                                         Navigator.of(context).pop();
 
                                         // Show error message
-                                        showErrorTopSnackBar(context, 'An error occurred: ${e.toString()}');
+                                        showErrorTopSnackBar(context,
+                                            'An error occurred: ${e.toString()}');
                                       }
                                     }
                                   },
@@ -1724,7 +1717,7 @@ class _DesignTabState extends State<DesignTab> {
                                       borderRadius: BorderRadius.circular(16),
                                     ),
                                   ),
-                                  child: Row(
+                                  child: const Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     // mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -1733,8 +1726,8 @@ class _DesignTabState extends State<DesignTab> {
                                       //   color: Colors.white,
                                       //   size: 20,
                                       // ),
-                                      const SizedBox(width: 8),
-                                      const Flexible(
+                                      SizedBox(width: 8),
+                                      Flexible(
                                         child: Text(
                                           'Upload Images',
                                           style: TextStyle(
@@ -1820,7 +1813,7 @@ class _DesignTabState extends State<DesignTab> {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Expanded(
+                  const Expanded(
                     child: Text(
                       'Uploading Images...',
                       style: TextStyle(
@@ -1835,7 +1828,7 @@ class _DesignTabState extends State<DesignTab> {
             ),
             const SizedBox(height: 24),
             // Progress indicator
-            CircularProgressIndicator(
+            const CircularProgressIndicator(
               color: AppColors.primary,
               strokeWidth: 3,
             ),

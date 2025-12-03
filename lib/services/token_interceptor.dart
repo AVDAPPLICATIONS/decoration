@@ -8,7 +8,8 @@ class TokenInterceptor extends Interceptor {
   TokenInterceptor(this._localStorageService);
 
   @override
-  Future<void> onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+  Future<void> onRequest(
+      RequestOptions options, RequestInterceptorHandler handler) async {
     final token = await _localStorageService.getToken();
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
@@ -23,7 +24,7 @@ class TokenInterceptor extends Interceptor {
   }
 
   @override
-  void onError(DioError err, ErrorInterceptorHandler handler) {
+  void onError(DioException err, ErrorInterceptorHandler handler) {
     // Handle errors if needed
     super.onError(err, handler);
   }

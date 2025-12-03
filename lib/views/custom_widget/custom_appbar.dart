@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../utils/responsive_utils.dart';
 
 /// Custom AppBar with optional curved bottom and back button control
-/// 
+///
 /// Usage examples:
 /// ```dart
 /// // Basic app bar with back button
@@ -11,14 +11,14 @@ import '../../utils/responsive_utils.dart';
 ///   showBackButton: true,
 ///   curvedBottom: false,
 /// )
-/// 
+///
 /// // App bar without back button
 /// CustomAppBar(
 ///   title: 'Home Screen',
 ///   showBackButton: false,
 ///   curvedBottom: false,
 /// )
-/// 
+///
 /// // App bar with curved bottom
 /// CustomAppBar(
 ///   title: 'Curved Screen',
@@ -51,7 +51,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final double? borderRadius;
 
   const CustomAppBar({
-    Key? key,
+    super.key,
     required this.title,
     this.actions,
     this.leading,
@@ -73,7 +73,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.titleColor,
     this.curvedBottom = false,
     this.borderRadius,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -97,11 +97,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           elevation: 0,
           shadowColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
-          toolbarHeight: toolbarHeight ?? context.responsive(
-            mobile: 56.0,
-            tablet: 64.0,
-            desktop: 72.0,
-          ),
+          toolbarHeight: toolbarHeight ??
+              context.responsive(
+                mobile: 56.0,
+                tablet: 64.0,
+                desktop: 72.0,
+              ),
           centerTitle: centerTitle,
           automaticallyImplyLeading: automaticallyImplyLeading,
           leading: _buildLeading(context, effectiveForegroundColor),
@@ -124,11 +125,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: elevation,
       shadowColor: shadowColor,
       surfaceTintColor: surfaceTintColor,
-      toolbarHeight: toolbarHeight ?? context.responsive(
-        mobile: 56.0,
-        tablet: 64.0,
-        desktop: 72.0,
-      ),
+      toolbarHeight: toolbarHeight ??
+          context.responsive(
+            mobile: 56.0,
+            tablet: 64.0,
+            desktop: 72.0,
+          ),
       centerTitle: centerTitle,
       automaticallyImplyLeading: automaticallyImplyLeading,
       leading: _buildLeading(context, effectiveForegroundColor),
@@ -154,13 +156,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     }
 
     return IconButton(
-      onPressed: onBackPressed ?? () {
-        if (Navigator.of(context, rootNavigator: true).canPop()) {
-          Navigator.of(context, rootNavigator: true).pop();
-        } else {
-          Navigator.of(context).pop();
-        }
-      },
+      onPressed: onBackPressed ??
+          () {
+            if (Navigator.of(context, rootNavigator: true).canPop()) {
+              Navigator.of(context, rootNavigator: true).pop();
+            } else {
+              Navigator.of(context).pop();
+            }
+          },
       icon: Icon(
         Icons.arrow_back,
         color: foregroundColor,
@@ -171,12 +174,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Size get preferredSize => Size.fromHeight(
-    toolbarHeight ?? 56.0, // Default height
-  );
+        toolbarHeight ?? 56.0, // Default height
+      );
 }
 
 /// Custom AppBar with loading indicator
-class CustomAppBarWithLoading extends StatelessWidget implements PreferredSizeWidget {
+class CustomAppBarWithLoading extends StatelessWidget
+    implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
   final Widget? leading;
@@ -203,7 +207,7 @@ class CustomAppBarWithLoading extends StatelessWidget implements PreferredSizeWi
   final double? borderRadius;
 
   const CustomAppBarWithLoading({
-    Key? key,
+    super.key,
     required this.title,
     this.actions,
     this.leading,
@@ -228,7 +232,7 @@ class CustomAppBarWithLoading extends StatelessWidget implements PreferredSizeWi
     this.loadingIndicatorStrokeWidth = 2.0,
     this.curvedBottom = false,
     this.borderRadius,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -246,7 +250,8 @@ class CustomAppBarWithLoading extends StatelessWidget implements PreferredSizeWi
             height: loadingIndicatorSize,
             child: CircularProgressIndicator(
               strokeWidth: loadingIndicatorStrokeWidth!,
-              valueColor: AlwaysStoppedAnimation<Color>(effectiveForegroundColor),
+              valueColor:
+                  AlwaysStoppedAnimation<Color>(effectiveForegroundColor),
             ),
           ),
         ),
@@ -268,11 +273,12 @@ class CustomAppBarWithLoading extends StatelessWidget implements PreferredSizeWi
           elevation: 0,
           shadowColor: Colors.transparent,
           surfaceTintColor: Colors.transparent,
-          toolbarHeight: toolbarHeight ?? context.responsive(
-            mobile: 56.0,
-            tablet: 64.0,
-            desktop: 72.0,
-          ),
+          toolbarHeight: toolbarHeight ??
+              context.responsive(
+                mobile: 56.0,
+                tablet: 64.0,
+                desktop: 72.0,
+              ),
           centerTitle: centerTitle,
           automaticallyImplyLeading: automaticallyImplyLeading,
           leading: _buildLeading(context, effectiveForegroundColor),
@@ -295,11 +301,12 @@ class CustomAppBarWithLoading extends StatelessWidget implements PreferredSizeWi
       elevation: elevation,
       shadowColor: shadowColor,
       surfaceTintColor: surfaceTintColor,
-      toolbarHeight: toolbarHeight ?? context.responsive(
-        mobile: 56.0,
-        tablet: 64.0,
-        desktop: 72.0,
-      ),
+      toolbarHeight: toolbarHeight ??
+          context.responsive(
+            mobile: 56.0,
+            tablet: 64.0,
+            desktop: 72.0,
+          ),
       centerTitle: centerTitle,
       automaticallyImplyLeading: automaticallyImplyLeading,
       leading: _buildLeading(context, effectiveForegroundColor),
@@ -325,13 +332,14 @@ class CustomAppBarWithLoading extends StatelessWidget implements PreferredSizeWi
     }
 
     return IconButton(
-      onPressed: onBackPressed ?? () {
-        if (Navigator.of(context, rootNavigator: true).canPop()) {
-          Navigator.of(context, rootNavigator: true).pop();
-        } else {
-          Navigator.of(context).pop();
-        }
-      },
+      onPressed: onBackPressed ??
+          () {
+            if (Navigator.of(context, rootNavigator: true).canPop()) {
+              Navigator.of(context, rootNavigator: true).pop();
+            } else {
+              Navigator.of(context).pop();
+            }
+          },
       icon: Icon(
         Icons.arrow_back,
         color: foregroundColor,
@@ -342,8 +350,8 @@ class CustomAppBarWithLoading extends StatelessWidget implements PreferredSizeWi
 
   @override
   Size get preferredSize => Size.fromHeight(
-    toolbarHeight ?? 56.0, // Default height
-  );
+        toolbarHeight ?? 56.0, // Default height
+      );
 }
 
 /// Custom AppBar for Tab Screens
@@ -375,7 +383,7 @@ class CustomTabAppBar extends StatelessWidget implements PreferredSizeWidget {
   final double? borderRadius;
 
   const CustomTabAppBar({
-    Key? key,
+    super.key,
     required this.title,
     required this.tabs,
     this.tabController,
@@ -401,7 +409,7 @@ class CustomTabAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.showBackButton = true,
     this.curvedBottom = false,
     this.borderRadius,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -409,7 +417,7 @@ class CustomTabAppBar extends StatelessWidget implements PreferredSizeWidget {
     final effectiveBackgroundColor = backgroundColor ?? colorScheme.primary;
     final effectiveForegroundColor = foregroundColor ?? colorScheme.onPrimary;
     final effectiveTitleColor = titleColor ?? colorScheme.onPrimary;
-    final effectiveLabelColor = labelColor ?? colorScheme.background;
+    final effectiveLabelColor = labelColor ?? colorScheme.surface;
     final effectiveUnselectedLabelColor = unselectedLabelColor ?? Colors.white;
     final effectiveIndicatorColor = indicatorColor ?? colorScheme.secondary;
 
@@ -449,21 +457,23 @@ class CustomTabAppBar extends StatelessWidget implements PreferredSizeWidget {
             controller: tabController,
             labelColor: effectiveLabelColor,
             unselectedLabelColor: effectiveUnselectedLabelColor,
-            labelStyle: labelStyle ?? TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: context.responsive(
-                mobile: 14.0,
-                tablet: 16.0,
-                desktop: 18.0,
-              ),
-            ),
-            unselectedLabelStyle: unselectedLabelStyle ?? TextStyle(
-              fontSize: context.responsive(
-                mobile: 14.0,
-                tablet: 16.0,
-                desktop: 18.0,
-              ),
-            ),
+            labelStyle: labelStyle ??
+                TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: context.responsive(
+                    mobile: 14.0,
+                    tablet: 16.0,
+                    desktop: 18.0,
+                  ),
+                ),
+            unselectedLabelStyle: unselectedLabelStyle ??
+                TextStyle(
+                  fontSize: context.responsive(
+                    mobile: 14.0,
+                    tablet: 16.0,
+                    desktop: 18.0,
+                  ),
+                ),
             indicatorColor: effectiveIndicatorColor,
             indicatorWeight: indicatorWeight ?? 4.0,
             tabs: tabs,
@@ -499,21 +509,23 @@ class CustomTabAppBar extends StatelessWidget implements PreferredSizeWidget {
         controller: tabController,
         labelColor: effectiveLabelColor,
         unselectedLabelColor: effectiveUnselectedLabelColor,
-        labelStyle: labelStyle ?? TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: context.responsive(
-            mobile: 14.0,
-            tablet: 16.0,
-            desktop: 18.0,
-          ),
-        ),
-        unselectedLabelStyle: unselectedLabelStyle ?? TextStyle(
-          fontSize: context.responsive(
-            mobile: 14.0,
-            tablet: 16.0,
-            desktop: 18.0,
-          ),
-        ),
+        labelStyle: labelStyle ??
+            TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: context.responsive(
+                mobile: 14.0,
+                tablet: 16.0,
+                desktop: 18.0,
+              ),
+            ),
+        unselectedLabelStyle: unselectedLabelStyle ??
+            TextStyle(
+              fontSize: context.responsive(
+                mobile: 14.0,
+                tablet: 16.0,
+                desktop: 18.0,
+              ),
+            ),
         indicatorColor: effectiveIndicatorColor,
         indicatorWeight: indicatorWeight ?? 4.0,
         tabs: tabs,
@@ -531,13 +543,14 @@ class CustomTabAppBar extends StatelessWidget implements PreferredSizeWidget {
     }
 
     return IconButton(
-      onPressed: onBackPressed ?? () {
-        if (Navigator.of(context, rootNavigator: true).canPop()) {
-          Navigator.of(context, rootNavigator: true).pop();
-        } else {
-          Navigator.of(context).pop();
-        }
-      },
+      onPressed: onBackPressed ??
+          () {
+            if (Navigator.of(context, rootNavigator: true).canPop()) {
+              Navigator.of(context, rootNavigator: true).pop();
+            } else {
+              Navigator.of(context).pop();
+            }
+          },
       icon: Icon(
         Icons.arrow_back,
         color: foregroundColor,
@@ -547,5 +560,6 @@ class CustomTabAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(104.0); // Default AppBar + TabBar height
+  Size get preferredSize =>
+      const Size.fromHeight(104.0); // Default AppBar + TabBar height
 }

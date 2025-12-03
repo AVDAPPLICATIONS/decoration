@@ -11,8 +11,7 @@ class MaterialTab extends ConsumerStatefulWidget {
   final Map<String, dynamic> event;
   final bool isAdmin;
 
-  const MaterialTab({Key? key, required this.event, required this.isAdmin})
-      : super(key: key);
+  const MaterialTab({super.key, required this.event, required this.isAdmin});
 
   @override
   ConsumerState<MaterialTab> createState() => _MaterialTabState();
@@ -40,9 +39,7 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
     final colorScheme = Theme.of(context).colorScheme;
     print(
         'Building MaterialTab with ${issuedInventoryItems.length} issued items');
-    if (issuedInventoryItems.isNotEmpty) {
-      print('Issued items: $issuedInventoryItems');
-    }
+    if (issuedInventoryItems.isNotEmpty) {}
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async {
@@ -259,7 +256,7 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
                     padding: const EdgeInsets.all(40),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
-                      color: colorScheme.surfaceVariant,
+                      color: colorScheme.surfaceContainerHighest,
                       border: Border.all(
                         color: colorScheme.outline.withOpacity(0.2),
                         width: 1,
@@ -335,7 +332,7 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
                             ),
                             child: Row(
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.info_outline,
                                   color: Colors.blue,
                                   size: 20,
@@ -392,7 +389,7 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
         ),
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        child: Column(
+        child: const Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
@@ -400,7 +397,7 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
               color: Colors.white,
               size: 32,
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(
               'Return to\nInventory',
               textAlign: TextAlign.center,
@@ -423,7 +420,8 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Are you sure you want to return this item to inventory?'),
+                const Text(
+                    'Are you sure you want to return this item to inventory?'),
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -483,7 +481,7 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [colorScheme.surface, colorScheme.surfaceVariant],
+          colors: [colorScheme.surface, colorScheme.surfaceContainerHighest],
         ),
         boxShadow: [
           BoxShadow(
@@ -724,8 +722,6 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
     const String apiUrl = '${apiBaseUrl}api/inventory/items/getList';
 
     try {
-      print('Fetching inventory items from: $apiUrl');
-
       final response = await http.post(
         Uri.parse(apiUrl),
         headers: {
@@ -737,20 +733,16 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
         body: json.encode({}), // Empty body for POST request
       );
 
-      print('Items API Response status code: ${response.statusCode}');
-      print('Items API Response body: ${response.body}');
-
       if (response.statusCode == 200) {
         try {
           final responseData = json.decode(response.body);
-          print('Parsed response data: $responseData');
 
           // Handle your specific API response structure
           if (responseData is Map &&
               responseData['success'] == true &&
               responseData['data'] != null) {
             final items = List<Map<String, dynamic>>.from(responseData['data']);
-            print('Extracted items: $items');
+
             return items;
           } else if (responseData is List) {
             return List<Map<String, dynamic>>.from(responseData);
@@ -759,31 +751,24 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
           } else if (responseData is Map && responseData['items'] != null) {
             return List<Map<String, dynamic>>.from(responseData['items']);
           } else {
-            print('Unexpected response structure: $responseData');
             return [];
           }
         } catch (e) {
-          print('Error parsing items response: $e');
           return [];
         }
       } else {
-        print('Failed to fetch items: ${response.statusCode}');
         return [];
       }
     } catch (e) {
-      print('Network error fetching items: $e');
       return [];
     }
   }
 
   Future<Map<String, dynamic>> _updateInventoryIssuance(
       Map<String, dynamic> updateData) async {
-    const String apiUrl = '${apiBaseUrl}/api/inventory/issuances/update';
+    const String apiUrl = '$apiBaseUrl/api/inventory/issuances/update';
 
     try {
-      print('Making API call to: $apiUrl');
-      print('Request data: $updateData');
-
       final response = await http.post(
         Uri.parse(apiUrl),
         headers: {
@@ -795,9 +780,6 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
         body: json.encode(updateData),
       );
 
-      print('Response status code: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         try {
           final responseData = json.decode(response.body);
@@ -827,7 +809,7 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
       }
     } catch (e) {
       // Handle network or parsing errors
-      print('Network error: $e');
+
       return {
         'success': false,
         'message': 'Network Error: ${e.toString()}',
@@ -837,12 +819,9 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
 
   Future<Map<String, dynamic>> _createInventoryIssuance(
       Map<String, dynamic> transactionData) async {
-    const String apiUrl = '${apiBaseUrl}/api/inventory/issuances/create';
+    const String apiUrl = '$apiBaseUrl/api/inventory/issuances/create';
 
     try {
-      print('Making API call to: $apiUrl');
-      print('Request data: $transactionData');
-
       final response = await http.post(
         Uri.parse(apiUrl),
         headers: {
@@ -854,9 +833,6 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
         body: json.encode(transactionData),
       );
 
-      print('Response status code: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         try {
           final responseData = json.decode(response.body);
@@ -886,7 +862,7 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
       }
     } catch (e) {
       // Handle network or parsing errors
-      print('Network error: $e');
+
       return {
         'success': false,
         'message': 'Network Error: ${e.toString()}',
@@ -907,9 +883,7 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
 
       print(
           'Saved ${issuedInventoryItems.length} issued items for event $eventId');
-    } catch (e) {
-      print('Error saving issued items: $e');
-    }
+    } catch (e) {}
   }
 
   // Load issued items from local storage
@@ -930,18 +904,12 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
 
         print(
             'Loaded ${issuedInventoryItems.length} saved issued items for event $eventId');
-      } else {
-        print('No saved issued items found for event $eventId');
-      }
-    } catch (e) {
-      print('Error loading saved issued items: $e');
-    }
+      } else {}
+    } catch (e) {}
   }
 
   // Return item to inventory
   void _returnItemToInventory(Map<String, dynamic> item, int index) async {
-    print('Returning item to inventory: $item');
-
     // Show loading indicator
     showDialog(
       context: context,
@@ -961,8 +929,6 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
         "event_id": widget.event['id'] ?? 0,
         "notes": "Returned to inventory: ${item['notes'] ?? 'No notes'}"
       };
-
-      print('Making return API call with data: $returnData');
 
       // Make API call to update issuance
       final response = await _updateInventoryIssuance(returnData);
@@ -984,7 +950,8 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
           final stockUpdate = response['data']?['stock_update'];
           final newQuantity = stockUpdate?['new_quantity'] ?? 'Unknown';
 
-          showSuccessTopSnackBar(context, 'Item returned to inventory successfully!');
+          showSuccessTopSnackBar(
+              context, 'Item returned to inventory successfully!');
         }
       } else {
         // API call failed, but we can still remove item locally
@@ -1000,7 +967,6 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
         }
       }
     } catch (e) {
-      print('Error returning item to inventory: $e');
       final returnData = {
         "id": item['issuance_id'], // The issuance ID from when item was issued
         "item_id": item['id'],
@@ -1009,7 +975,7 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
         "event_id": widget.event['id'] ?? 0,
         "notes": "Returned to inventory: ${item['notes'] ?? 'No notes'}"
       };
-      print(returnData);
+
       // Close loading dialog
       Navigator.pop(context);
 
@@ -1039,27 +1005,19 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
         issuedInventoryItems.clear();
       });
 
-      print('Cleared all issued items for event $eventId');
-
       if (mounted) {
         showSuccessTopSnackBar(context, 'All issued items cleared');
       }
-    } catch (e) {
-      print('Error clearing issued items: $e');
-    }
+    } catch (e) {}
   }
 
   // Refresh all data (available items and issued items)
   Future<void> _refreshAllData() async {
-    print('Refreshing all data...');
-
     // Refresh available inventory items from API
     await _loadInventoryItems();
 
     // Reload issued items from local storage
     await _loadSavedIssuedItems();
-
-    print('All data refreshed successfully');
   }
 
   Future<void> _loadInventoryItems() async {
@@ -1071,7 +1029,7 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
 
     try {
       final items = await _fetchInventoryItems();
-      print('Loaded ${items.length} items: $items');
+
       setState(() {
         availableItems = items;
         isLoadingItems = false;
@@ -1080,7 +1038,6 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
       setState(() {
         isLoadingItems = false;
       });
-      print('Error loading inventory items: $e');
     }
   }
 
@@ -1094,11 +1051,9 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
 
     // Function to add item to main widget's list
     void addIssuedItem(Map<String, dynamic> item) {
-      print('Adding issued item: $item');
       setState(() {
         issuedInventoryItems.add(item);
       });
-      print('Total issued items: ${issuedInventoryItems.length}');
 
       // Save to local storage
       _saveIssuedItems();
@@ -1128,11 +1083,11 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
           }
 
           return AlertDialog(
-            title: Row(
+            title: const Row(
               children: [
                 // Icon(Icons.add, color: AppColors.primary, size: 20),
-                const SizedBox(width: 8),
-                const Text('Issue Inventory Item'),
+                SizedBox(width: 8),
+                Text('Issue Inventory Item'),
               ],
             ),
             content: SizedBox(
@@ -1305,7 +1260,8 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
                 onPressed: () async {
                   // Validate inputs
                   if (selectedItem == null || quantityController.text.isEmpty) {
-                    showErrorTopSnackBar(context, 'Please select an item and enter quantity');
+                    showErrorTopSnackBar(
+                        context, 'Please select an item and enter quantity');
                     return;
                   }
 
@@ -1365,7 +1321,8 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
                       final newQuantity =
                           stockUpdate?['new_quantity'] ?? 'Unknown';
 
-                      showSuccessTopSnackBar(context, 'Inventory item issued successfully!');
+                      showSuccessTopSnackBar(
+                          context, 'Inventory item issued successfully!');
                     } else {
                       // API call failed, but we can still add item locally for demo purposes
                       final issuedItem = {
@@ -1389,7 +1346,8 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
                       Navigator.pop(context);
 
                       // Show warning message
-                      showErrorTopSnackBar(context, 'API Error - Item added locally');
+                      showErrorTopSnackBar(
+                          context, 'API Error - Item added locally');
                     }
                   } catch (e) {
                     // Close loading dialog
@@ -1419,8 +1377,7 @@ class _MaterialTabState extends ConsumerState<MaterialTab> {
                     // Show error message
                     SnackBarManager.showWarning(
                       context: context,
-                      message:
-                          'Item added locally (Network Error)',
+                      message: 'Item added locally (Network Error)',
                       duration: const Duration(seconds: 4),
                     );
                   }

@@ -57,7 +57,7 @@ class _FullScreenImageViewerState extends State<FullScreenImageViewer> {
             initialScale: PhotoViewComputedScale.contained,
             backgroundDecoration: const BoxDecoration(color: Colors.black),
             loadingBuilder: (context, event) => Center(
-              child: Container(
+              child: SizedBox(
                 width: 50,
                 height: 50,
                 child: CircularProgressIndicator(

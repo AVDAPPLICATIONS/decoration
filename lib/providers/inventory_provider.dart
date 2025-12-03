@@ -6,7 +6,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import '../data/repositories/inventory_repository.dart';
 import '../utils/constants.dart';
 import 'api_provider.dart';
-import '../data/repositories/offline_cache_repository.dart';
 
 class InventoryItem {
   final String id;
@@ -109,46 +108,43 @@ class InventoryItem {
     final categoryName = map['category_name']?.toString().toLowerCase() ?? '';
     Map<String, dynamic>? categoryDetails;
 
-    print('🔍 Parsing item: ${map['name']} (Category: $categoryName)');
-
     // Get the appropriate details object based on category
     switch (categoryName) {
       case 'furniture':
         categoryDetails = map['furniture_details'];
-        print('🔍 Found furniture_details: $categoryDetails');
+
         break;
       case 'fabric':
       case 'fabrics':
         categoryDetails = map['fabric_details'];
-        print('🔍 Found fabric_details: $categoryDetails');
+
         break;
       case 'carpet':
       case 'carpets':
         categoryDetails = map['carpet_details'];
-        print('🔍 Found carpet_details: $categoryDetails');
+
         break;
       case 'frame structure':
       case 'frame structures':
         categoryDetails = map['frame_structure_details'];
-        print('🔍 Found frame_structure_details: $categoryDetails');
+
         break;
       case 'murti set':
       case 'murti sets':
         categoryDetails = map['murti_set_details'];
-        print('🔍 Found murti_set_details: $categoryDetails');
+
         break;
       case 'stationery':
         categoryDetails = map['stationery_details'];
-        print('🔍 Found stationery_details: $categoryDetails');
+
         break;
       case 'thermocol':
       case 'thermocol material':
       case 'thermocol materials':
         categoryDetails = map['thermocol_details'];
-        print('🔍 Found thermocol_details: $categoryDetails');
+
         break;
       default:
-        print('🔍 No category details found for: $categoryName');
     }
 
     return InventoryItem(
@@ -292,11 +288,8 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       final items = itemsResponse.map((m) => InventoryItem.fromMap(m)).toList();
       state = items;
       _categories = categoriesResponse;
-
-      print('✅ Inventory data loaded successfully');
     } catch (e) {
       _error = e.toString();
-      print('❌ Error loading inventory data: $e');
 
       // If it's a FormatException (HTML response), provide a more user-friendly error
       if (e.toString().contains('FormatException') ||
@@ -327,17 +320,12 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       final items = itemsResponse.map((m) => InventoryItem.fromMap(m)).toList();
       state = items;
       _categories = categoriesResponse;
-
-      print('✅ Inventory data silently refreshed successfully');
     } catch (e) {
       // Don't set error state for silent refresh
-      print('⚠️ Warning: Silent refresh failed: $e');
 
       // If it's a FormatException (HTML response), log it but don't show to user
       if (e.toString().contains('FormatException') ||
-          e.toString().contains('HTML')) {
-        print('⚠️ Server configuration error during silent refresh');
-      }
+          e.toString().contains('HTML')) {}
     } finally {
       _isLoading = false;
     }
@@ -353,7 +341,6 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       }
     } catch (e) {
       _error = e.toString();
-      print('❌ Error adding item: $e');
     }
   }
 
@@ -367,7 +354,6 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       }
     } catch (e) {
       _error = e.toString();
-      print('❌ Error updating item: $e');
     }
   }
 
@@ -381,7 +367,6 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       }
     } catch (e) {
       _error = e.toString();
-      print('❌ Error deleting item: $e');
     }
   }
 
@@ -408,7 +393,6 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
     try {
       return await _inventoryService.testConnection();
     } catch (e) {
-      print('❌ API Connection test failed: $e');
       return false;
     }
   }
@@ -446,15 +430,11 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       if (response['success'] == true) {
         // Reload inventory data to get the updated list
         await loadInventoryData();
-        print('✅ Furniture item created successfully: ${response['data']}');
       } else {
         throw Exception(
             response['message'] ?? 'Failed to create furniture item');
       }
     } catch (e) {
-      print('❌ Error creating furniture item with specific API: $e');
-      print('🔄 Attempting fallback to general inventory API...');
-
       // Fallback to general inventory API
       try {
         final fallbackResponse = await _inventoryService.createItem(
@@ -483,7 +463,7 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
         }
       } catch (fallbackError) {
         _error = fallbackError.toString();
-        print('❌ Error creating furniture item via fallback: $fallbackError');
+
         rethrow;
       }
     } finally {
@@ -522,18 +502,17 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
         itemImageBytes: itemImageBytes,
         itemImageName: itemImageName,
       );
-      print('Murti set response is: ${response}');
+
       if (response['success'] == true) {
         // Reload inventory data to get the updated list
         await loadInventoryData();
-        print('✅ Murti sets item created successfully: ${response['data']}');
       } else {
         throw Exception(
             response['message'] ?? 'Failed to create murti sets item');
       }
     } catch (e) {
       _error = e.toString();
-      print('❌ Error creating murti sets item: $e');
+
       rethrow;
     } finally {
       _isLoading = false;
@@ -571,14 +550,13 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       if (response['success'] == true) {
         // Reload inventory data to get the updated list
         await loadInventoryData();
-        print('✅ Stationery item created successfully: ${response['data']}');
       } else {
         throw Exception(
             response['message'] ?? 'Failed to create stationery item');
       }
     } catch (e) {
       _error = e.toString();
-      print('❌ Error creating stationery item: $e');
+
       rethrow;
     } finally {
       _isLoading = false;
@@ -630,7 +608,7 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       }
     } catch (e) {
       _error = e.toString();
-      print('❌ Error creating thermocol materials item: $e');
+
       rethrow;
     } finally {
       _isLoading = false;
@@ -672,14 +650,13 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       if (response['success'] == true) {
         // Reload inventory data to get the updated list
         await loadInventoryData();
-        print('✅ Furniture item updated successfully: ${response['data']}');
       } else {
         throw Exception(
             response['message'] ?? 'Failed to update furniture item');
       }
     } catch (e) {
       _error = e.toString();
-      print('❌ Error updating furniture item: $e');
+
       rethrow;
     } finally {
       _isLoading = false;
@@ -723,13 +700,12 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       if (response['success'] == true) {
         // Reload inventory data to get the updated list
         await loadInventoryData();
-        print('✅ Carpet item updated successfully: ${response['data']}');
       } else {
         throw Exception(response['message'] ?? 'Failed to update carpet item');
       }
     } catch (e) {
       _error = e.toString();
-      print('❌ Error updating carpet item: $e');
+
       rethrow;
     } finally {
       _isLoading = false;
@@ -771,13 +747,12 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       if (response['success'] == true) {
         // Reload inventory data to get the updated list
         await loadInventoryData();
-        print('✅ Fabric item updated successfully: ${response['data']}');
       } else {
         throw Exception(response['message'] ?? 'Failed to update fabric item');
       }
     } catch (e) {
       _error = e.toString();
-      print('❌ Error updating fabric item: $e');
+
       rethrow;
     } finally {
       _isLoading = false;
@@ -829,7 +804,7 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       }
     } catch (e) {
       _error = e.toString();
-      print('❌ Error updating frame structure item: $e');
+
       rethrow;
     } finally {
       _isLoading = false;
@@ -881,7 +856,7 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       }
     } catch (e) {
       _error = e.toString();
-      print('❌ Error updating thermocol materials item: $e');
+
       rethrow;
     } finally {
       _isLoading = false;
@@ -925,14 +900,13 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       if (response['success'] == true) {
         // Reload inventory data to get the updated list
         await loadInventoryData();
-        print('✅ Murti sets item updated successfully: ${response['data']}');
       } else {
         throw Exception(
             response['message'] ?? 'Failed to update murti sets item');
       }
     } catch (e) {
       _error = e.toString();
-      print('❌ Error updating murti sets item: $e');
+
       rethrow;
     } finally {
       _isLoading = false;
@@ -972,14 +946,13 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       if (response['success'] == true) {
         // Reload inventory data to get the updated list
         await loadInventoryData();
-        print('✅ Stationery item updated successfully: ${response['data']}');
       } else {
         throw Exception(
             response['message'] ?? 'Failed to update stationery item');
       }
     } catch (e) {
       _error = e.toString();
-      print('❌ Error updating stationery item: $e');
+
       rethrow;
     } finally {
       _isLoading = false;
@@ -1001,14 +974,13 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       if (response['success'] == true) {
         // Reload inventory data to get the updated list
         await loadInventoryData();
-        print('✅ Inventory item deleted successfully: ${response['data']}');
       } else {
         throw Exception(
             response['message'] ?? 'Failed to delete inventory item');
       }
     } catch (e) {
       _error = e.toString();
-      print('❌ Error deleting inventory item: $e');
+
       rethrow;
     } finally {
       _isLoading = false;
@@ -1044,7 +1016,7 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       }
     } catch (e) {
       _error = e.toString();
-      print('❌ Error issuing inventory to event: $e');
+
       rethrow;
     } finally {
       _isLoading = false;
@@ -1058,13 +1030,12 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
 
       if (response['success'] == true) {
         final events = List<Map<String, dynamic>>.from(response['data'] ?? []);
-        print('✅ Events list retrieved successfully: ${events.length} events');
+
         return events;
       } else {
         throw Exception(response['message'] ?? 'Failed to get events list');
       }
     } catch (e) {
-      print('❌ Error getting events list: $e');
       rethrow;
     }
   }
@@ -1079,14 +1050,12 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       );
 
       if (response['success'] == true) {
-        print('✅ Issuance history retrieved successfully for item $itemId');
         return response;
       } else {
         throw Exception(
             response['message'] ?? 'Failed to get issuance history');
       }
     } catch (e) {
-      print('❌ Error getting issuance history: $e');
       rethrow;
     }
   }
@@ -1111,14 +1080,12 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       );
 
       if (response['success'] == true) {
-        print('✅ Issuance updated successfully');
         // Reload inventory data to reflect stock changes
         await loadInventoryData();
       } else {
         throw Exception(response['message'] ?? 'Failed to update issuance');
       }
     } catch (e) {
-      print('❌ Error updating issuance: $e');
       rethrow;
     }
   }
@@ -1164,7 +1131,7 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       }
     } catch (e) {
       _error = e.toString();
-      print('❌ Error creating frame structure item: $e');
+
       rethrow;
     } finally {
       _isLoading = false;
@@ -1204,13 +1171,12 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       if (response['success'] == true) {
         // Reload inventory data to get the updated list
         await loadInventoryData();
-        print('✅ Fabric item created successfully: ${response['data']}');
       } else {
         throw Exception(response['message'] ?? 'Failed to create fabric item');
       }
     } catch (e) {
       _error = e.toString();
-      print('❌ Error creating fabric item: $e');
+
       rethrow;
     } finally {
       _isLoading = false;
@@ -1248,13 +1214,12 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       if (response['success'] == true) {
         // Reload inventory data to get the updated list
         await loadInventoryData();
-        print('✅ Carpet item created successfully: ${response['data']}');
       } else {
         throw Exception(response['message'] ?? 'Failed to create carpet item');
       }
     } catch (e) {
       _error = e.toString();
-      print('❌ Error creating carpet item: $e');
+
       rethrow;
     } finally {
       _isLoading = false;
@@ -1312,7 +1277,6 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
         if (e.toString().contains('Server returned invalid response') ||
             e.toString().contains('API endpoint not found') ||
             e.toString().contains('Internal server error')) {
-          print('🔍 Server configuration error detected');
           _error =
               'Server configuration error. Please contact the administrator.';
         }
@@ -1323,7 +1287,7 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
         } else {
           // Wait before retrying (exponential backoff)
           final delay = Duration(milliseconds: 500 * (attempt + 1));
-          print('Retrying in ${delay.inMilliseconds}ms...');
+
           await Future.delayed(delay);
         }
       }
@@ -1377,15 +1341,12 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       );
 
       if (response['success'] == true) {
-        print(
-            '✅ Event issuance history retrieved successfully for event $eventId');
         return response;
       } else {
         throw Exception(
             response['message'] ?? 'Failed to get event issuance history');
       }
     } catch (e) {
-      print('❌ Error getting event issuance history: $e');
       rethrow;
     }
   }
@@ -1396,14 +1357,12 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       final response = await _inventoryService.getInventoryItemsList();
 
       if (response['success'] == true) {
-        print('✅ Inventory items list retrieved successfully');
         return response;
       } else {
         throw Exception(
             response['message'] ?? 'Failed to get inventory items list');
       }
     } catch (e) {
-      print('❌ Error getting inventory items list: $e');
       rethrow;
     }
   }
@@ -1426,14 +1385,12 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       );
 
       if (response['success'] == true) {
-        print('✅ Material issuance created successfully');
         return response;
       } else {
         throw Exception(
             response['message'] ?? 'Failed to create material issuance');
       }
     } catch (e) {
-      print('❌ Error creating material issuance: $e');
       rethrow;
     }
   }
@@ -1458,14 +1415,12 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
       );
 
       if (response['success'] == true) {
-        print('✅ Material issuance updated successfully');
         return response;
       } else {
         throw Exception(
             response['message'] ?? 'Failed to update material issuance');
       }
     } catch (e) {
-      print('❌ Error updating material issuance: $e');
       rethrow;
     }
   }

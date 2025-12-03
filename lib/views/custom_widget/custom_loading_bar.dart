@@ -11,14 +11,14 @@ class CustomLoadingBar extends StatefulWidget {
   final bool showProgress;
 
   const CustomLoadingBar({
-    Key? key,
+    super.key,
     this.message,
     this.primaryColor,
     this.backgroundColor,
     this.height,
     this.showMessage = true,
     this.showProgress = true,
-  }) : super(key: key);
+  });
 
   @override
   State<CustomLoadingBar> createState() => _CustomLoadingBarState();
@@ -99,7 +99,7 @@ class _CustomLoadingBarState extends State<CustomLoadingBar>
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(height! / 2),
+        borderRadius: BorderRadius.circular(height / 2),
         child: Stack(
           children: [
             // Background
@@ -192,12 +192,12 @@ class CustomLoadingOverlay extends StatelessWidget {
   final bool showProgress;
 
   const CustomLoadingOverlay({
-    Key? key,
+    super.key,
     this.message,
     this.primaryColor,
     this.backgroundColor,
     this.showProgress = true,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -260,7 +260,7 @@ class CustomLoadingOverlay extends StatelessWidget {
                     mobile: 16.0, tablet: 18.0, desktop: 20.0)),
             // Progress bar
             if (showProgress)
-              Container(
+              SizedBox(
                 width: context.responsive(
                     mobile: 200.0, tablet: 250.0, desktop: 300.0),
                 child: CustomLoadingBar(
@@ -292,11 +292,11 @@ class CustomLoadingIndicator extends StatelessWidget {
   final double? size;
 
   const CustomLoadingIndicator({
-    Key? key,
+    super.key,
     this.message,
     this.color,
     this.size,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

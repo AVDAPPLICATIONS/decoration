@@ -8,9 +8,7 @@ class UserService {
 
   Future<List<UserModel>> fetchUsers() async {
     final response = await api.get('/users');
-    return (response as List)
-        .map((json) => UserModel.fromJson(json))
-        .toList();
+    return (response as List).map((json) => UserModel.fromJson(json)).toList();
   }
 
   Future<UserModel> createUser(Map<String, dynamic> payload) async {

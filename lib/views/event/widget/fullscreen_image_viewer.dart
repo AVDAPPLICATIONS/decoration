@@ -75,13 +75,12 @@ class FullScreenImageViewer extends ConsumerWidget {
 
           final cachedPath = snapshot.data;
           final ImageProvider provider;
-          
+
           if (cachedPath != null && File(cachedPath).existsSync()) {
             provider = FileImage(File(cachedPath));
           } else {
             // Kick off background caching for next time
             imageCache.ensureCached(imageUrl).catchError((error) {
-              print('Background caching failed: $error');
               // If caching fails, we'll still try to show the network image
             });
             provider = NetworkImage(imageUrl);
@@ -172,5 +171,4 @@ class FullScreenImageViewer extends ConsumerWidget {
       );
     }
   }
-
 }

@@ -54,7 +54,7 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colorScheme.background,
+      backgroundColor: colorScheme.surface,
       appBar: CustomAppBar(
         title: 'Issue History: ${widget.itemName}',
         showBackButton: true,
@@ -167,7 +167,7 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
           ),
           const SizedBox(height: 12),
 
-          ...issuanceHistory.map((issue) => _buildHistoryCard(issue)).toList(),
+          ...issuanceHistory.map((issue) => _buildHistoryCard(issue)),
         ],
       ),
     );
@@ -511,7 +511,7 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
-                        color: colorScheme.surfaceVariant,
+                        color: colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: colorScheme.outline),
                       ),
@@ -605,10 +605,10 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
                     TextField(
                       controller: quantityController,
                       keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Quantity to Return',
                         hintText: 'Enter quantity to return...',
-                        border: const OutlineInputBorder(),
+                        border: OutlineInputBorder(),
                         suffixText: 'units',
                       ),
                       onChanged: (value) {
@@ -738,11 +738,9 @@ class _ItemIssueHistoryPageState extends ConsumerState<ItemIssueHistoryPage> {
       int eventId = 0;
       if (issue['event_id'] != null) {
         eventId = int.parse(issue['event_id'].toString());
-        print('🔍 Debug: Using event_id from issue data: $eventId');
       } else {
         // Fallback to 0 if event_id is somehow missing
         eventId = 0;
-        print('🔍 Debug: event_id not found, using default: $eventId');
       }
 
       await ref.read(inventoryProvider.notifier).updateIssuance(

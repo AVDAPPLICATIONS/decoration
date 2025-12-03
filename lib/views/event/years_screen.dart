@@ -2,7 +2,8 @@ import 'package:avd_decoration_application/utils/responsive_utils.dart';
 import 'package:avd_decoration_application/views/custom_widget/custom_appbar.dart';
 import 'package:avd_decoration_application/views/event/year/editEventform.dart';
 import 'package:flutter/material.dart';
-import 'package:avd_decoration_application/widgets/cached_network_or_file_image.dart' as cnf;
+import 'package:avd_decoration_application/widgets/cached_network_or_file_image.dart'
+    as cnf;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/year_model.dart';
 import '../../providers/year_provider.dart';
@@ -53,8 +54,6 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
       await ref
           .read(yearProvider.notifier)
           .fetchYears(templateId: widget.templateId);
-    } catch (e) {
-      print('Error loading years: $e');
     } finally {
       setState(() {
         _isLoadingYears = false;
@@ -73,7 +72,6 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
       // showBackButton: false, // ✅ hides the back icon
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -113,7 +111,7 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
             end: Alignment.bottomCenter,
             colors: [
               colorScheme.primary,
-              colorScheme.background,
+              colorScheme.surface,
             ],
             stops: const [0.0, 0.25],
           ),
@@ -368,17 +366,6 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
             eventDetails['success'] == false &&
             eventDetails['error_type'] == 'server_database_error';
 
-        print('🔍 Debug: FutureBuilder for year ${year.id}');
-        print('  - snapshot.connectionState: ${snapshot.connectionState}');
-        print('  - eventDetails: $eventDetails');
-        print('  - hasEventDetails: $hasEventDetails');
-        print('  - hasServerError: $hasServerError');
-
-        if (hasEventDetails) {
-          print(
-              '  - cover_image: ${eventDetails['data']['event']['cover_image']}');
-        }
-
         return Dismissible(
           key: Key('year_${year.id}'),
           direction: DismissDirection.horizontal,
@@ -458,9 +445,10 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
                     ),
                     ElevatedButton(
                       onPressed: () {
-                        showSuccessTopSnackBar(context, 'Event Deleted successfully!');
+                        showSuccessTopSnackBar(
+                            context, 'Event Deleted successfully!');
                         Navigator.pop(context, true);
-                        },
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: colorScheme.error,
                         foregroundColor: colorScheme.onError,
@@ -478,15 +466,12 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
             try {
               // First call the API to delete the year
               await ref.read(yearProvider.notifier).deleteYear(year.id);
-              print('YearsScreen: API deletion successful for year ${year.id}');
 
               // Only remove from state if API deletion succeeds
               ref.read(yearProvider.notifier).removeYearFromState(year.id);
-              print('YearsScreen: Removed year ${year.id} from state');
 
               // Force refresh the years list to ensure UI updates
               await _loadYears();
-              print('YearsScreen: Refreshed years list after deletion');
 
               if (mounted) {
                 SnackBarManager.showSuccess(
@@ -495,7 +480,6 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
                 );
               }
             } catch (e) {
-              print('YearsScreen: Error deleting year ${year.id}: $e');
               // If deletion fails, show error but don't remove from state
               if (mounted) {
                 SnackBarManager.showError(
@@ -678,37 +662,30 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
 
   Future<Map<String, dynamic>?> _getEventDetailsForYear(dynamic year) async {
     if (widget.templateId == null) {
-      print('🔍 Debug: No templateId for year ${year.id}');
       return null;
     }
 
     try {
       final eventRepository = ref.read(eventRepositoryProvider);
 
-      print(
-          '🔍 Debug: Fetching event details for year ${year.id}, templateId: ${widget.templateId}');
       final eventDetails = await eventRepository.getEventDetails(
         templateId: widget.templateId!,
         yearId: year.id,
       );
 
-      print('🔍 Debug: Event details for year ${year.id}: $eventDetails');
-
       // Check if event has cover image
-      if (eventDetails != null && eventDetails['success'] == true && eventDetails['data'] != null) {
+      if (eventDetails != null &&
+          eventDetails['success'] == true &&
+          eventDetails['data'] != null) {
         final coverImage = eventDetails['data']['event']['cover_image'];
-        print('🔍 Debug: Cover image for year ${year.id}: $coverImage');
       }
 
       return eventDetails;
     } catch (e) {
-      print('❌ Error fetching event details for year ${year.id}: $e');
-
       // Check if it's a server database error
       if (e.toString().contains('500') ||
           e.toString().contains('column') ||
           e.toString().contains('does not exist')) {
-        print('🔍 Server database error detected for year ${year.id}');
         // Return a structured error response instead of null
         return {
           'success': false,
@@ -773,7 +750,7 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
 
       // Open Add Event Details Form for the newly created year
       if (createdYear != null) {
-        _showAddEventDetailsForm(yearId: createdYear.id,yearName: yearName);
+        _showAddEventDetailsForm(yearId: createdYear.id, yearName: yearName);
       }
     } catch (e) {
       SnackBarManager.showError(
@@ -810,10 +787,13 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
 
       if (mounted) {
         // Check if event was found or not
-        if (eventDetails != null && eventDetails['success'] == true && eventDetails['data'] != null) {
+        if (eventDetails != null &&
+            eventDetails['success'] == true &&
+            eventDetails['data'] != null) {
           // Event exists, navigate to EventDetailsScreen
           _navigateToEventDetails(eventDetails, yearId: year.id);
-        } else if (eventDetails != null && eventDetails['success'] == false &&
+        } else if (eventDetails != null &&
+            eventDetails['success'] == false &&
             eventDetails['error_type'] == 'server_database_error') {
           // Server database error, show error message
           SnackBarManager.showError(
@@ -823,7 +803,7 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
           );
         } else {
           // Event not found, show Add Event Details form
-          _showAddEventDetailsForm(yearId: year.id,yearName: year.yearName);
+          _showAddEventDetailsForm(yearId: year.id, yearName: year.yearName);
         }
       }
     } catch (e) {
@@ -872,7 +852,8 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
     );
   }
 
-  void _showAddEventDetailsForm({required int yearId,required String yearName}) {
+  void _showAddEventDetailsForm(
+      {required int yearId, required String yearName}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -887,8 +868,6 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
           yearId: yearId,
           yearName: yearName,
           onEventCreated: (eventData) {
-            print('✅ Event created successfully: $eventData');
-
             // Close the form first
             Navigator.pop(context);
 
@@ -962,7 +941,7 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
 
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) {
-            _showAddEventDetailsForm(yearId: year.id,yearName: year.yearName);
+            _showAddEventDetailsForm(yearId: year.id, yearName: year.yearName);
           }
         });
       }
@@ -996,7 +975,5 @@ class _YearsScreenState extends ConsumerState<YearsScreen> {
         },
       ),
     );
-
   }
 }
-

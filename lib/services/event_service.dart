@@ -92,17 +92,15 @@ class EventService {
   }
 
   Future<EventModel> createEvent(EventModel event) async {
-    print('Creating event with data: ${event.toJson()}');
     final response = await api.post('/api/events/create', body: event.toJson());
-    print('Event creation response: $response');
+
     return EventModel.fromJson(response);
   }
 
   Future<Map<String, dynamic>> createEventFromData(
       Map<String, dynamic> eventData) async {
-    print('Creating event with data: $eventData');
     final response = await api.post('/api/events/create', body: eventData);
-    print('Event creation response: $response');
+
     return response;
   }
 
@@ -110,16 +108,12 @@ class EventService {
     required Map<String, dynamic> eventData,
     File? coverImage,
   }) async {
-    print('Creating event with form-data: $eventData');
-    print('Cover image: ${coverImage?.path}');
-
     final response = await api.postFormData(
       '/api/events/create',
       fields: eventData,
       files: coverImage != null ? {'cover_image': coverImage} : {},
     );
 
-    print('Event creation response: $response');
     return response;
   }
 
@@ -139,21 +133,19 @@ class EventService {
     String? existingImageUrl,
   }) async {
     try {
-      print('Updating event $eventId with name: $eventName, location: $location, date: $date, templateId: $templateId, yearId: $yearId');
-      
       if (coverImage != null) {
         // Use multipart request for file upload
         final request = http.MultipartRequest(
           'POST',
           Uri.parse('${api.baseUrl}/api/events/update'),
         );
-        
+
         // Add the image file
         request.files.add(await http.MultipartFile.fromPath(
           'cover_image',
           coverImage.path,
         ));
-        
+
         // Add form fields
         request.fields['id'] = eventId.toString();
         request.fields['description'] = eventName;
@@ -161,13 +153,11 @@ class EventService {
         request.fields['date'] = date;
         request.fields['template_id'] = templateId.toString();
         request.fields['year_id'] = yearId.toString();
-        
-        print('Sending multipart request with image');
+
         final response = await request.send();
         final responseBody = await response.stream.bytesToString();
         final data = jsonDecode(responseBody);
-        
-        print('Event update response: $data');
+
         return data;
       } else {
         // No image, use regular POST request
@@ -180,12 +170,10 @@ class EventService {
           'year_id': yearId,
           'cover_image': existingImageUrl, // Preserve existing image
         });
-        
-        print('Event update response: $response');
+
         return response;
       }
     } catch (e) {
-      print('Error updating event: $e');
       return {
         'success': false,
         'message': 'Failed to update event: $e',
@@ -202,15 +190,13 @@ class EventService {
     required int yearId,
     int maxRetries = 2,
   }) async {
-    print('Getting event details for templateId: $templateId, yearId: $yearId');
-
     for (int attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         final response = await api.post('/api/events/getDetails', body: {
           'template_id': templateId,
           'year_id': yearId,
         });
-        print('Event details response: $response');
+
         return response;
       } catch (e) {
         // If this is the last attempt, handle the error
@@ -218,7 +204,6 @@ class EventService {
           // Check if it's a 404 error (Event not found)
           if (e.toString().contains('404') ||
               e.toString().contains('Event not found')) {
-            print('Event not found, returning success: false response');
             return {
               'success': false,
               'message': 'Event not found',
@@ -280,7 +265,7 @@ class EventService {
       'event_name': eventName,
       'template_id': templateId,
     });
-    print('Year creation response: $response');
+
     return response;
   }
 }

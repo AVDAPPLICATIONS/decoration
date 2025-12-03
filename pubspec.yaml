@@ -44,13 +44,15 @@ dependencies:
   persistent_bottom_nav_bar: ^6.2.1
   lottie: ^3.1.2
   google_fonts: ^6.3.2
-
+  print_slayer: ^1.1.0
+  path: any
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
   build_runner: ^2.4.13
   drift_dev: ^2.18.0
+  print_remover: ^1.0.2
 
 flutter_icons:
   android: true

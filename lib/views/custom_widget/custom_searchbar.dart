@@ -4,9 +4,9 @@ import '../../themes/app_theme.dart';
 
 class CustomSearchBar extends StatefulWidget {
   final String hintText;
-  final ValueChanged<String>? onQueryChanged;   // debounced change
-  final ValueChanged<String>? onSubmitted;      // keyboard submit
-  final VoidCallback? onVoiceTap;               // optional mic/voice action
+  final ValueChanged<String>? onQueryChanged; // debounced change
+  final ValueChanged<String>? onSubmitted; // keyboard submit
+  final VoidCallback? onVoiceTap; // optional mic/voice action
   final String initialText;
   final bool autofocus;
   final int debounceMs;
@@ -70,9 +70,8 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
   @override
   Widget build(BuildContext context) {
     final focused = _focus.hasFocus;
-    final borderColor = focused
-        ? AppColors.primary.withOpacity(0.45)
-        : Colors.grey.shade200;
+    final borderColor =
+        focused ? AppColors.primary.withOpacity(0.45) : Colors.grey.shade200;
     final borderWidth = focused ? 1.5 : 1.2;
 
     return Padding(
@@ -157,7 +156,8 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
                 size: 20,
               ),
             ),
-            prefixIconConstraints: const BoxConstraints.tightFor(width: 44, height: 44),
+            prefixIconConstraints:
+                const BoxConstraints.tightFor(width: 44, height: 44),
             // Suffix (clear + optional mic)
             suffixIcon: Row(
               mainAxisSize: MainAxisSize.min,
@@ -185,7 +185,8 @@ class _CustomSearchBarState extends State<CustomSearchBar> {
                   ),
                 if (widget.onVoiceTap != null)
                   Container(
-                    margin: const EdgeInsets.only(left: 4, right: 6, top: 6, bottom: 6),
+                    margin: const EdgeInsets.only(
+                        left: 4, right: 6, top: 6, bottom: 6),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(10),

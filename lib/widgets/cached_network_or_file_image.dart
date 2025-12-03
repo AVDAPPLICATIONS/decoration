@@ -40,7 +40,8 @@ class CachedNetworkOrFileImage extends ConsumerWidget {
         return Image.network(
           imageUrl,
           fit: fit,
-          errorBuilder: (_, __, ___) => errorWidget ?? const Icon(Icons.broken_image),
+          errorBuilder: (_, __, ___) =>
+              errorWidget ?? const Icon(Icons.broken_image),
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) return child;
             return placeholder ?? child;
@@ -50,5 +51,3 @@ class CachedNetworkOrFileImage extends ConsumerWidget {
     );
   }
 }
-
-

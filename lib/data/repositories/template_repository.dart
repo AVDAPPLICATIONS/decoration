@@ -57,5 +57,3 @@ class TemplateRepository {
     return templates;
   }
 }
-
-

@@ -3,17 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../models/event_template_model.dart' show EventTemplateModel;
 import '../../../providers/template_provider.dart';
-import '../../../utils/top_snackbar_helper.dart' show showErrorTopSnackBar, showSuccessTopSnackBar;
-
-
+import '../../../utils/top_snackbar_helper.dart'
+    show showErrorTopSnackBar, showSuccessTopSnackBar;
 
 Future<void> showEditTemplateDialog(
-    BuildContext context,
-    WidgetRef ref,
-    EventTemplateModel template,
-    ) async {
+  BuildContext context,
+  WidgetRef ref,
+  EventTemplateModel template,
+) async {
   final TextEditingController nameController =
-  TextEditingController(text: template.name);
+      TextEditingController(text: template.name);
   final colorScheme = Theme.of(context).colorScheme;
 
   await showDialog(
@@ -29,7 +28,7 @@ Future<void> showEditTemplateDialog(
             end: Alignment.bottomRight,
             colors: [
               colorScheme.surface,
-              colorScheme.surfaceVariant,
+              colorScheme.surfaceContainerHighest,
             ],
           ),
           boxShadow: [

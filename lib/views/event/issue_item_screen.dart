@@ -60,8 +60,8 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
       // Ensure we always convert to List<Map<String, dynamic>> safely
       final rawList = (response['data'] as List?) ?? const [];
       final items = rawList
-          .where((e) => e is Map)
-          .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e as Map))
+          .whereType<Map>()
+          .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
           .toList();
       setState(() {
         _availableItems = items;
@@ -170,8 +170,9 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
   // Dimensions helper (best-effort from various fields)
   String _dimensions(Map<String, dynamic> item) {
     final direct = item['dimensions'] ?? item['size'] ?? item['dimension'];
-    if (direct != null && direct.toString().trim().isNotEmpty)
+    if (direct != null && direct.toString().trim().isNotEmpty) {
       return direct.toString();
+    }
     final details = item['furniture_details'] ??
         item['fabric_details'] ??
         item['carpet_details'] ??
@@ -182,8 +183,9 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
     if (details is Map) {
       final dim =
           details['dimensions'] ?? details['size'] ?? details['dimension'];
-      if (dim != null && dim.toString().trim().isNotEmpty)
+      if (dim != null && dim.toString().trim().isNotEmpty) {
         return dim.toString();
+      }
       final l = details['length'];
       final w = details['width'];
       final h = details['height'];
@@ -216,8 +218,6 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
         item['image'] ??
         item['photo'] ??
         item['cover_image'];
-    print('🔍 Debug Image URL for item ${item['name']}:');
-    print('  - Raw URL: $rawUrl');
 
     if (rawUrl != null &&
         rawUrl.toString().isNotEmpty &&
@@ -225,7 +225,6 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
       // Use the proper inventory service to get the image URL
       final imageUrl =
           ref.read(inventoryServiceProvider).getImageUrl(rawUrl.toString());
-      print('  - Processed URL: $imageUrl');
 
       if (imageUrl.isNotEmpty) {
         return ClipRRect(
@@ -254,17 +253,12 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
               );
             },
             errorBuilder: (context, error, stackTrace) {
-              print('❌ Image load error for $imageUrl: $error');
               return _buildCategoryIcon(item);
             },
           ),
         );
-      } else {
-        print('  - Image URL is empty, showing category icon');
-      }
-    } else {
-      print('  - No valid image URL found, showing category icon');
-    }
+      } else {}
+    } else {}
     return _buildCategoryIcon(item);
   }
 
@@ -490,8 +484,7 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
                       ),
                     ),
 
-                  if (isLowStock && !isOutOfStock)
-                    const SizedBox(height: 4),
+                  if (isLowStock && !isOutOfStock) const SizedBox(height: 4),
 
                   // Quantity Display
                   Text(
@@ -501,8 +494,7 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color:
-                          isOutOfStock ? Colors.red[600] : Colors.grey[900],
+                      color: isOutOfStock ? Colors.red[600] : Colors.grey[900],
                     ),
                     textAlign: TextAlign.right,
                     overflow: TextOverflow.ellipsis,
@@ -514,9 +506,8 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: isOutOfStock
-                          ? null
-                          : () => _showIssueDialog(item),
+                      onPressed:
+                          isOutOfStock ? null : () => _showIssueDialog(item),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: isOutOfStock
                             ? Colors.grey[400]
@@ -956,7 +947,8 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
                                     });
                                     setModalState(() {});
                                   },
-                                  backgroundColor: colorScheme.surfaceVariant,
+                                  backgroundColor:
+                                      colorScheme.surfaceContainerHighest,
                                   selectedColor: colorScheme.primary,
                                   checkmarkColor: colorScheme.onPrimary,
                                   side: BorderSide(
@@ -974,7 +966,7 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
                             // Item Name Filter Section (only show if category is selected)
                             if (_selectedCategory != 'All') ...[
                               Text(
-                                'Filter by Item Name (${_selectedCategory})',
+                                'Filter by Item Name ($_selectedCategory)',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -1018,7 +1010,8 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
                                     return Container(
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
-                                        color: colorScheme.surfaceVariant
+                                        color: colorScheme
+                                            .surfaceContainerHighest
                                             .withOpacity(0.3),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
@@ -1058,7 +1051,7 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
                                           setModalState(() {});
                                         },
                                         backgroundColor:
-                                            colorScheme.surfaceVariant,
+                                            colorScheme.surfaceContainerHighest,
                                         selectedColor: colorScheme.primary,
                                         checkmarkColor: colorScheme.onPrimary,
                                         side: BorderSide(
@@ -1161,7 +1154,7 @@ class _IssueItemScreenState extends ConsumerState<IssueItemScreen> {
             onPressed: _isSubmitting
                 ? null
                 : () {
-                    // print(item);
+                    //
                     _issueItem(item);
                     // Navigator.pop(context);
                     _loadAvailableItems();

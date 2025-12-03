@@ -34,7 +34,7 @@ class TemplateNotifier extends StateNotifier<List<EventTemplateModel>> {
   Future<void> fetchTemplates() async {
     try {
       ref.read(templateLoadingProvider.notifier).state = true;
-      print('TemplateProvider: Starting to fetch templates from API...');
+
       final templates = await repo.fetchTemplates();
       print(
           'TemplateProvider: Successfully fetched ${templates.length} templates');
@@ -46,9 +46,7 @@ class TemplateNotifier extends StateNotifier<List<EventTemplateModel>> {
       }
 
       state = templates;
-      print('TemplateProvider: State updated with ${state.length} templates');
     } catch (e) {
-      print('TemplateProvider: Error fetching templates: $e');
       // Keep the current state on error, don't clear it
     } finally {
       ref.read(templateLoadingProvider.notifier).state = false;
@@ -59,26 +57,20 @@ class TemplateNotifier extends StateNotifier<List<EventTemplateModel>> {
     try {
       await service.addTemplate(template);
       await fetchTemplates();
-    } catch (e) {
-      print('Error adding template: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> updateTemplate(int id, EventTemplateModel template) async {
     try {
       await service.updateTemplate(id, template);
       await fetchTemplates();
-    } catch (e) {
-      print('Error updating template: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> deleteTemplate(int id) async {
     try {
       await service.deleteTemplate(id);
       await fetchTemplates();
-    } catch (e) {
-      print('Error deleting template: $e');
-    }
+    } catch (e) {}
   }
 }

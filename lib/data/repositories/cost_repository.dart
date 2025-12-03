@@ -33,7 +33,10 @@ class CostRepository {
         cacheKey,
         (obj) {
           if (obj is List) {
-            return obj.map((e) => CostModel.fromJson(Map<String, dynamic>.from(e as Map))).toList();
+            return obj
+                .map((e) =>
+                    CostModel.fromJson(Map<String, dynamic>.from(e as Map)))
+                .toList();
           }
           return <CostModel>[];
         },
@@ -46,12 +49,11 @@ class CostRepository {
       final List<dynamic> costData = jsonDecode(response['data']);
       final costs = costData.map((json) => CostModel.fromJson(json)).toList();
       if (offline != null) {
-        await offline!.saveJson(cacheKey, costs.map((c) => c.toJson()).toList());
+        await offline!
+            .saveJson(cacheKey, costs.map((c) => c.toJson()).toList());
       }
       return costs;
     }
     return <CostModel>[];
   }
 }
-
-

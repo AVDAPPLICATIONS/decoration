@@ -76,15 +76,11 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
         nameCounts[normalizedName] = (nameCounts[normalizedName] ?? 0) + 1;
       }
 
-      print('🔍 Name counts for $category: $nameCounts');
-
       final duplicateNames = nameCounts.entries
           .where((entry) => entry.value > 1)
           .map((entry) => entry.key)
           .toList();
       duplicateNames.sort();
-
-      print('🔍 Duplicate names found: $duplicateNames');
 
       return ['All', ...duplicateNames];
     }
@@ -93,10 +89,6 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
   // Get filtered inventory items based on selected category, item name, and search query
   List<InventoryItem> _getFilteredItems(List<InventoryItem> items) {
     List<InventoryItem> filteredItems = items;
-
-    print('🔍 Starting filter with ${items.length} total items');
-    print('🔍 Selected category: $_selectedCategory');
-    print('🔍 Selected item name: $_selectedItemName');
 
     // Filter by category
     if (_selectedCategory != 'All') {
@@ -108,9 +100,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
           '🔍 After category filter ($_selectedCategory): ${filteredItems.length} items (was $beforeCount)');
 
       // Debug: Show items in this category
-      for (final item in filteredItems) {
-        print('  - ${item.name} (ID: ${item.id})');
-      }
+      for (final item in filteredItems) {}
     }
 
     // Filter by item name (only if category is selected and item name is not 'All')
@@ -125,9 +115,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
           '🔍 After item name filter ($_selectedItemName): ${filteredItems.length} items (was $beforeCount)');
 
       // Debug: Show filtered items
-      for (final item in filteredItems) {
-        print('  - ${item.name} (ID: ${item.id})');
-      }
+      for (final item in filteredItems) {}
     }
 
     // Filter by search query
@@ -381,7 +369,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                                           });
                                         },
                                         backgroundColor:
-                                            colorScheme.surfaceVariant,
+                                            colorScheme.surfaceContainerHighest,
                                         selectedColor: colorScheme.primary,
                                         checkmarkColor: colorScheme.onPrimary,
                                         side: BorderSide(
@@ -401,7 +389,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                                     Row(
                                       children: [
                                         Text(
-                                          'Filter by Item Name (${_selectedCategory})',
+                                          'Filter by Item Name ($_selectedCategory)',
                                           style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.w600,
@@ -487,7 +475,8 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                                           return Container(
                                             padding: const EdgeInsets.all(16),
                                             decoration: BoxDecoration(
-                                              color: colorScheme.surfaceVariant
+                                              color: colorScheme
+                                                  .surfaceContainerHighest
                                                   .withOpacity(0.3),
                                               borderRadius:
                                                   BorderRadius.circular(8),
@@ -497,7 +486,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                                                   CrossAxisAlignment.start,
                                               children: [
                                                 Text(
-                                                  'No duplicate item names found in ${_selectedCategory}',
+                                                  'No duplicate item names found in $_selectedCategory',
                                                   style: TextStyle(
                                                     fontSize: 14,
                                                     fontWeight: FontWeight.w500,
@@ -605,7 +594,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                                                     });
                                                   },
                                                   backgroundColor: colorScheme
-                                                      .surfaceVariant,
+                                                      .surfaceContainerHighest,
                                                   selectedColor:
                                                       colorScheme.primary,
                                                   checkmarkColor:
@@ -753,13 +742,11 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
     return PopScope(
       canPop: true,
       onPopInvoked: (didPop) {
-        if (didPop) {
-          print('Inventory list screen back button pressed');
-        }
+        if (didPop) {}
       },
       child: Scaffold(
         appBar: _buildResponsiveAppBar(colorScheme),
-        backgroundColor: colorScheme.background,
+        backgroundColor: colorScheme.surface,
         body: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -767,7 +754,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
               end: Alignment.bottomCenter,
               colors: [
                 colorScheme.primary,
-                colorScheme.background,
+                colorScheme.surface,
               ],
               stops: const [0.0, 0.25],
             ),
@@ -840,10 +827,8 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                             '⚠️ Warning: Could not refresh inventory data: $e');
                       }
                     }
-                    print('Form result received: $result');
-                    if (result != null && result is Map<String, dynamic>) {
-                      print('Result is valid map, showing success message');
 
+                    if (result != null && result is Map<String, dynamic>) {
                       // Show success message - the item is already in the list via silent refresh
                       final itemName =
                           result['data']?['name'] ?? result['name'] ?? 'Item';
@@ -851,9 +836,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                         context: context,
                         message: '$itemName added to inventory successfully!',
                       );
-                    } else {
-                      print('Result is null or not a map: $result');
-                    }
+                    } else {}
                   },
                   backgroundColor: Theme.of(context).colorScheme.primary,
                   foregroundColor: Theme.of(context).colorScheme.surface,
@@ -871,77 +854,77 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
     );
   }
 
-    Widget _buildSearchBar() {
-      final colorScheme = Theme.of(context).colorScheme;
+  Widget _buildSearchBar() {
+    final colorScheme = Theme.of(context).colorScheme;
 
-      return Container(
-        margin: const EdgeInsets.all(16),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: colorScheme.outline.withOpacity(0.3),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.shadow.withOpacity(0.04),
-              spreadRadius: 0,
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: colorScheme.outline.withOpacity(0.3),
+          width: 1,
         ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.search,
-              color: colorScheme.onSurfaceVariant,
-              size: 20,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                controller: _searchController,
-                onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value;
-                  });
-                },
-                decoration: InputDecoration(
-                  hintText: 'Search items, categories, materials, dimensions...',
-                  hintStyle: TextStyle(
-                    color: colorScheme.onSurfaceVariant.withOpacity(0.6),
-                    fontSize: 14,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
-                ),
-                style: TextStyle(
-                  color: colorScheme.onSurface,
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.shadow.withOpacity(0.04),
+            spreadRadius: 0,
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.search,
+            color: colorScheme.onSurfaceVariant,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
+              decoration: InputDecoration(
+                hintText: 'Search items, categories, materials, dimensions...',
+                hintStyle: TextStyle(
+                  color: colorScheme.onSurfaceVariant.withOpacity(0.6),
                   fontSize: 14,
                 ),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+              ),
+              style: TextStyle(
+                color: colorScheme.onSurface,
+                fontSize: 14,
               ),
             ),
-            if (_searchQuery.isNotEmpty)
-              GestureDetector(
-                onTap: () {
-                  _searchController.clear();
-                  setState(() {
-                    _searchQuery = '';
-                  });
-                },
-                child: Icon(
-                  Icons.clear,
-                  color: colorScheme.onSurfaceVariant,
-                  size: 20,
-                ),
+          ),
+          if (_searchQuery.isNotEmpty)
+            GestureDetector(
+              onTap: () {
+                _searchController.clear();
+                setState(() {
+                  _searchQuery = '';
+                });
+              },
+              child: Icon(
+                Icons.clear,
+                color: colorScheme.onSurfaceVariant,
+                size: 20,
               ),
-          ],
-        ),
-      );
-    }
+            ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildBody(List<InventoryItem> inventoryItems,
       InventoryNotifier inventoryNotifier, bool isAdmin) {
@@ -1254,7 +1237,6 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
 
     // Add general dimensions if available
     if (item.dimensions != null && item.dimensions!.isNotEmpty) {
-      print(dimensionParts.toList());
       dimensionParts.add(item.dimensions!);
     }
 
@@ -1528,9 +1510,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
         canPop: true,
         onPopInvoked: (didPop) {
           // Modal will be dismissed automatically
-          if (didPop) {
-            print('Modal dismissed by back button');
-          }
+          if (didPop) {}
         },
         child: Container(
           constraints: BoxConstraints(
@@ -1591,7 +1571,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                           _viewItem(item);
                         },
                       ),
-                      
+
                       // Admin-only actions
                       if (isAdmin) ...[
                         _buildOptionTile(
@@ -1780,7 +1760,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
 
   // Issue to Event functionality hidden as requested
   // void _issueToEvent(Map<String, dynamic> item) {
-  //   print('Opening issue screen for item: ${item['name']}');
+  //
   //   PersistentNavBarNavigator.pushNewScreen(
   //     context,
   //     screen: IssueInventoryPage(inventoryItem: item),
@@ -1848,7 +1828,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceVariant,
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -1905,9 +1885,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                         .silentRefreshInventoryData();
                     print(
                         '✅ Inventory data silently refreshed after adding new item');
-                  } catch (e) {
-                    print('⚠️ Warning: Could not refresh inventory data: $e');
-                  }
+                  } catch (e) {}
                 }
               },
               icon: Icon(
